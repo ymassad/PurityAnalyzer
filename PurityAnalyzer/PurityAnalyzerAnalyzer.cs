@@ -346,6 +346,9 @@ namespace PurityAnalyzer
                 return true;
             }
 
+            if (method.ContainingType.TypeKind == TypeKind.Delegate)
+                return true;
+
             return false;
         }
 
