@@ -211,6 +211,75 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void CallingEnumerableLinqMethodsViaQuerySyntaxKeepsMethodPure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(int[] data)
+    {
+        var result =
+            from x in data
+            where x > 0
+            let x2 = x + 1
+            group x2 by x2 > 2 into g
+            select g.Key;
+
+        return result.First();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        public void CallingEnumerableLinqMethodsViaQuerySyntaxAndLetUsesImpureMethodMakesMethodImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(int[] data)
+    {
+        var result =
+            from x in data
+            where x > 0
+            let x2 = ImpureMethod( x + 1)
+            group x2 by x2 > 2 into g
+            select g.Key;
+
+        return result.First();
+    }
+
+    static int state = 0;
+
+    public static int ImpureMethod(int input)
+    {
+        return state++;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
 
     }
 }
