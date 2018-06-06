@@ -42,5 +42,101 @@ public static class Module1
             dignostics.Length.Should().Be(0);
 
         }
+
+        [Test]
+        public void CallingSelectMethodAndPassedLambdaCallsImpureMethodMakesMethodImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(int[] data)
+    {
+        return
+            data
+                .Select(x => ImpureMethod(x))
+                .First();
+    }
+
+    static int state = 0;
+
+    public static string ImpureMethod(int input)
+    {
+        state++;
+
+        return """";
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void CallingSelectMethodAndPassedLambdaIncrementsFieldMakesMethodImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(int[] data)
+    {
+        return
+            data
+                .Select(x => state++)
+                .First();
+    }
+
+    static int state = 0;
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void CallingSelectMethodAndPassedLambdaReadsMutableFieldMakesMethodImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(int[] data)
+    {
+        return
+            data
+                .Select(x => state)
+                .First();
+    }
+
+    static int state = 0;
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

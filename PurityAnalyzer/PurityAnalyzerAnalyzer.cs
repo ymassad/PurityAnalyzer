@@ -340,7 +340,6 @@ namespace PurityAnalyzer
                 return true;
             }
 
-
             if (method.ContainingType.IsGenericType &&
                 method.ContainingType.ConstructedFrom.Equals(iGroupingType))
             {
