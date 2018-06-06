@@ -246,10 +246,10 @@ namespace PurityAnalyzer
                 {
                     if (!property.IsInCode())
                     {
-
-                        impurities.Add((node, "Property access on type that is not in code and that does not have the Pure attribute"));
-
-
+                        if (!property.IsReadOnly || !IsKnownPureMethod(property.GetMethod))
+                        {
+                            impurities.Add((node, "Property access on type that is not in code and that does not have the Pure attribute"));
+                        }
                     }
                     else if (!property.IsReadOnly)
                     {
@@ -317,10 +317,34 @@ namespace PurityAnalyzer
         {
             var inttype = semanticModel.Compilation.GetTypeByMetadataName(typeof(int).FullName);
 
+            var booltype = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
+
+            var enumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Enumerable).FullName);
+
+            var iGroupingType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IGrouping<,>).FullName);
+
             if (method.ContainingType.Equals(inttype))
             {
                 if (method.Name == "ToString")
                     return true;
+            }
+
+            if (method.ContainingType.Equals(booltype))
+            {
+                if (method.Name == "ToString")
+                    return true;
+            }
+
+            if (method.ContainingType.Equals(enumerableType))
+            {
+                return true;
+            }
+
+
+            if (method.ContainingType.IsGenericType &&
+                method.ContainingType.ConstructedFrom.Equals(iGroupingType))
+            {
+                return true;
             }
 
             return false;
