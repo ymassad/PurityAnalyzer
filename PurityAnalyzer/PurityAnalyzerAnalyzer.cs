@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -225,6 +226,23 @@ namespace PurityAnalyzer
         }
 
 
+        public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        {
+            var symbol = semanticModel.GetSymbolInfo(node.Type).Symbol as INamedTypeSymbol;
+
+            if (!IsTypePure(symbol))
+            {
+                impurities.Add((node, "Constructed object is not pure"));
+            }
+
+            base.VisitObjectCreationExpression(node);
+        }
+
+        private bool IsTypePure(INamedTypeSymbol symbol)
+        {
+            return symbol.GetMembers().OfType<IMethodSymbol>().All(IsMethodPure);
+        }
+
         public override void VisitIdentifierName(IdentifierNameSyntax node)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
@@ -286,24 +304,9 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                if (!SymbolHasIsPureAttribute(method))
+                if (!IsMethodPure(method))
                 {
-                    if (method.IsInCode())
-                    {
-                        var localtion = method.Locations.First();
-
-                        var methodNode = localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
-
-                        var imp = Utils.GetImpurities(methodNode, semanticModel);
-
-                        if (imp.Any())
-                            impurities.Add((node, "Method is impure"));
-                    }
-                    else
-                    {
-                        if(!IsKnownPureMethod(method))
-                            impurities.Add((node, "Method is impure"));
-                    }
+                    impurities.Add((node, "Method is impure"));
                 }
 
 
@@ -311,6 +314,29 @@ namespace PurityAnalyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        private bool IsMethodPure(IMethodSymbol method1)
+        {
+            if (!SymbolHasIsPureAttribute(method1))
+            {
+                if (method1.IsInCode())
+                {
+                    var localtion = method1.Locations.First();
+
+                    var methodNode = localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
+
+                    var imp = Utils.GetImpurities(methodNode, semanticModel);
+
+                    if (imp.Any()) return false;
+                }
+                else
+                {
+                    if (!IsKnownPureMethod(method1)) return false;
+                }
+            }
+
+            return true;
         }
 
         private bool IsKnownPureMethod(IMethodSymbol method)
