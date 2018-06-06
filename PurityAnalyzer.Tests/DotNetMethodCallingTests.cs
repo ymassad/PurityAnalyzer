@@ -138,5 +138,79 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void CallingSelectMethodPassingImpureMethodGroupMakesMethodImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(int[] data)
+    {
+        return
+            data
+                .Select(ImpureMethod)
+                .First();
+    }
+
+    static int state = 0;
+
+    public static string ImpureMethod(int input)
+    {
+        state++;
+
+        return """";
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
+        public void CallingSelectMethodPassingPureMethodGroupKeepsMethodPure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(int[] data)
+    {
+        return
+            data
+                .Select(PureMethod)
+                .First();
+    }
+
+    static int state = 0;
+
+    public static string PureMethod(int input)
+    {
+        return """";
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
     }
 }
