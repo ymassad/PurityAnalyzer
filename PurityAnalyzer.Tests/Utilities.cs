@@ -61,7 +61,19 @@ namespace PurityAnalyzer.Tests
             var result = solution.GetProject(projectId).GetCompilationAsync().Result
                 .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new PurityAnalyzerAnalyzer()));
 
-            return result.GetAllDiagnosticsAsync().Result.Where(x => x.Descriptor.Id == "ReadPurityAnalyzer" || x.Descriptor.Id == "WritePurityAnalyzer").ToArray();
+            var results = result.GetAllDiagnosticsAsync().Result;
+
+            if (results.Where(x => !IsFromPurityAnalyzer(x)).Any(x => x.Severity == DiagnosticSeverity.Error))
+            {
+                throw new Exception("Error in compilation");
+            }
+
+            bool IsFromPurityAnalyzer(Diagnostic x)
+            {
+                return x.Descriptor.Id == "ReadPurityAnalyzer" || x.Descriptor.Id == "WritePurityAnalyzer";
+            }
+
+            return results.Where(IsFromPurityAnalyzer).ToArray();
         }
 
         private static Solution AddNewSourceFile(

@@ -234,7 +234,7 @@ public static class Module1
             group x2 by x2 > 2 into g
             select g.Key;
 
-        return result.First();
+        return result.First().ToString();
     }
 }";
 

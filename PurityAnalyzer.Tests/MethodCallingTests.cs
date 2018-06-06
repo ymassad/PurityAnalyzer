@@ -148,7 +148,7 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        int localstate;
+        int localstate = 0;
 
         string DoSomethingElseImpure()
         {   

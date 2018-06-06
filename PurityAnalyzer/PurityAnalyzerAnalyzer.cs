@@ -240,6 +240,9 @@ namespace PurityAnalyzer
 
         private bool IsTypePure(INamedTypeSymbol symbol)
         {
+            if (SymbolHasAssumeIsPureAttribute(symbol))
+                return true;
+
             return symbol.GetMembers().OfType<IMethodSymbol>().All(IsMethodPure);
         }
 
@@ -308,21 +311,24 @@ namespace PurityAnalyzer
                 {
                     impurities.Add((node, "Method is impure"));
                 }
-
-
-
             }
 
             base.VisitIdentifierName(node);
         }
 
-        private bool IsMethodPure(IMethodSymbol method1)
+        private bool IsMethodPure(IMethodSymbol method)
         {
-            if (!SymbolHasIsPureAttribute(method1))
+            if (SymbolHasAssumeIsPureAttribute(method))
+                return true;
+
+            if (SymbolHasAssumeIsPureAttribute(method.ContainingType))
+                return true;
+
+            if (!SymbolHasIsPureAttribute(method))
             {
-                if (method1.IsInCode())
+                if (method.IsInCode())
                 {
-                    var localtion = method1.Locations.First();
+                    var localtion = method.Locations.First();
 
                     var methodNode = localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
 
@@ -332,7 +338,7 @@ namespace PurityAnalyzer
                 }
                 else
                 {
-                    if (!IsKnownPureMethod(method1)) return false;
+                    if (!IsKnownPureMethod(method)) return false;
                 }
             }
 
@@ -381,6 +387,11 @@ namespace PurityAnalyzer
         private bool SymbolHasIsPureAttribute(ISymbol symbol)
         {
             return symbol.GetAttributes().Any(x => isIsPureAttribute(x.AttributeClass.Name));
+        }
+
+        private bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)
+        {
+            return symbol.GetAttributes().Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
     }
 
