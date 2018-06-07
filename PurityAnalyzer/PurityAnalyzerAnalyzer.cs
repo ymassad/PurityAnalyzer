@@ -39,6 +39,7 @@ namespace PurityAnalyzer
 
             context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.MethodDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeClassSyntaxNode, SyntaxKind.ClassDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzePropertySyntaxNode, SyntaxKind.PropertyDeclaration);
         }
 
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
@@ -48,18 +49,11 @@ namespace PurityAnalyzer
             if (methodDeclaration.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
             {
-                var impurities = Utils.GetImpurities(methodDeclaration, context.SemanticModel);
-
-                foreach(var impurity in impurities)
-                {
-                    var diagnostic = Diagnostic.Create(
-                        ImpurityRule,
-                        impurity.node.GetLocation());
-
-                    context.ReportDiagnostic(diagnostic);
-                }
+                ProcessImpuritiesForMethod(context, methodDeclaration);
             }
         }
+
+
 
         private void AnalyzeClassSyntaxNode(SyntaxNodeAnalysisContext context)
         {
@@ -70,17 +64,45 @@ namespace PurityAnalyzer
             {
                 foreach (var methodDeclaration in classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>())
                 {
-                    var impurities = Utils.GetImpurities(methodDeclaration, context.SemanticModel);
+                    ProcessImpuritiesForMethod(context, methodDeclaration);
+                }
+            }
+        }
 
-                    foreach (var impurity in impurities)
+        private void AnalyzePropertySyntaxNode(SyntaxNodeAnalysisContext context)
+        {
+            var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
+
+            if (propertyDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
+                .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
+            {
+                if(propertyDeclarationSyntax.AccessorList != null)
+                {
+                    foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
                     {
-                        var diagnostic = Diagnostic.Create(
-                            ImpurityRule,
-                            impurity.node.GetLocation());
-
-                        context.ReportDiagnostic(diagnostic);
+                        ProcessImpuritiesForMethod(context, accessor);
                     }
                 }
+                else if (propertyDeclarationSyntax.ExpressionBody != null)
+                {
+                    ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody);
+                }
+            }
+        }
+
+        private static void ProcessImpuritiesForMethod(
+            SyntaxNodeAnalysisContext context,
+            SyntaxNode methodLikeNode)
+        {
+            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel);
+
+            foreach (var impurity in impurities)
+            {
+                var diagnostic = Diagnostic.Create(
+                    ImpurityRule,
+                    impurity.node.GetLocation());
+
+                context.ReportDiagnostic(diagnostic);
             }
         }
     }
