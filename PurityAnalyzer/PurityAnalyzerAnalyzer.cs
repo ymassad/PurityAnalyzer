@@ -66,6 +66,11 @@ namespace PurityAnalyzer
                 {
                     ProcessImpuritiesForMethod(context, methodDeclaration);
                 }
+
+                foreach (var propertyDeclaration in classDeclarationSyntax.Members.OfType<PropertyDeclarationSyntax>())
+                {
+                    ProcessImpuritiesForProperty(context, propertyDeclaration);
+                }
             }
         }
 
@@ -76,17 +81,23 @@ namespace PurityAnalyzer
             if (propertyDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
             {
-                if(propertyDeclarationSyntax.AccessorList != null)
+                ProcessImpuritiesForProperty(context, propertyDeclarationSyntax);
+            }
+        }
+
+        private static void ProcessImpuritiesForProperty(SyntaxNodeAnalysisContext context,
+            PropertyDeclarationSyntax propertyDeclarationSyntax)
+        {
+            if (propertyDeclarationSyntax.AccessorList != null)
+            {
+                foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
                 {
-                    foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
-                    {
-                        ProcessImpuritiesForMethod(context, accessor);
-                    }
+                    ProcessImpuritiesForMethod(context, accessor);
                 }
-                else if (propertyDeclarationSyntax.ExpressionBody != null)
-                {
-                    ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody);
-                }
+            }
+            else if (propertyDeclarationSyntax.ExpressionBody != null)
+            {
+                ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody);
             }
         }
 
