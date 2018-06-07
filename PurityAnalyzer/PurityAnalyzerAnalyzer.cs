@@ -71,6 +71,16 @@ namespace PurityAnalyzer
                 {
                     ProcessImpuritiesForProperty(context, propertyDeclaration);
                 }
+
+                foreach (var fieldDeclaration in classDeclarationSyntax.Members.OfType<FieldDeclarationSyntax>())
+                {
+                    foreach (var fieldVar in fieldDeclaration.Declaration.Variables)
+                    {
+                        var initializedTo = fieldVar.Initializer.Value;
+
+                        ProcessImpuritiesForMethod(context, initializedTo);
+                    }
+                }
             }
         }
 
