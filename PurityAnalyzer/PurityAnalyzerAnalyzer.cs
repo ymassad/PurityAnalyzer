@@ -37,14 +37,13 @@ namespace PurityAnalyzer
         public override void Initialize(AnalysisContext context)
         {
 
-            context.RegisterSyntaxNodeAction(AnalyzeSyntaxNode, SyntaxKind.MethodDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.MethodDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzeClassSyntaxNode, SyntaxKind.ClassDeclaration);
         }
 
-        private void AnalyzeSyntaxNode(SyntaxNodeAnalysisContext context)
+        private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
         {
             var methodDeclaration = (MethodDeclarationSyntax) context.Node;
-
-            
 
             if (methodDeclaration.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
@@ -53,19 +52,36 @@ namespace PurityAnalyzer
 
                 foreach(var impurity in impurities)
                 {
-
-
                     var diagnostic = Diagnostic.Create(
                         ImpurityRule,
                         impurity.node.GetLocation());
 
                     context.ReportDiagnostic(diagnostic);
-                    
-
                 }
             }
+        }
 
-            int a = 0;
+        private void AnalyzeClassSyntaxNode(SyntaxNodeAnalysisContext context)
+        {
+            var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
+
+            if (classDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
+                .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
+            {
+                foreach (var methodDeclaration in classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>())
+                {
+                    var impurities = Utils.GetImpurities(methodDeclaration, context.SemanticModel);
+
+                    foreach (var impurity in impurities)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            ImpurityRule,
+                            impurity.node.GetLocation());
+
+                        context.ReportDiagnostic(diagnostic);
+                    }
+                }
+            }
         }
     }
 

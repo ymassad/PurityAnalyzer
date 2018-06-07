@@ -163,6 +163,7 @@
     <Compile Include="InterfaceTakingHigherOrderFunctionsTests.cs" />
     <Compile Include="HigherOrderFunctionsTests.cs" />
     <Compile Include="DotNetMethodCallingTests.cs" />
+    <Compile Include="IsPureAttributeOnClassTests.cs" />
     <Compile Include="MethodCallingTests.cs" />
     <Compile Include="FieldsOnInputParameterTests.cs" />
     <Compile Include="CompiledPropertiesOnInputParameterTests.cs" />
