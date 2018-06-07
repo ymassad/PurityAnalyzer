@@ -170,6 +170,7 @@
     <Compile Include="MethodCallingTests.cs" />
     <Compile Include="FieldsOnInputParameterTests.cs" />
     <Compile Include="CompiledPropertiesOnInputParameterTests.cs" />
+    <Compile Include="NewObjectTests.cs" />
     <Compile Include="PropertiesOnInputParameterTests.cs" />
     <Compile Include="StaticFieldTests.cs" />
     <Compile Include="ConstFieldTests.cs" />

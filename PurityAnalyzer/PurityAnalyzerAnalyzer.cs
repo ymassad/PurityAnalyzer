@@ -291,7 +291,7 @@ namespace PurityAnalyzer
 
             if (symbol != null)
             {
-                if (!IsTypePure(symbol))
+                if (!IsTypePureForConstruction(symbol))
                 {
                     impurities.Add((node, "Constructed object is not pure"));
                 }
@@ -300,12 +300,29 @@ namespace PurityAnalyzer
             base.VisitObjectCreationExpression(node);
         }
 
-        private bool IsTypePure(INamedTypeSymbol symbol)
+        private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
         {
             if (SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
-            return symbol.GetMembers().OfType<IMethodSymbol>().All(IsMethodPure);
+            if (!symbol.GetMembers().OfType<IMethodSymbol>().All(IsMethodPure))
+                return false;
+
+            if (symbol.IsInCode())
+            {
+                var fields = symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
+                    .OfType<TypeDeclarationSyntax>().SelectMany(x => x.Members).OfType<FieldDeclarationSyntax>()
+                    .ToArray();
+
+                foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
+                {
+                    if (Utils.GetImpurities(var, semanticModel).Any())
+                        return false;
+                }
+            }
+
+
+            return true;
         }
 
         public override void VisitIdentifierName(IdentifierNameSyntax node)
