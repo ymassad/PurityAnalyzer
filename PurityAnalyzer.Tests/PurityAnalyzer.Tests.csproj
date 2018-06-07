@@ -160,6 +160,7 @@
     <Compile Include="ArrayTests.cs" />
     <Compile Include="CompiledMethodCallingTests.cs" />
     <Compile Include="AssumeIsPureAttributeTests.cs" />
+    <Compile Include="ExpressionBodiesMethodsTests.cs" />
     <Compile Include="InterfaceTakingHigherOrderFunctionsTests.cs" />
     <Compile Include="HigherOrderFunctionsTests.cs" />
     <Compile Include="DotNetMethodCallingTests.cs" />
