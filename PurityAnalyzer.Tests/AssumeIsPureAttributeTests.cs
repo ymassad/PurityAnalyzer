@@ -139,5 +139,89 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+
+        [Test]
+        public void MethodThatCallsConstructorThatHasTheAssumeIsPureAttributeAndThatUpdatesStaticStateIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class AssumeIsPureAttribute : Attribute
+{
+}
+
+public class Test2
+{
+    static int z;
+
+    [AssumeIsPure]
+    public Test2()
+    {
+        z++;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var x = new Test2();
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatCallsConstructorThatHasTheAssumeIsPureAttributeAndThatUpdatesInstanceStateIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class AssumeIsPureAttribute : Attribute
+{
+}
+
+public class Test2
+{
+    int z = 0;
+
+    [AssumeIsPure]
+    public Test2()
+    {
+        z++;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var x = new Test2();
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
     }
 }

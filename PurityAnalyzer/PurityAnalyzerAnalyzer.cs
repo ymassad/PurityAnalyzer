@@ -230,9 +230,12 @@ namespace PurityAnalyzer
         {
             var symbol = semanticModel.GetSymbolInfo(node.Type).Symbol as INamedTypeSymbol;
 
-            if (!IsTypePure(symbol))
+            if (symbol != null)
             {
-                impurities.Add((node, "Constructed object is not pure"));
+                if (!IsTypePure(symbol))
+                {
+                    impurities.Add((node, "Constructed object is not pure"));
+                }
             }
 
             base.VisitObjectCreationExpression(node);
