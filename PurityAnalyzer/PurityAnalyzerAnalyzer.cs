@@ -302,7 +302,11 @@ namespace PurityAnalyzer
         private readonly Func<string, bool> isIsPureAttribute;
 
         private readonly SemanticModel semanticModel;
-        private INamedTypeSymbol objectType;
+        private readonly INamedTypeSymbol objectType;
+        private readonly INamedTypeSymbol intType;
+        private readonly INamedTypeSymbol boolType;
+        private readonly INamedTypeSymbol enumerableType;
+        private readonly INamedTypeSymbol iGroupingType;
 
         public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute)
         {
@@ -311,6 +315,13 @@ namespace PurityAnalyzer
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
+            intType = semanticModel.Compilation.GetTypeByMetadataName(typeof(int).FullName);
+
+            boolType = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
+
+            enumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Enumerable).FullName);
+
+            iGroupingType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IGrouping<,>).FullName);
 
         }
 
@@ -543,21 +554,13 @@ namespace PurityAnalyzer
 
         private bool IsKnownPureMethod(IMethodSymbol method)
         {
-            var inttype = semanticModel.Compilation.GetTypeByMetadataName(typeof(int).FullName);
-
-            var booltype = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
-
-            var enumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Enumerable).FullName);
-
-            var iGroupingType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IGrouping<,>).FullName);
-
-            if (method.ContainingType.Equals(inttype))
+            if (method.ContainingType.Equals(intType))
             {
                 if (method.Name == "ToString")
                     return true;
             }
 
-            if (method.ContainingType.Equals(booltype))
+            if (method.ContainingType.Equals(boolType))
             {
                 if (method.Name == "ToString")
                     return true;
