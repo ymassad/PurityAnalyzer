@@ -279,16 +279,19 @@ public static class Module1
         }
 
 
-        /* Note about creating objects with virutal methods:
-         * Virtual here means (1) method with virtual keyword (2) method with override keyword (3) method belongs to an interface implementation
-         * If a method creates a class that has an impure virtual method, I consider the method to be impure.
-         * The reason is that the created object might be passed to a function that takes the abstract type as a parameter and invokes the virtual method.
-         * By default, I consider invoking a virtual method to be pure (e.g. invoking an interface method)
+        /* Note about creating objects with overridden methods:
+         * Overridden methods are
+         * (1) methods with the override keyword (overriding a virtual or abstract method)
+         * (2) method belongs to an interface implementation (explicit or implicit)
+         * If a method creates an instance of a class that has an impure overridden method, I consider the method to be impure.
+         * The reason is that the created object might be passed to a function that takes the abstract type as a parameter and invokes the overridden method.
+         * The original method (in the base type/interface) might be pure, but the overridden one might not be.
+         * By default, I consider invoking an abstract/interface method to be pure
          * There might be a better way to do all of this. But for now I am using these rules.
         */
 
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureNonVirtualMethodKeepsMethodPure()
+        public void CreatingAnInstanceOfAClassThatHasAnImpureNonOverriddenMethodKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -324,8 +327,9 @@ public static class Module1
 
         }
 
+
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureVirtualMethodMakesMethodImpure()
+        public void CreatingAnInstanceOfAClassThatHasAnImpureNonOverriddenVirtualMethodKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -340,7 +344,50 @@ public class PureDto
 
     static int state = 0;
 
-    public virtual int ImpureMethod() => state++;
+    public virtual void ImpureMethod() => state++;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int ImpureMethod() => 1;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    static int state = 0;
+
+    public override int ImpureMethod() => state++;
 
     public PureDto(int age) { Age = age;}
 }
@@ -363,7 +410,7 @@ public static class Module1
 
 
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureOverriddenMethodMakesMethodImpure()
+        public void CreatingAnInstanceOfAClassThatHasAnImpureAbstractOverriddenMethodMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -492,7 +539,7 @@ public static class Module1
 
 
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAPureVirtualMethodKeepsMethodPure()
+        public void CreatingAnInstanceOfAClassThatHasAPureNonOverriddenVirtualMethodKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -528,9 +575,51 @@ public static class Module1
 
         }
 
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAPureOverriddenVirtualMethodKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int PureMethod() => 1;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    static int state = 0;
+
+    public override int PureMethod() => 2;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
 
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAPureOverriddenMethodKeepsMethodPure()
+        public void CreatingAnInstanceOfAClassThatHasAPureAbstractOverriddenMethodKeepsMethodPure()
         {
             string code = @"
 using System;

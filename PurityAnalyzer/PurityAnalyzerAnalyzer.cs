@@ -386,7 +386,6 @@ namespace PurityAnalyzer
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor ||
-                        x.IsVirtual ||
                         x.IsOverride ||
                         interfaceImplementationMethods.Contains(x))
                     .All(IsMethodPure))
