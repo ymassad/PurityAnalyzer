@@ -314,7 +314,27 @@ namespace PurityAnalyzer
             if (SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
-            if (!symbol.GetMembers().OfType<IMethodSymbol>().All(IsMethodPure))
+
+            var allInterfaceMethods =
+                symbol.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>());
+
+
+            var interfaceImplementationMethods =
+                new HashSet<ISymbol>(
+                    allInterfaceMethods.Select(x => symbol.FindImplementationForInterfaceMember(x)));
+
+
+            if (!
+                symbol
+                    .GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Where(x =>
+                        x.MethodKind == MethodKind.Constructor ||
+                        x.MethodKind == MethodKind.StaticConstructor ||
+                        x.IsVirtual ||
+                        x.IsOverride ||
+                        interfaceImplementationMethods.Contains(x))
+                    .All(IsMethodPure))
                 return false;
 
             if (symbol.IsInCode())
@@ -425,6 +445,9 @@ namespace PurityAnalyzer
             {
                 if (method.IsInCode())
                 {
+                    if (method.IsImplicitlyDeclared)
+                        return true;
+
                     var localtion = method.Locations.First();
 
                     var methodNode = localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
