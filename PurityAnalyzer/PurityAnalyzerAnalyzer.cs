@@ -434,15 +434,15 @@ namespace PurityAnalyzer
 
             while (!baseType.Equals(objectType))
             {
-                if (!baseType.IsInCode())
-                    break;
-                
-                if (AnyImpureFieldInitializer(baseType))
-                    return false;
+                if (baseType.IsInCode())
+                {
+                    if (AnyImpureFieldInitializer(baseType))
+                        return false;
 
-                if (AnyImpurePropertyInitializer(baseType))
-                    return false;
-                
+                    if (AnyImpurePropertyInitializer(baseType))
+                        return false;
+                }
+
                 baseType = baseType.BaseType;
             }
 
