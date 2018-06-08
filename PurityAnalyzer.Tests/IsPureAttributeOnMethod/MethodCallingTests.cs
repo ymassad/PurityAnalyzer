@@ -7,7 +7,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
     public class MethodCallingTests
     {
         [Test]
-        public void MethodThatCallsAPreMethodIsPure()
+        public void MethodThatCallsAPureMethodIsPure()
         {
             string code = @"
 using System;
