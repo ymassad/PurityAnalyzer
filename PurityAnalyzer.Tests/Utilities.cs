@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -73,7 +74,17 @@ namespace PurityAnalyzer.Tests
                 return x.Descriptor.Id == "ReadPurityAnalyzer" || x.Descriptor.Id == "WritePurityAnalyzer";
             }
 
-            return results.Where(IsFromPurityAnalyzer).ToArray();
+            var diagnostics = results.Where(IsFromPurityAnalyzer).ToArray();
+
+            if (diagnostics.Any())
+            {
+                foreach (var diag in diagnostics)
+                {
+                    Console.WriteLine(diag);
+                }
+            }
+
+            return diagnostics;
         }
 
         private static Solution AddNewSourceFile(

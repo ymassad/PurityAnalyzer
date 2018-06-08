@@ -25,12 +25,12 @@ namespace PurityAnalyzer
         private static DiagnosticDescriptor ImpurityRule =
             new DiagnosticDescriptor(
                 ReadDiagnosticId,
-                "Impure read operation",
-                "Impure read operation",
+                "Impurity error",
+                "{0}",
                 Category,
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                description: "Impure read descruption");
+                description: "Impurity error");
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule);
 
@@ -129,7 +129,8 @@ namespace PurityAnalyzer
             {
                 var diagnostic = Diagnostic.Create(
                     ImpurityRule,
-                    impurity.node.GetLocation());
+                    impurity.node.GetLocation(),
+                    impurity.message);
 
                 context.ReportDiagnostic(diagnostic);
             }
@@ -393,10 +394,10 @@ namespace PurityAnalyzer
                 {
                     GetUsage(node).Match(
                         readFromCaseCase: _ => { },
-                        writtenToCaseCase: _ => impurities.Add((node, "error")),
+                        writtenToCaseCase: _ => impurities.Add((node, "Writing to an array")),
                         readFromAndWrittenToCaseCase: _ =>
                         {
-                            impurities.Add((node, "error"));
+                            impurities.Add((node, "Writing to an array"));
                         });
                 }
             }
