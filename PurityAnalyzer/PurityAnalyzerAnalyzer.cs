@@ -36,7 +36,7 @@ namespace PurityAnalyzer
 
         public override void Initialize(AnalysisContext context)
         {
-
+            context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.ConstructorDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.MethodDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeClassSyntaxNode, SyntaxKind.ClassDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzePropertySyntaxNode, SyntaxKind.PropertyDeclaration);
@@ -44,7 +44,7 @@ namespace PurityAnalyzer
 
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
         {
-            var methodDeclaration = (MethodDeclarationSyntax) context.Node;
+            var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
             if (methodDeclaration.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
@@ -52,7 +52,6 @@ namespace PurityAnalyzer
                 ProcessImpuritiesForMethod(context, methodDeclaration);
             }
         }
-
 
 
         private void AnalyzeClassSyntaxNode(SyntaxNodeAnalysisContext context)
@@ -123,7 +122,18 @@ namespace PurityAnalyzer
             SyntaxNodeAnalysisContext context,
             SyntaxNode methodLikeNode)
         {
-            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel);
+            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel).ToList();
+
+            if (methodLikeNode is ConstructorDeclarationSyntax constructor)
+            {
+                var containingType = constructor.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+
+                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, constructor.IsStatic()))
+                    impurities.Add((methodLikeNode, "There are impure field initializers"));
+
+                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, constructor.IsStatic()))
+                    impurities.Add((methodLikeNode, "There are impure property initializers"));
+            }
 
             foreach (var impurity in impurities)
             {
@@ -152,6 +162,38 @@ namespace PurityAnalyzer
             vis.Visit(methodDeclaration);
 
             return vis.impurities.ToArray();
+        }
+
+        public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration, SemanticModel semanticModel, bool onlyStaticFields = false)
+        {
+            var props = typeDeclaration
+                .Members
+                .OfType<PropertyDeclarationSyntax>()
+                .Where(x => !onlyStaticFields || x.IsStatic())
+                .ToArray();
+
+            foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
+            {
+                if (Utils.GetImpurities(var, semanticModel).Any()) return true;
+            }
+
+            return false;
+        }
+
+        public static bool AnyImpureFieldInitializer(TypeDeclarationSyntax typeDeclaration, SemanticModel semanticModel, bool onlyStaticFields = false)
+        {
+            var fields =
+                typeDeclaration.Members
+                    .OfType<FieldDeclarationSyntax>()
+                    .Where(x => !onlyStaticFields || x.IsStatic())
+                    .ToArray();
+
+            foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
+            {
+                if (Utils.GetImpurities(var, semanticModel).Any()) return true;
+            }
+
+            return false;
         }
     }
 
@@ -198,6 +240,21 @@ namespace PurityAnalyzer
         public static bool IsInCode(this ISymbol symbol)
         {
             return symbol.Locations.All(x => x.IsInSource);
+        }
+
+        public static bool IsStatic(this BaseMethodDeclarationSyntax method)
+        {
+            return method.Modifiers.Any(SyntaxKind.StaticKeyword);
+        }
+
+        public static bool IsStatic(this PropertyDeclarationSyntax prop)
+        {
+            return prop.Modifiers.Any(SyntaxKind.StaticKeyword);
+        }
+
+        public static bool IsStatic(this FieldDeclarationSyntax field)
+        {
+            return field.Modifiers.Any(SyntaxKind.StaticKeyword);
         }
     }
 
@@ -314,7 +371,6 @@ namespace PurityAnalyzer
             if (SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
-
             var allInterfaceMethods =
                 symbol.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>());
 
@@ -322,7 +378,6 @@ namespace PurityAnalyzer
             var interfaceImplementationMethods =
                 new HashSet<ISymbol>(
                     allInterfaceMethods.Select(x => symbol.FindImplementationForInterfaceMember(x)));
-
 
             if (!
                 symbol
@@ -339,28 +394,31 @@ namespace PurityAnalyzer
 
             if (symbol.IsInCode())
             {
-                var fields = symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
-                    .OfType<TypeDeclarationSyntax>().SelectMany(x => x.Members).OfType<FieldDeclarationSyntax>()
-                    .ToArray();
+                if (AnyImpureFieldInitializer(symbol))
+                    return false;
 
-                foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
-                {
-                    if (Utils.GetImpurities(var, semanticModel).Any())
-                        return false;
-                }
-
-                var proeprties = symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
-                    .OfType<TypeDeclarationSyntax>().SelectMany(x => x.Members).OfType<PropertyDeclarationSyntax>()
-                    .ToArray();
-
-                foreach (var var in proeprties.Select(x => x.Initializer).Where(i => i != null))
-                {
-                    if (Utils.GetImpurities(var, semanticModel).Any())
-                        return false;
-                }
+                if (AnyImpurePropertyInitializer(symbol))
+                    return false;
             }
 
             return true;
+        }
+
+        private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol)
+        {
+            return
+                symbol.Locations
+                    .Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
+                    .OfType<TypeDeclarationSyntax>()
+                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel));
+        }
+
+        private bool AnyImpureFieldInitializer(INamedTypeSymbol symbol)
+        {
+            return
+                symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
+                .OfType<TypeDeclarationSyntax>()
+                .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel));
         }
 
         public override void VisitIdentifierName(IdentifierNameSyntax node)
