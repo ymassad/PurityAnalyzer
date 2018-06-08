@@ -302,11 +302,16 @@ namespace PurityAnalyzer
         private readonly Func<string, bool> isIsPureAttribute;
 
         private readonly SemanticModel semanticModel;
+        private INamedTypeSymbol objectType;
 
         public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute)
         {
             this.semanticModel = semanticModel;
             this.isIsPureAttribute = isIsPureAttribute;
+
+            objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
+
+
         }
 
 
@@ -366,6 +371,22 @@ namespace PurityAnalyzer
             base.VisitObjectCreationExpression(node);
         }
 
+        
+
+        private IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
+        {
+            
+            if (symbol.Equals(objectType))
+                return new IMethodSymbol[0];
+
+            return
+                symbol
+                    .GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Concat(GetAllMethods(symbol.BaseType))
+                    .ToArray();
+        }
+
         private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
         {
             if (SymbolHasAssumeIsPureAttribute(symbol))
@@ -378,11 +399,9 @@ namespace PurityAnalyzer
             var interfaceImplementationMethods =
                 new HashSet<ISymbol>(
                     allInterfaceMethods.Select(x => symbol.FindImplementationForInterfaceMember(x)));
-
+            
             if (!
-                symbol
-                    .GetMembers()
-                    .OfType<IMethodSymbol>()
+                GetAllMethods(symbol)
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor ||

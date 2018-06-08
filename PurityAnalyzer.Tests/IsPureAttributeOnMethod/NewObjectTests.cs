@@ -407,8 +407,7 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
-
-
+        
         [Test]
         public void CreatingAnInstanceOfAClassThatHasAnImpureAbstractOverriddenMethodMakesMethodImpure()
         {
@@ -780,6 +779,93 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnVirtualOverriddenMethodWhichHasPureBodyButInvokesImpureBaseMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+
+    public virtual int ImpureMethod() => state++;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    public override int ImpureMethod() => base.ImpureMethod() + 1;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnImpureOverriddenMethodDefinedInBaseClassMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public abstract class Base0
+{
+    public abstract int ImpureMethod();
+}
+
+public class Base : Base0
+{
+    static int state = 0;
+
+    public override int ImpureMethod() => state++;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
 
         }
 
