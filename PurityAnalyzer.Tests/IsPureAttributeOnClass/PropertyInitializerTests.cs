@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using NUnit.Framework;
 
-namespace PurityAnalyzer.Tests
+namespace PurityAnalyzer.Tests.IsPureAttributeOnClass
 {
     [TestFixture]
-    public class FieldInitializerTests
+    public class PropertyInitializerTests
     {
         [Test]
-        public void PureFieldInitializerKeepsClassPure()
+        public void PurePropertyInitializerKeepsClassPure()
         {
             string code = @"
 using System;
@@ -24,7 +19,7 @@ public class IsPureAttribute : Attribute
 [IsPure]
 public class Class1
 {
-    readonly int field = AnotherClass.PureMethod();
+    int property {get;} = AnotherClass.PureMethod();
 }
 
 public static class AnotherClass
@@ -39,7 +34,7 @@ public static class AnotherClass
         }
 
         [Test]
-        public void ImpureFieldInitializerMakesClassImpure()
+        public void ImpurePropertyInitializerMakesClassImpure()
         {
             string code = @"
 using System;
@@ -51,7 +46,7 @@ public class IsPureAttribute : Attribute
 [IsPure]
 public class Class1
 {
-    readonly int field = AnotherClass.ImpureMethod();
+    int property {get;} = AnotherClass.ImpureMethod();
 }
 
 public static class AnotherClass
@@ -68,7 +63,7 @@ public static class AnotherClass
         }
 
         [Test]
-        public void PureStaticFieldInitializerKeepsClassPure()
+        public void PureStaticPropertyInitializerKeepsClassPure()
         {
             string code = @"
 using System;
@@ -80,7 +75,7 @@ public class IsPureAttribute : Attribute
 [IsPure]
 public class Class1
 {
-    readonly static int field = AnotherClass.PureMethod();
+    static int property {get;} = AnotherClass.PureMethod();
 }
 
 public static class AnotherClass
@@ -95,7 +90,7 @@ public static class AnotherClass
         }
 
         [Test]
-        public void ImpureStaticFieldInitializerMakesClassImpure()
+        public void ImpureStaticPropertyInitializerMakesClassImpure()
         {
             string code = @"
 using System;
@@ -107,7 +102,7 @@ public class IsPureAttribute : Attribute
 [IsPure]
 public class Class1
 {
-    static readonly int field = AnotherClass.ImpureMethod();
+    static int property {get;} = AnotherClass.ImpureMethod();
 }
 
 public static class AnotherClass

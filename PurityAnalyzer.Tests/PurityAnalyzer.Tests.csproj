@@ -156,25 +156,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompiledFieldsOnInputParameterTests.cs" />
-    <Compile Include="ArrayTests.cs" />
-    <Compile Include="CompiledMethodCallingTests.cs" />
-    <Compile Include="AssumeIsPureAttributeTests.cs" />
-    <Compile Include="ExpressionBodiesMethodsTests.cs" />
-    <Compile Include="PropertyInitializerTests.cs" />
-    <Compile Include="FieldInitializerTests.cs" />
-    <Compile Include="InterfaceTakingHigherOrderFunctionsTests.cs" />
-    <Compile Include="HigherOrderFunctionsTests.cs" />
-    <Compile Include="DotNetMethodCallingTests.cs" />
-    <Compile Include="IsPureAttributeOnPropertyTests.cs" />
-    <Compile Include="IsPureAttributeOnClassTests.cs" />
-    <Compile Include="MethodCallingTests.cs" />
-    <Compile Include="FieldsOnInputParameterTests.cs" />
-    <Compile Include="CompiledPropertiesOnInputParameterTests.cs" />
-    <Compile Include="NewObjectTests.cs" />
-    <Compile Include="PropertiesOnInputParameterTests.cs" />
-    <Compile Include="StaticFieldTests.cs" />
-    <Compile Include="ConstFieldTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CompiledFieldsOnInputParameterTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\ArrayTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CompiledMethodCallingTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\AssumeIsPureAttributeTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\ExpressionBodiesMethodsTests.cs" />
+    <Compile Include="IsPureAttributeOnClass\PropertyInitializerTests.cs" />
+    <Compile Include="IsPureAttributeOnClass\FieldInitializerTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\InterfaceTakingHigherOrderFunctionsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\HigherOrderFunctionsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\DotNetMethodCallingTests.cs" />
+    <Compile Include="IsPureAttributeOnProperty\IsPureAttributeOnPropertyTests.cs" />
+    <Compile Include="IsPureAttributeOnClass\IsPureAttributeOnClassTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\MethodCallingTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\FieldsOnInputParameterTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CompiledPropertiesOnInputParameterTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\NewObjectTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\PropertiesOnInputParameterTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\StaticFieldTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\ConstFieldTests.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

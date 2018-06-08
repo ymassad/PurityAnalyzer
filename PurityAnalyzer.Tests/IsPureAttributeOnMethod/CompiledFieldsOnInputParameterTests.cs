@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using NUnit.Framework;
 
-namespace PurityAnalyzer.Tests
+namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
 {
     [TestFixture]
-    public class CompiledMethodCallingTests
+    public class CompiledFieldsOnInputParameterTests
     {
         [Test]
-        public void MethodThatCallsACompiledMethodWithTheIsPureAttributeIsPure()
+        public void MethodThatReadsAReadOnlyFieldOnParameterWhoseTypeIsCompiledIsPure()
         {
             string code = @"
 using System;
 using PurityAnalyzer.Tests.CompiledCsharpLib;
-
 
 public class IsPureAttribute : Attribute
 {
@@ -26,19 +20,20 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething()
+    public static string DoSomething(ImmutableDto1 input)
     {
-        return StaticClass.PureMethod();
+        return input.Field1.ToString();
     }
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+
             dignostics.Length.Should().Be(0);
-
         }
 
+
         [Test]
-        public void MethodThatCallsAnCompiledMethodThatDoesNotHaveTheIsPureAttributeIsImpure()
+        public void MethodThatReadsAReadWriteFieldOnParameterWhoseTypeIsCompiledIsImpure()
         {
             string code = @"
 using System;
@@ -51,20 +46,19 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething()
+    public static string DoSomething(MutableDto1 input)
     {
-        return StaticClass.ImpureMethod();
+        return input.Field1.ToString();
     }
-
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+
             dignostics.Length.Should().BePositive();
-
         }
 
         [Test]
-        public void MethodThatCallsALocalFunctionThatCallsACompiledMethodWithTheIsPureAttributeIsPure()
+        public void MethodThatWritesAReadWriteFieldOnParameterWhoseTypeIsCompiledIsImpure()
         {
             string code = @"
 using System;
@@ -77,54 +71,42 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething()
+    public static string DoSomething(MutableDto1 input)
     {
-        string DoSomethingElsePure()
-        {   
-            return StaticClass.PureMethod();
-        }
-
-        return DoSomethingElsePure();
+        input.Field1 = 1;
+        return """";
     }
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
 
-        }
-
-        [Test]
-        public void MethodThatCallsALocalFunctionThatClassACompiledMethodThatDoesNotHaveTheIsPureAttributeIsImpure()
-        {
-            string code = @"
-using System;
-using PurityAnalyzer.Tests.CompiledCsharpLib;
-
-public class IsPureAttribute : Attribute
-{
-}
-
-public static class Module1
-{
-    private static int state;
-
-    [IsPure]
-    public static string DoSomething()
-    {
-        string DoSomethingElseImpure()
-        {   
-            return StaticClass.ImpureMethod();
-        }
-
-        return DoSomethingElseImpure();
-    }
-}";
-
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
             dignostics.Length.Should().BePositive();
-
         }
 
+        [Test]
+        public void MethodThatReadsAndWritesAReadWriteFieldOnParameterWhoseTypeIsCompiledIsImpure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
 
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(MutableDto1 input)
+    {
+        input.Field1 = input.Field1 + 1;
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+
+            dignostics.Length.Should().BePositive();
+        }
     }
 }
