@@ -430,6 +430,22 @@ namespace PurityAnalyzer
                     return false;
             }
 
+            var baseType = symbol.BaseType;
+
+            while (!baseType.Equals(objectType))
+            {
+                if (!baseType.IsInCode())
+                    break;
+                
+                if (AnyImpureFieldInitializer(baseType))
+                    return false;
+
+                if (AnyImpurePropertyInitializer(baseType))
+                    return false;
+                
+                baseType = baseType.BaseType;
+            }
+
             return true;
         }
 
