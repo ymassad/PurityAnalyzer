@@ -107,7 +107,6 @@ public class IsPureAttribute : Attribute
 public class Class1
 {
     int a;
-
     
     public int Prop1
     {

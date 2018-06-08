@@ -109,6 +109,14 @@ namespace PurityAnalyzer
             {
                 ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody);
             }
+
+            if (propertyDeclarationSyntax.Initializer != null)
+            {
+                var initializedTo = propertyDeclarationSyntax.Initializer.Value;
+
+                ProcessImpuritiesForMethod(context, initializedTo);
+            }
+
         }
 
         private static void ProcessImpuritiesForMethod(
@@ -319,8 +327,17 @@ namespace PurityAnalyzer
                     if (Utils.GetImpurities(var, semanticModel).Any())
                         return false;
                 }
-            }
 
+                var proeprties = symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
+                    .OfType<TypeDeclarationSyntax>().SelectMany(x => x.Members).OfType<PropertyDeclarationSyntax>()
+                    .ToArray();
+
+                foreach (var var in proeprties.Select(x => x.Initializer).Where(i => i != null))
+                {
+                    if (Utils.GetImpurities(var, semanticModel).Any())
+                        return false;
+                }
+            }
 
             return true;
         }

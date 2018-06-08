@@ -161,6 +161,7 @@
     <Compile Include="CompiledMethodCallingTests.cs" />
     <Compile Include="AssumeIsPureAttributeTests.cs" />
     <Compile Include="ExpressionBodiesMethodsTests.cs" />
+    <Compile Include="PropertyInitializerTests.cs" />
     <Compile Include="FieldInitializerTests.cs" />
     <Compile Include="InterfaceTakingHigherOrderFunctionsTests.cs" />
     <Compile Include="HigherOrderFunctionsTests.cs" />
