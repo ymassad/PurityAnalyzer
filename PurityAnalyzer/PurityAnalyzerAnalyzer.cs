@@ -294,6 +294,19 @@ namespace PurityAnalyzer
         public static IdentifierUsage ReadFromAndWrittenTo() => new ReadFromAndWrittenToCase();
     }
 
+    public static class IdentifierUsageExtensionMethods
+    {
+        public static bool IsRead(this IdentifierUsage usage)
+        {
+            return usage.Match(readFromCaseCase: _ => true, writtenToCaseCase: _ => false, readFromAndWrittenToCaseCase: _ => true);
+        }
+
+        public static bool IsWrite(this IdentifierUsage usage)
+        {
+            return usage.Match(readFromCaseCase: _ => false, writtenToCaseCase: _ => true, readFromAndWrittenToCaseCase: _ => true);
+        }
+    }
+
     public class Visitor : CSharpSyntaxWalker
     {
 
@@ -328,7 +341,7 @@ namespace PurityAnalyzer
 
 
 
-        private IdentifierUsage GetUsage(IdentifierNameSyntax identifier)
+        private IdentifierUsage GetUsage(SyntaxNode identifier)
         {
             if (identifier.Parent is MemberAccessExpressionSyntax memberAccess)
             {
@@ -534,6 +547,30 @@ namespace PurityAnalyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)
+        {
+            var symbol = semanticModel.GetSymbolInfo(node).Symbol;
+
+            if (symbol is IPropertySymbol propertySymbol)
+            {
+                var usage = GetUsage(node.Expression);
+
+                if (usage.IsRead())
+                {
+                    if(!IsMethodPure(propertySymbol.GetMethod))
+                        impurities.Add((node, "Impure get"));
+                }
+
+                if (usage.IsWrite())
+                {
+                    if (!IsMethodPure(propertySymbol.SetMethod))
+                        impurities.Add((node, "Impure set"));
+                }
+            }
+            
+            base.VisitElementAccessExpression(node);
         }
 
         private bool IsMethodPure(IMethodSymbol method)

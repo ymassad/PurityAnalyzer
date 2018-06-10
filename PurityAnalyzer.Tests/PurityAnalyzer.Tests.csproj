@@ -163,6 +163,7 @@
     <Compile Include="IsPureAttributeOnMethod\ExpressionBodiesMethodsTests.cs" />
     <Compile Include="IsPureAttributeOnClass\PropertyInitializerTests.cs" />
     <Compile Include="IsPureAttributeOnClass\FieldInitializerTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\IndexersTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InterfaceTakingHigherOrderFunctionsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\HigherOrderFunctionsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DotNetMethodCallingTests.cs" />
