@@ -524,20 +524,6 @@ namespace PurityAnalyzer
                 }
             }
 
-            if (symbol.Symbol is IParameterSymbol parameter)
-            {
-                if (parameter.Type.TypeKind == TypeKind.Array)
-                {
-                    GetUsage(node).Match(
-                        readFromCaseCase: _ => { },
-                        writtenToCaseCase: _ => impurities.Add((node, "Writing to an array")),
-                        readFromAndWrittenToCaseCase: _ =>
-                        {
-                            impurities.Add((node, "Writing to an array"));
-                        });
-                }
-            }
-
             if (symbol.Symbol is IMethodSymbol method)
             {
                 if (!IsMethodPure(method))
@@ -551,24 +537,48 @@ namespace PurityAnalyzer
 
         public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)
         {
-            var symbol = semanticModel.GetSymbolInfo(node).Symbol;
 
-            if (symbol is IPropertySymbol propertySymbol)
+            var type = semanticModel.GetTypeInfo(node.Expression).Type;
+
+            if (type?.TypeKind == TypeKind.Array)
             {
                 var usage = GetUsage(node.Expression);
 
-                if (usage.IsRead())
-                {
-                    if(!IsMethodPure(propertySymbol.GetMethod))
-                        impurities.Add((node, "Impure get"));
-                }
-
                 if (usage.IsWrite())
                 {
-                    if (!IsMethodPure(propertySymbol.SetMethod))
-                        impurities.Add((node, "Impure set"));
+                    impurities.Add((node, "Impure array set"));
+                }
+
+                if (usage.IsRead())
+                {
+                    if (semanticModel.GetSymbolInfo(node.Expression).Symbol is IFieldSymbol field && field.IsStatic)
+                    {
+                        impurities.Add((node, "Impure array read"));
+                    }
                 }
             }
+            else
+            {
+                var symbol = semanticModel.GetSymbolInfo(node).Symbol;
+
+                if (symbol is IPropertySymbol propertySymbol)
+                {
+                    var usage = GetUsage(node.Expression);
+
+                    if (usage.IsRead())
+                    {
+                        if (!IsMethodPure(propertySymbol.GetMethod))
+                            impurities.Add((node, "Impure get"));
+                    }
+
+                    if (usage.IsWrite())
+                    {
+                        if (!IsMethodPure(propertySymbol.SetMethod))
+                            impurities.Add((node, "Impure set"));
+                    }
+                }
+            }
+
             
             base.VisitElementAccessExpression(node);
         }
