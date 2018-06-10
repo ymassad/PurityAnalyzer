@@ -32,8 +32,9 @@ public static class Module1
         }
 
 
+        //Reading from mutable input is considered pure
         [Test]
-        public void MethodThatReadsAReadWriteFieldOnParameterWhoseTypeIsCompiledIsImpure()
+        public void MethodThatReadsAReadWriteFieldOnParameterWhoseTypeIsCompiledIsPure()
         {
             string code = @"
 using System;
@@ -54,7 +55,7 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
 
-            dignostics.Length.Should().BePositive();
+            dignostics.Length.Should().Be(0);
         }
 
         [Test]

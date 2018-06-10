@@ -479,6 +479,19 @@ namespace PurityAnalyzer
                 .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel));
         }
 
+        private bool IsParameterBasedAccess(MemberAccessExpressionSyntax node)
+        {
+            var accessedSymbol = semanticModel.GetSymbolInfo(node.Expression).Symbol;
+
+            if (accessedSymbol is IParameterSymbol)
+                return true;
+
+            if (node.Expression is MemberAccessExpressionSyntax parentExpression)
+                return IsParameterBasedAccess(parentExpression);
+
+            return false;
+        }
+
         public override void VisitIdentifierName(IdentifierNameSyntax node)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
@@ -489,7 +502,21 @@ namespace PurityAnalyzer
                 {
                     if (!(field.IsReadOnly || field.IsConst))
                     {
-                        impurities.Add((node, "Non const/readonly field is accessed"));
+
+                        var usage = GetUsage(node);
+
+                        if (usage.IsWrite())
+                        {
+                            impurities.Add((node, "Write access to field"));
+                        }
+                        else
+                        {
+                            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess) || !IsParameterBasedAccess(memberAccess))
+                            {
+                                impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                            }
+                        }
+
                     }
                 }
             }

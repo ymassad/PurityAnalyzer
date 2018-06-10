@@ -57,7 +57,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReadsAnAutomaticReadOnlyPropertyWhoseClassThatHasTheIsPureAttributeOnParameterWhoseTypeIsCompiledIsPure()
+        public void MethodThatReadsAnAutomaticReadOnlyPropertyWhoseClassHasTheIsPureAttributeOnParameterWhoseTypeIsCompiledIsPure()
         {
             string code = @"
 using System;

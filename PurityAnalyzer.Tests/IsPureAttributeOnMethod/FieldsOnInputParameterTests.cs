@@ -36,8 +36,9 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        //Even if input is mutable, reading such mutable input is a pure operation
         [Test]
-        public void MethodThatReadsAReadWriteFieldOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        public void MethodThatReadsAReadWriteFieldOnParameterWhoseTypeIsDefinedInCodeIsPure()
         {
             string code = @"
 using System;
@@ -63,7 +64,7 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
 
-            dignostics.Length.Should().BePositive();
+            dignostics.Length.Should().Be(0);
         }
 
         [Test]
