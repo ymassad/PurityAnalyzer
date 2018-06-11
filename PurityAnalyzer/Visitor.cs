@@ -16,8 +16,8 @@ namespace PurityAnalyzer
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private readonly INamedTypeSymbol enumerableType;
-        private readonly INamedTypeSymbol iGroupingType;
+        private Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
+        private HashSet<INamedTypeSymbol> knownPureTypes;
 
         public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute)
         {
@@ -26,9 +26,9 @@ namespace PurityAnalyzer
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
-            enumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Enumerable).FullName);
+            knownPureMethods = GetKnownPureMethods();
 
-            iGroupingType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IGrouping<,>).FullName);
+            knownPureTypes = GetKnownPureTypes();
         }
 
         private IdentifierUsage GetUsage(SyntaxNode identifier)
@@ -386,20 +386,31 @@ namespace PurityAnalyzer
 
         public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureMethods()
         {
-            Dictionary<string, string[]> pureMethods = new Dictionary<string, string[]>()
+            Dictionary<Type, string[]> pureMethods = new Dictionary<Type, string[]>()
             {
-                ["System.Int32"] = new []{ "ToString" },
-                ["System.Boolean"] = new[] { "ToString" },
-                ["System.Double"] = new[] { "ToString" },
-                ["System.Single"] = new[] { "ToString" },
-                ["System.Decimal"] = new[] { "ToString" },
-                ["System.String"] = new[] { "ToString" }
+                [typeof(int)] = new []{ "ToString" },
+                [typeof(bool)] = new[] { "ToString" },
+                [typeof(double)] = new[] { "ToString" },
+                [typeof(float)] = new[] { "ToString" },
+                [typeof(decimal)] = new[] { "ToString" },
+                [typeof(string)] = new[] { "ToString" }
             };
 
             return pureMethods
-                .ToDictionary(x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                .ToDictionary(x => semanticModel.Compilation.GetTypeByMetadataName(x.Key.FullName),
                     x => new HashSet<string>(x.Value));
 
+        }
+
+        public HashSet<INamedTypeSymbol> GetKnownPureTypes()
+        {
+            var pureTypes = new []
+            {
+                typeof(Enumerable),
+                typeof(IGrouping<,>)
+            };
+
+            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x.FullName)));
         }
 
         private bool IsKnownPureMethod(IMethodSymbol method)
@@ -407,23 +418,22 @@ namespace PurityAnalyzer
             if (method.ContainingType.TypeKind == TypeKind.Delegate)
                 return true;
 
-            if (GetKnownPureMethods().TryGetValue(method.ContainingType, out var methods) &&
+            if (method.ContainingType.IsGenericType)
+            {
+                if (knownPureTypes.Contains(method.ContainingType.ConstructedFrom))
+                    return true;
+            }
+            else
+            {
+                if (knownPureTypes.Contains(method.ContainingType))
+                    return true;
+            }
+
+            if (knownPureMethods.TryGetValue(method.ContainingType, out var methods) &&
                 methods.Contains(method.Name))
             {
                 return true;
             }
-
-            if (method.ContainingType.Equals(enumerableType))
-            {
-                return true;
-            }
-
-            if (method.ContainingType.IsGenericType &&
-                method.ContainingType.ConstructedFrom.Equals(iGroupingType))
-            {
-                return true;
-            }
-
 
             return false;
         }
