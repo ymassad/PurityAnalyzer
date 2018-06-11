@@ -118,6 +118,61 @@ public class Class1
         }
 
         [Test]
+        public void IsPureOnClassRequiresStaticConstructorToBePure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+[IsPure]
+public class Class1
+{
+    static Class1() => AnotherClass.state = 1;
+}
+
+public static class AnotherClass
+{
+    public static int state;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void IsPureOnClassRequiresInstanceConstructorToBePure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+[IsPure]
+public class Class1
+{
+    public Class1() => AnotherClass.state = 1;
+}
+
+public static class AnotherClass
+{
+    public static int state;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
         public void CaseWhereMembersArePure()
         {
             string code = @"

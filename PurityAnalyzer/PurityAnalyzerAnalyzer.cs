@@ -61,7 +61,11 @@ namespace PurityAnalyzer
             if (classDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
             {
-                foreach (var methodDeclaration in classDeclarationSyntax.Members.OfType<MethodDeclarationSyntax>())
+                foreach (var methodDeclaration in
+                    classDeclarationSyntax.Members
+                        .OfType<MethodDeclarationSyntax>()
+                        .Cast<MemberDeclarationSyntax>()
+                        .Concat(classDeclarationSyntax.Members.OfType<ConstructorDeclarationSyntax>()))
                 {
                     ProcessImpuritiesForMethod(context, methodDeclaration);
                 }
