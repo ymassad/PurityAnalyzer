@@ -237,6 +237,8 @@ namespace PurityAnalyzer
             throw new Exception("Invalid IdentifierUsage type");
         }
 
+        public static bool IsCompiled(this ISymbol symbol) => !symbol.IsInCode();
+
         public static bool IsInCode(this ISymbol symbol)
         {
             return symbol.Locations.All(x => x.IsInSource);
@@ -492,6 +494,11 @@ namespace PurityAnalyzer
             return false;
         }
 
+        private bool IsParameterBasedAccess(IdentifierNameSyntax node)
+        {
+            return node.Parent is MemberAccessExpressionSyntax memberAccess && IsParameterBasedAccess(memberAccess);
+        }
+
         public override void VisitIdentifierName(IdentifierNameSyntax node)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
@@ -502,7 +509,6 @@ namespace PurityAnalyzer
                 {
                     if (!(field.IsReadOnly || field.IsConst))
                     {
-
                         var usage = GetUsage(node);
 
                         if (usage.IsWrite())
@@ -511,7 +517,7 @@ namespace PurityAnalyzer
                         }
                         else
                         {
-                            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess) || !IsParameterBasedAccess(memberAccess))
+                            if (!IsParameterBasedAccess(node))
                             {
                                 impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
                             }
@@ -525,7 +531,7 @@ namespace PurityAnalyzer
             {
                 if (!SymbolHasIsPureAttribute(property) && !SymbolHasIsPureAttribute(property.ContainingSymbol))
                 {
-                    if (!property.IsInCode())
+                    if (property.IsCompiled())
                     {
                         if (!property.IsReadOnly || !IsKnownPureMethod(property.GetMethod))
                         {
@@ -534,18 +540,27 @@ namespace PurityAnalyzer
                     }
                     else if (!property.IsReadOnly)
                     {
+                        var usage = GetUsage(node);
 
-                        impurities.Add((node, "Non read only property access"));
+                        if (usage.IsWrite())
+                        {
+                            impurities.Add((node, "Write property access"));
+                        }
+                        else
+                        {
+                            if (!IsParameterBasedAccess(node))
+                            {
+                                impurities.Add((node, "Non input based property read"));
+                            }
+                            else if(IsImpure(GetPropertyGetter(property)))
+                            {
+                                impurities.Add((node, "Impure property getter"));
+                            }
+                        }
                     }
                     else
                     {
-                        var localtion = property.GetMethod.Locations.First();
-
-                        var getNode = localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
-
-                        var imp = Utils.GetImpurities(getNode, semanticModel);
-
-                        if(imp.Any())
+                        if (IsImpure(GetPropertyGetter(property)))
                             impurities.Add((node, "Property getter is impure"));
                     }
                 }
@@ -560,6 +575,20 @@ namespace PurityAnalyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        private bool IsImpure(SyntaxNode methodLike)
+        {
+            var imp = Utils.GetImpurities(methodLike, semanticModel);
+
+            return imp.Any();
+        }
+
+        private SyntaxNode GetPropertyGetter(IPropertySymbol propertySymbol)
+        {
+            var localtion = propertySymbol.GetMethod.Locations.First();
+
+            return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
         }
 
         public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)

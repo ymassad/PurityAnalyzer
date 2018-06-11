@@ -113,8 +113,9 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        //Reading mutable input should be considered pure
         [Test]
-        public void MethodThatReadsAnAutomaticReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        public void MethodThatReadsAnAutomaticReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
         {
             string code = @"
 using System;
@@ -133,7 +134,85 @@ public static class Module1
     [IsPure]
     public static string DoSomething(Dto1 input)
     {
-        
+        return input.Prop1.ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
+        public void MethodThatReadsANonPureReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+    public int Prop1
+    {
+        get
+        {
+            state++;
+            return state;
+        }
+        set
+        {
+            state = value;
+        }
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        return input.Prop1.ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReadsANonPureReadOnlyPropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+    public int Prop1
+    {
+        get
+        {
+            state++;
+            return state;
+        }
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
         return input.Prop1.ToString();
     }
 }";
