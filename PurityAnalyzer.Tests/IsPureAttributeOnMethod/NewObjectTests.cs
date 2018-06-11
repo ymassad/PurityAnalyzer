@@ -252,14 +252,17 @@ public class PureDto
 {
     public int Age {get;}
 
-    static int state = 0;
-
     static PureDto()
     {
-        state++;
+        AnotherClass.state++;
     }
 
     public PureDto(int age) { Age = age;}
+}
+
+public static class AnotherClass
+{
+    public static int state = 0;
 }
 
 public static class Module1

@@ -513,20 +513,42 @@ namespace PurityAnalyzer
                 {
                     if (!(field.IsReadOnly || field.IsConst))
                     {
-                        var usage = GetUsage(node);
+                        var constructorWhereIdentifierIsUsed =
+                            node.Ancestors()
+                                .OfType<ConstructorDeclarationSyntax>()
+                                .FirstOrDefault();
 
-                        if (usage.IsWrite())
+                        bool accessingFieldFromMatchingConstructor = false;
+
+
+                        if (constructorWhereIdentifierIsUsed != null)
                         {
-                            impurities.Add((node, "Write access to field"));
-                        }
-                        else
-                        {
-                            if (!IsParameterBasedAccess(node))
+                            var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
+
+                            var currentType = constructorSymbol.ContainingType;
+
+                            if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
                             {
-                                impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                accessingFieldFromMatchingConstructor = true;
                             }
                         }
 
+                        if (!accessingFieldFromMatchingConstructor)
+                        {
+                            var usage = GetUsage(node);
+
+                            if (usage.IsWrite())
+                            {
+                                impurities.Add((node, "Write access to field"));
+                            }
+                            else
+                            {
+                                if (!IsParameterBasedAccess(node))
+                                {
+                                    impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                }
+                            }
+                        }
                     }
                 }
             }
