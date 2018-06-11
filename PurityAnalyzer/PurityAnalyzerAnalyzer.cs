@@ -322,8 +322,6 @@ namespace PurityAnalyzer
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private readonly INamedTypeSymbol intType;
-        private readonly INamedTypeSymbol boolType;
         private readonly INamedTypeSymbol enumerableType;
         private readonly INamedTypeSymbol iGroupingType;
 
@@ -333,10 +331,6 @@ namespace PurityAnalyzer
             this.isIsPureAttribute = isIsPureAttribute;
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
-
-            intType = semanticModel.Compilation.GetTypeByMetadataName(typeof(int).FullName);
-
-            boolType = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
 
             enumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Enumerable).FullName);
 
@@ -702,18 +696,33 @@ namespace PurityAnalyzer
             return true;
         }
 
+        public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureMethods()
+        {
+            Dictionary<string, string[]> pureMethods = new Dictionary<string, string[]>()
+            {
+                ["System.Int32"] = new []{ "ToString" },
+                ["System.Boolean"] = new[] { "ToString" },
+                ["System.Double"] = new[] { "ToString" },
+                ["System.Single"] = new[] { "ToString" },
+                ["System.Decimal"] = new[] { "ToString" },
+                ["System.String"] = new[] { "ToString" }
+            };
+
+            return pureMethods
+                .ToDictionary(x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                x => new HashSet<string>(x.Value));
+
+        }
+
         private bool IsKnownPureMethod(IMethodSymbol method)
         {
-            if (method.ContainingType.Equals(intType))
-            {
-                if (method.Name == "ToString")
-                    return true;
-            }
+            if (method.ContainingType.TypeKind == TypeKind.Delegate)
+                return true;
 
-            if (method.ContainingType.Equals(boolType))
+            if (GetKnownPureMethods().TryGetValue(method.ContainingType, out var methods) &&
+                methods.Contains(method.Name))
             {
-                if (method.Name == "ToString")
-                    return true;
+                return true;
             }
 
             if (method.ContainingType.Equals(enumerableType))
@@ -727,8 +736,6 @@ namespace PurityAnalyzer
                 return true;
             }
 
-            if (method.ContainingType.TypeKind == TypeKind.Delegate)
-                return true;
 
             return false;
         }
