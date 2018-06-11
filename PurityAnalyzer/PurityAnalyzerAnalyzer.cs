@@ -600,6 +600,11 @@ namespace PurityAnalyzer
                 }
             }
 
+            if (symbol.Symbol is IEventSymbol)
+            {
+                impurities.Add((node, "Event access"));
+            }
+
             base.VisitIdentifierName(node);
         }
 
