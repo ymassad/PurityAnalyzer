@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
 {
     [TestFixture]
-    public class DotNetMethodCallingTests
+    public class LinqTests
     {
         [Test]
         public void CallingEnumerableLinqMethodsKeepsMethodPure()

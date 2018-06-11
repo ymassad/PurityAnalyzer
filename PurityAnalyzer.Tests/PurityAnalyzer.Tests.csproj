@@ -168,7 +168,7 @@
     <Compile Include="IsPureAttributeOnMethod\IndexersTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InterfaceTakingHigherOrderFunctionsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\HigherOrderFunctionsTests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\DotNetMethodCallingTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\LinqTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\IsPureAttributeOnConstructor.cs" />
     <Compile Include="IsPureAttributeOnProperty\IsPureAttributeOnPropertyTests.cs" />
     <Compile Include="IsPureAttributeOnClass\IsPureAttributeOnClassTests.cs" />
