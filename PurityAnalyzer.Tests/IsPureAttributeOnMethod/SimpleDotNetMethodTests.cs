@@ -41,6 +41,8 @@ public static class Module1
             yield return "1d.ToString()";
             yield return "1m.ToString()";
             yield return "true.ToString()";
+            yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
+            yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
         }
     }
 }

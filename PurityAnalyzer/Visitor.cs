@@ -393,7 +393,8 @@ namespace PurityAnalyzer
                 [typeof(double)] = new[] { "ToString" },
                 [typeof(float)] = new[] { "ToString" },
                 [typeof(decimal)] = new[] { "ToString" },
-                [typeof(string)] = new[] { "ToString" }
+                [typeof(string)] = new[] { "ToString" },
+                [typeof(Guid)] = new[] { "ToString", "Parse" }
             };
 
             return pureMethods
