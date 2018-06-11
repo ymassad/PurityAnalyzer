@@ -825,7 +825,7 @@ public static class Module1
         }
 
         [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureOverriddenMethodDefinedInBaseClassMakesMethodImpure()
+        public void CreatingAnInstanceOfAClassThatHasAnImpureMethodDefinedInGrandParentClassAndOverriddenInParentClassMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -868,6 +868,7 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
+
 
         [Test]
         public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstanceConstructorMakesMethodImpure()
@@ -988,6 +989,5 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
-
     }
 }
