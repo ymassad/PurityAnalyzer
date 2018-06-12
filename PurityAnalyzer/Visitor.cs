@@ -317,6 +317,21 @@ namespace PurityAnalyzer
             base.VisitBinaryExpression(node);
         }
 
+        public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
+        {
+            if (node.Kind() == SyntaxKind.AddAssignmentExpression)
+            {
+                if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
+                {
+                    if (!IsMethodPure(method))
+                    {
+                        impurities.Add((node, "Operator is impure"));
+                    }
+                }
+            }
+
+            base.VisitAssignmentExpression(node);
+        }
 
         public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)
         {

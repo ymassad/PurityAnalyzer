@@ -12,7 +12,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
     public class CustomerOperatorTests
     {
         [Test]
-        public void PureCustomBinaryOperatorMethodIsConsideredPure()
+        public void PureCustomPlusBinaryOperatorMethodIsConsideredPure()
         {
             string code = @"
 using System;
@@ -37,7 +37,7 @@ public class CustomType
         }
 
         [Test]
-        public void ImpureCustomBinaryOperatorMethodIsConsideredImpure()
+        public void ImpureCustomPlusBinaryOperatorMethodIsConsideredImpure()
         {
             string code = @"
 using System;
@@ -65,7 +65,7 @@ public class CustomType
         }
 
         [Test]
-        public void MethodThatUsesPureCustomBinaryOperatorIsPure()
+        public void MethodThatUsesPureCustomPlusBinaryOperatorIsPure()
         {
             string code = @"
 using System;
@@ -98,7 +98,7 @@ public class CustomType
         }
 
         [Test]
-        public void MethodThatUsesImpureCustomBinaryOperatorIsImpure()
+        public void MethodThatUsesImpureCustomPlusBinaryOperatorIsImpure()
         {
             string code = @"
 using System;
@@ -113,6 +113,83 @@ public class MyClass
     public static CustomType DoSomething()
     {
         return new CustomType() + new CustomType();
+    }
+}
+
+public class CustomType
+{
+    static int state = 0;
+
+    public static CustomType operator +(CustomType c1, CustomType c2)
+    {
+        state++;
+        return new CustomType();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void MethodThatUsesPureCustomPlusBinaryOperatorViaPlusEqualsIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+    [IsPure]
+    public static CustomType DoSomething()
+    {
+        var a = new CustomType();
+
+        a += new CustomType();
+
+        return a;
+    }
+}
+
+public class CustomType
+{    
+    public static CustomType operator +(CustomType c1, CustomType c2)
+    {
+        return new CustomType();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatUsesImpureCustomPlusBinaryOperatorViaPlusEqualsIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+    [IsPure]
+    public static CustomType DoSomething()
+    {
+        var a = new CustomType();
+
+        a += new CustomType();
+
+        return a;
     }
 }
 
