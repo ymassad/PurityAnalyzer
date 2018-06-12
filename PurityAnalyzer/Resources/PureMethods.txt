@@ -6,3 +6,5 @@ System.Decimal, ToString
 System.String, ToString
 System.Guid, ToString
 System.Guid, Parse
+System.String, Join
+System.String, Equals

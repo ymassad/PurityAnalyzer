@@ -43,6 +43,13 @@ public static class Module1
             yield return "true.ToString()";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
+            yield return @"String.Join("","", new []{""1"", ""2""})";
+            yield return @"String.Equals(""1"", ""2"")";
+            yield return @"""1"".Equals(""2"")";
+            yield return @"String.Equals(""1"", ""2"", StringComparison.Ordinal)";
+            yield return @"""1"".Equals(""2"", StringComparison.Ordinal)";
+            yield return @"String.Equals(""1"", ""2"", StringComparison.OrdinalIgnoreCase)";
+            yield return @"""1"".Equals(""2"", StringComparison.OrdinalIgnoreCase)";
         }
     }
 }
