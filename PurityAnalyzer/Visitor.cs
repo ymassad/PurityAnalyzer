@@ -386,32 +386,22 @@ namespace PurityAnalyzer
 
         public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureMethods()
         {
-            Dictionary<Type, string[]> pureMethods = new Dictionary<Type, string[]>()
-            {
-                [typeof(int)] = new []{ "ToString" },
-                [typeof(bool)] = new[] { "ToString" },
-                [typeof(double)] = new[] { "ToString" },
-                [typeof(float)] = new[] { "ToString" },
-                [typeof(decimal)] = new[] { "ToString" },
-                [typeof(string)] = new[] { "ToString" },
-                [typeof(Guid)] = new[] { "ToString", "Parse" }
-            };
-
-            return pureMethods
-                .ToDictionary(x => semanticModel.Compilation.GetTypeByMetadataName(x.Key.FullName),
-                    x => new HashSet<string>(x.Value));
-
+            return Resources.PureMethods.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(','))
+                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure method line"))
+                .Select(x => new {Type = x[0], Method = x[1].Trim()})
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                    x => new HashSet<string>(x));
         }
 
         public HashSet<INamedTypeSymbol> GetKnownPureTypes()
         {
-            var pureTypes = new []
-            {
-                typeof(Enumerable),
-                typeof(IGrouping<,>)
-            };
+            var pureTypes =
+                Resources.PureTypes.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
 
-            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x.FullName)));
+            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
         }
 
         private bool IsKnownPureMethod(IMethodSymbol method)

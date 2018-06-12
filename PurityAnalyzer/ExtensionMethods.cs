@@ -66,5 +66,13 @@ namespace PurityAnalyzer
         {
             return field.Modifiers.Any(SyntaxKind.StaticKeyword);
         }
+
+        public static T ThrowIf<T>(this T value, Func<T, bool> condition, string errorMessage)
+        {
+            if(condition(value))
+                throw new Exception(errorMessage);
+
+            return value;
+        }
     }
 }

@@ -1,0 +1,8 @@
+System.Int32, ToString
+System.Boolean, ToString
+System.Double, ToString
+System.Single, ToString
+System.Decimal, ToString
+System.String, ToString
+System.Guid, ToString
+System.Guid, Parse

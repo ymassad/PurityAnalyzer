@@ -60,5 +60,23 @@ namespace PurityAnalyzer {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string PureMethods {
+            get {
+                return ResourceManager.GetString("PureMethods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string PureTypes {
+            get {
+                return ResourceManager.GetString("PureTypes", resourceCulture);
+            }
+        }
     }
 }
