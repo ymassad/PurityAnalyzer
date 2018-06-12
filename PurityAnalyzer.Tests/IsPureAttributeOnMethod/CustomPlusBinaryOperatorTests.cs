@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
 {
     [TestFixture]
-    public class CustomerOperatorTests
+    public class CustomPlusBinaryOperatorTests
     {
         [Test]
         public void PureCustomPlusBinaryOperatorMethodIsConsideredPure()
