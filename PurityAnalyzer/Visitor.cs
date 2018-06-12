@@ -319,7 +319,11 @@ namespace PurityAnalyzer
 
         public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
         {
-            if (node.Kind() == SyntaxKind.AddAssignmentExpression)
+            var kind = node.Kind();
+
+            if (
+                kind == SyntaxKind.AddAssignmentExpression ||
+                kind == SyntaxKind.SubtractAssignmentExpression)
             {
                 if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
                 {
