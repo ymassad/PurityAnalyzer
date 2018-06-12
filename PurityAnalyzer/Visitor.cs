@@ -304,6 +304,20 @@ namespace PurityAnalyzer
             return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
         }
 
+        public override void VisitBinaryExpression(BinaryExpressionSyntax node)
+        {
+            if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
+            {
+                if (!IsMethodPure(method))
+                {
+                    impurities.Add((node, "Operator is impure"));
+                }
+            }
+
+            base.VisitBinaryExpression(node);
+        }
+
+
         public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)
         {
 

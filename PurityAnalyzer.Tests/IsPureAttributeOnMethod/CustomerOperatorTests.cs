@@ -12,7 +12,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
     public class CustomerOperatorTests
     {
         [Test]
-        public void PureOperatorMethodIsConsideredPure()
+        public void PureCustomBinaryOperatorMethodIsConsideredPure()
         {
             string code = @"
 using System;
@@ -37,7 +37,7 @@ public class CustomType
         }
 
         [Test]
-        public void ImpureOperatorMethodIsConsideredImpure()
+        public void ImpureCustomBinaryOperatorMethodIsConsideredImpure()
         {
             string code = @"
 using System;
@@ -51,6 +51,75 @@ public class CustomType
     static int state = 0;
 
     [IsPure]
+    public static CustomType operator +(CustomType c1, CustomType c2)
+    {
+        state++;
+        return new CustomType();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void MethodThatUsesPureCustomBinaryOperatorIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+    [IsPure]
+    public static CustomType DoSomething()
+    {
+        return new CustomType() + new CustomType();
+    }
+}
+
+public class CustomType
+{    
+    public static CustomType operator +(CustomType c1, CustomType c2)
+    {
+        return new CustomType();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatUsesImpureCustomBinaryOperatorIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+    [IsPure]
+    public static CustomType DoSomething()
+    {
+        return new CustomType() + new CustomType();
+    }
+}
+
+public class CustomType
+{
+    static int state = 0;
+
     public static CustomType operator +(CustomType c1, CustomType c2)
     {
         state++;
