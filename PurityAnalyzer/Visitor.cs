@@ -321,9 +321,16 @@ namespace PurityAnalyzer
         {
             var kind = node.Kind();
 
-            if (
-                kind == SyntaxKind.AddAssignmentExpression ||
-                kind == SyntaxKind.SubtractAssignmentExpression)
+            if (kind == SyntaxKind.AddAssignmentExpression ||
+                kind == SyntaxKind.SubtractAssignmentExpression ||
+                kind == SyntaxKind.AndAssignmentExpression ||
+                kind == SyntaxKind.DivideAssignmentExpression ||
+                kind == SyntaxKind.ExclusiveOrAssignmentExpression ||
+                kind == SyntaxKind.ModuloAssignmentExpression ||
+                kind == SyntaxKind.OrAssignmentExpression ||
+                kind == SyntaxKind.MultiplyAssignmentExpression ||
+                kind == SyntaxKind.LeftShiftAssignmentExpression ||
+                kind == SyntaxKind.RightShiftAssignmentExpression)
             {
                 if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
                 {
