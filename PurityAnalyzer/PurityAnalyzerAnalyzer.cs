@@ -30,6 +30,9 @@ namespace PurityAnalyzer
                 isEnabledByDefault: true,
                 description: "Impurity error");
 
+        public static Maybe<string> CustomPureTypesFilename { get; set; }
+        public static Maybe<string> CustomPureMethodsFilename { get; set; }
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule);
 
         public override void Initialize(AnalysisContext context)

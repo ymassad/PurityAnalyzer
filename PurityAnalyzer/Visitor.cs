@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -16,8 +17,8 @@ namespace PurityAnalyzer
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
-        private HashSet<INamedTypeSymbol> knownPureTypes;
+        private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
+        private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
         public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute)
         {
@@ -426,7 +427,14 @@ namespace PurityAnalyzer
 
         public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureMethods()
         {
-            return Resources.PureMethods.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+            var pureMethodsFileContents =
+                Resources.PureMethods
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                  .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
+                  .ValueOr("");
+
+            return pureMethodsFileContents.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Split(','))
                 .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure method line"))
                 .Select(x => new {Type = x[0], Method = x[1].Trim()})
@@ -438,8 +446,15 @@ namespace PurityAnalyzer
 
         public HashSet<INamedTypeSymbol> GetKnownPureTypes()
         {
+            var pureTypesFileContents =
+                Resources.PureTypes
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                    .CustomPureTypesFilename.ChainValue(File.ReadAllText)
+                    .ValueOr("");
+
             var pureTypes =
-                Resources.PureTypes.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+                pureTypesFileContents.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
 
             return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
         }
