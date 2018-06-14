@@ -47,6 +47,11 @@ namespace PurityAnalyzer.Tests
 
         public static Diagnostic[] RunPurityAnalyzer(string content, params MetadataReference[] additionalReferences)
         {
+            return RunPurityAnalyzer(content, Maybe.NoValue, additionalReferences);
+        }
+
+        public static Diagnostic[] RunPurityAnalyzer(string content, Maybe<string> secondFileContent, params MetadataReference[] additionalReferences)
+        {
             var workspace = new AdhocWorkspace();
 
             var solution = workspace.CurrentSolution;
@@ -58,7 +63,14 @@ namespace PurityAnalyzer.Tests
             var documentId = DocumentId.CreateNewId(projectId);
 
             solution = AddNewSourceFile(solution, content, "NewFile.cs", documentId);
- 
+
+            if (secondFileContent.HasValue)
+            {
+                var secondDocumentId = DocumentId.CreateNewId(projectId);
+
+                solution = AddNewSourceFile(solution, secondFileContent.GetValue(), "NewFile2.cs", secondDocumentId);
+            }
+
             var result = solution.GetProject(projectId).GetCompilationAsync().Result
                 .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new PurityAnalyzerAnalyzer()));
 
