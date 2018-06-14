@@ -20,6 +20,9 @@
     <Copyright>Copyright</Copyright>
     <PackageTags>PurityAnalyzer, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

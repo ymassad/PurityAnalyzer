@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -32,10 +33,16 @@ namespace PurityAnalyzer.Vsix
     /// To get loaded into VS, the package must be referred by &lt;Asset Type="Microsoft.VisualStudio.VsPackage" ...&gt; in .vsixmanifest file.
     /// </para>
     /// </remarks>
+    [ProvideOptionPage(typeof(OptionPageGrid),
+        "Purity Analyzer", "Settings Page", 0, 0, true)]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [Guid(VSPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string)]
     public sealed class VSPackage : AsyncPackage
     {
         /// <summary>
@@ -63,13 +70,50 @@ namespace PurityAnalyzer.Vsix
         /// <param name="cancellationToken">A cancellation token to monitor for initialization cancellation, which can occur when VS is shutting down.</param>
         /// <param name="progress">A provider for progress updates.</param>
         /// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        protected override async Task InitializeAsync(
+            CancellationToken cancellationToken,
+            IProgress<ServiceProgressData> progress)
         {
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            PurityAnalyzerAnalyzer.CustomPureMethodsFilename = CustomPureMethodsFilename.ToMaybe().If(x => x != "");
+            PurityAnalyzerAnalyzer.CustomPureTypesFilename = CustomPureTypesFilename.ToMaybe().If(x => x != "");
         }
 
         #endregion
+
+        public string CustomPureTypesFilename
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.CustomPureTypesFilename;
+            }
+        }
+
+        public string CustomPureMethodsFilename
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.CustomPureMethodsFilename;
+            }
+        }
     }
+
+    public class OptionPageGrid : DialogPage
+    {
+        [Category("Purity Analyzer")]
+        [DisplayName("Custom Pure Types Filename")]
+        [Description("Full filename that contains custom types to consider pure")]
+        public string CustomPureTypesFilename { get; set; } = "";
+
+        [Category("Purity Analyzer")]
+        [DisplayName("Custom Pure Methods Filename")]
+        [Description("Full filename that contains custom methods to consider pure")]
+        public string CustomPureMethodsFilename { get; set; } = "";
+    }
+
 }
