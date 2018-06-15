@@ -282,6 +282,127 @@ public static class Module1
         }
 
 
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstanceConstructorMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+
+    public Base() { state++;}
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstanceFieldInitializerMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+
+    int localState = state++;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstancePropertyInitializerMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+
+    int localState {get;} = state++;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new PureDto(1);
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
         /* Note about creating objects with overridden methods:
          * Overridden methods are
          * (1) methods with the override keyword (overriding a virtual or abstract method)
@@ -873,124 +994,5 @@ public static class Module1
         }
 
 
-        [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstanceConstructorMakesMethodImpure()
-        {
-            string code = @"
-using System;
-
-public class IsPureAttribute : Attribute
-{
-}
-
-public class Base
-{
-    static int state = 0;
-
-    public Base() { state++;}
-}
-
-public class PureDto : Base
-{
-    public int Age {get;}
-
-    public PureDto(int age) { Age = age;}
-}
-
-public static class Module1
-{
-    [IsPure]
-    public static string DoSomething()
-    {
-        var obj = new PureDto(1);
-
-        return """";
-    }
-}";
-
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
-
-        }
-
-        [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstanceFieldInitializerMakesMethodImpure()
-        {
-            string code = @"
-using System;
-
-public class IsPureAttribute : Attribute
-{
-}
-
-public class Base
-{
-    static int state = 0;
-
-    int localState = state++;
-}
-
-public class PureDto : Base
-{
-    public int Age {get;}
-
-    public PureDto(int age) { Age = age;}
-}
-
-public static class Module1
-{
-    [IsPure]
-    public static string DoSomething()
-    {
-        var obj = new PureDto(1);
-
-        return """";
-    }
-}";
-
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
-
-        }
-
-        [Test]
-        public void CreatingAnInstanceOfAClassThatHasAnImpureBaseInstancePropertyInitializerMakesMethodImpure()
-        {
-            string code = @"
-using System;
-
-public class IsPureAttribute : Attribute
-{
-}
-
-public class Base
-{
-    static int state = 0;
-
-    int localState {get;} = state++;
-}
-
-public class PureDto : Base
-{
-    public int Age {get;}
-
-    public PureDto(int age) { Age = age;}
-}
-
-public static class Module1
-{
-    [IsPure]
-    public static string DoSomething()
-    {
-        var obj = new PureDto(1);
-
-        return """";
-    }
-}";
-
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
-
-        }
     }
 }
