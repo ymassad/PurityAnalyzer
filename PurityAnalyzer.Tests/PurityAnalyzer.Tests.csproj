@@ -173,6 +173,10 @@
     <Compile Include="IsPureAttributeOnMethod\HigherOrderFunctionsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\LinqTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\IsPureAttributeOnConstructor.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingExplicitlyTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByAssignmentsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByCallingMethodTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\NewObjectTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\SimpleDotNetMethodTests.cs" />
     <Compile Include="IsPureAttributeOnProperty\IsPureAttributeOnPropertyTests.cs" />
     <Compile Include="IsPureAttributeOnClass\IsPureAttributeOnClassTests.cs" />
@@ -206,6 +210,9 @@
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.6.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.6.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="IsPureAttributeOnMethod\OverriddenMethods\Note.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

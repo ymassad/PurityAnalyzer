@@ -1,0 +1,18 @@
+﻿Note about creating objects with overridden methods:
+Overridden methods are
+(1) methods with the override keyword (overriding a virtual or abstract method)
+(2) method belongs to an interface implementation (explicit or implicit)
+
+Before 15 June 2018:
+If a method creates an instance of a class that has an impure overridden method, I consider the method to be impure.
+The reason is that the created object might be passed to a function that takes the abstract type as a parameter and invokes the overridden method.
+The original method (in the base type/interface) might be pure, but the overridden one might not be.
+By default, I consider invoking an abstract/interface method to be pure
+There might be a better way to do all of this. But for now I am using these rules.
+15 June 2018:
+As long as the constructor (instance and static) of the class is pure, then the creation of the object is a pure operation.
+To solve the problem described above, I consider some cast operations to be impure.
+
+1.	For a method M that returns type A to be pure: if A has pure abstract methods, then M must return an object that has these methods also pure (if it overrides these methods).
+2.	A cast to an abstract type with pure abstract method is pure only if the object casted from has these methods also pure (overrided).
+3.	An upcast to an abstract type with pure abstract methods is only legal if we can know for sure that the source object has these methods pure (only if the target type/methods sealed?)
