@@ -81,9 +81,12 @@ namespace PurityAnalyzer
                 {
                     foreach (var fieldVar in fieldDeclaration.Declaration.Variables)
                     {
-                        var initializedTo = fieldVar.Initializer.Value;
+                        if (fieldVar.Initializer != null)
+                        {
+                            var initializedTo = fieldVar.Initializer.Value;
 
-                        ProcessImpuritiesForMethod(context, initializedTo);
+                            ProcessImpuritiesForMethod(context, initializedTo);
+                        }
                     }
                 }
             }

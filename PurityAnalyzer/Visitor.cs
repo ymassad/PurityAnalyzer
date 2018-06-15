@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -70,12 +71,140 @@ namespace PurityAnalyzer
             return GetUsageForOperation(identifier.Parent);
         }
 
+        public override void VisitCastExpression(CastExpressionSyntax node)
+        {
+            if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
+                semanticModel.GetTypeInfo(node.Expression).Type is ITypeSymbol sourceType)
+            {
+                if (IsImpureCast(sourceType, destinationType))
+                {
+                    impurities.Add((node, "Cast is impure"));
+                }
+            }
+
+            base.VisitCastExpression(node);
+        }
+
+        public IEnumerable<IMethodSymbol> GetAllMethods(
+            ITypeSymbol typeSymbol,
+            Maybe<ITypeSymbol> downUntilBefore = default)
+        {
+
+            var myMethods = GetMethods(typeSymbol);
+
+            foreach (var myMethod in myMethods)
+                yield return myMethod;
+
+            var current = typeSymbol.BaseType;
+
+            while (current != null)
+            {
+                if(downUntilBefore.HasValue)
+                    if (current.Equals(downUntilBefore.GetValue()))
+                        break;
+
+                foreach (var method in GetAllMethods(current))
+                    yield return method;
+
+                current = current.BaseType;
+            }
+        }
+
+        private static IEnumerable<IMethodSymbol> GetMethods(ITypeSymbol typeSymbol)
+        {
+            return typeSymbol.GetMembers().OfType<IMethodSymbol>();
+        }
+
+        private bool IsDownCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        {
+            if (destinationType.TypeKind == TypeKind.Interface)
+            {
+                return sourceType.AllInterfaces.Contains(destinationType);
+            }
+
+            var current = sourceType.BaseType;
+
+            while (current != null)
+            {
+
+                if (current.Equals(destinationType))
+                    return true;
+
+                current = current.BaseType;
+            }
+
+            return false;
+        }
+
+        private ImmutableArray<INamedTypeSymbol> GetAllInterfaceIncludingSelfIfIsInterface(ITypeSymbol type)
+        {
+            var allInterfaces = type.AllInterfaces;
+
+            if (type.TypeKind == TypeKind.Interface)
+                return allInterfaces.Add((INamedTypeSymbol)type);
+
+            return allInterfaces;
+        }
+
+        private bool IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        {
+            if (IsDownCast(sourceType, destinationType))
+            {
+                var methodsOfInterfacesImplementedByDestionationType =
+                    GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
+                        .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
+                        .ToArray();
+
+                var pureAbstractMethodsDefinedOnDestinationTypeOrItsBaseTypes =
+                    GetAllMethods(destinationType)
+                        .Where(x => x.IsAbstract)
+                        .Where(IsMethodPure)
+                        .ToArray();
+
+                var pureBaseVirtualMethodsDefinedOnDestinationTypeOrItsBaseTypes =
+                    GetAllMethods(destinationType)
+                        .Where(x => x.IsVirtual && !x.IsOverride)
+                        .Where(IsMethodPure)
+                        .ToArray();
+
+                var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
+                    pureAbstractMethodsDefinedOnDestinationTypeOrItsBaseTypes
+                        .Concat(pureBaseVirtualMethodsDefinedOnDestinationTypeOrItsBaseTypes)
+                        .ToArray();
+                
+                var sourceMethodsDownUntilBeforeDestionation = GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
+
+                var sourceMethodsThatOverrideSomePureDestionationBaseMethod = sourceMethodsDownUntilBeforeDestionation.Where(x =>
+                    x.IsOverride && x.OverriddenMethod != null && allPureOverridableMethodsOnDestionationOrItsBaseTypes.Contains(x.OverriddenMethod)).ToArray();
+
+                if (sourceMethodsThatOverrideSomePureDestionationBaseMethod.Any(x => !IsMethodPure(x)))
+                {
+                    return true;
+                }
+
+                var sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces =
+                    methodsOfInterfacesImplementedByDestionationType.Select(sourceType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>();
+
+                if (sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces.Any(x => !IsMethodPure(x)))
+                    return true;
+            }
+            
+            return false;
+        }
+
+        public override void DefaultVisit(SyntaxNode node)
+        {
+            if (ContainsImpureCast(node))
+            {
+                impurities.Add((node, "Cast is impure"));
+            }
+
+            base.DefaultVisit(node);
+        }
 
         public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
         {
-            var symbol = semanticModel.GetSymbolInfo(node.Type).Symbol as INamedTypeSymbol;
-
-            if (symbol != null)
+            if (semanticModel.GetSymbolInfo(node.Type).Symbol is INamedTypeSymbol symbol)
             {
                 if (!IsTypePureForConstruction(symbol))
                 {
@@ -105,21 +234,11 @@ namespace PurityAnalyzer
             if (SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
-            var allInterfaceMethods =
-                symbol.AllInterfaces.SelectMany(i => i.GetMembers().OfType<IMethodSymbol>());
-
-
-            var interfaceImplementationMethods =
-                new HashSet<ISymbol>(
-                    allInterfaceMethods.Select(x => symbol.FindImplementationForInterfaceMember(x)));
-            
             if (!
                 GetAllMethods(symbol)
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
-                        x.MethodKind == MethodKind.StaticConstructor ||
-                        x.IsOverride ||
-                        interfaceImplementationMethods.Contains(x))
+                        x.MethodKind == MethodKind.StaticConstructor)
                     .All(IsMethodPure))
                 return false;
 
@@ -184,6 +303,25 @@ namespace PurityAnalyzer
         private bool IsParameterBasedAccess(IdentifierNameSyntax node)
         {
             return node.Parent is MemberAccessExpressionSyntax memberAccess && IsParameterBasedAccess(memberAccess);
+        }
+
+        public bool ContainsImpureCast(SyntaxNode node)
+        {
+            var typeInfo = semanticModel.GetTypeInfo(node);
+
+            if (typeInfo.Type != null && typeInfo.ConvertedType != null &&
+                !typeInfo.Type.Equals(typeInfo.ConvertedType))
+            {
+                var sourceType = typeInfo.Type;
+                var destinationType = typeInfo.ConvertedType;
+
+                if (IsImpureCast(sourceType, destinationType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override void VisitIdentifierName(IdentifierNameSyntax node)

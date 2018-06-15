@@ -140,6 +140,142 @@ public static class Module1
         }
 
         [Test]
+        public void PassingANewInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeDirectlyMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    static int state = 0;
+
+    public override int Method() => state++;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        Call(new PureDto(1));
+        void Call(Base input){}
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void PassingANewInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeByFirstGettingItBackFromAnotherMethodAndThenPassingItDirectlyMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    static int state = 0;
+
+    public override int Method() => state++;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        Call(GetInput(new PureDto(1)));
+        void Call(Base input){}
+
+        return """";
+    }
+    
+    public static PureDto GetInput(PureDto dto) => dto;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void PassingANewInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeByHavingAnotherMethodCreateItPassingItDirectlyMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class PureDto : Base
+{
+    public int Age {get;}
+
+    static int state = 0;
+
+    public override int Method() => state++;
+
+    public PureDto(int age) { Age = age;}
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        Call(Create());
+        void Call(Base input){}
+
+        return """";
+    }
+    
+    public static PureDto Create() => new PureDto(1);
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
         public void PassingANewInstanceOfAClassThatHasAnImpureAbstractOverriddenMethodAsBaseTypeMakesMethodImpure()
         {
             string code = @"
