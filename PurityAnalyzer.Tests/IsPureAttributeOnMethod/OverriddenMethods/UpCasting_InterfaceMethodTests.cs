@@ -409,5 +409,365 @@ public static class Module1
             dignostics.Length.Should().Be(0);
 
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    static int state = 0;
+    public int Method() => state++;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    static int state = 0;
+    int IInterface.Method() => state++;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    public int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    int IInterface.Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    public sealed int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    sealed int IInterface.Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    static int state = 0;
+    public sealed int Method() => state++;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface
+{
+    int Method();
+}
+
+public class Middle : IInterface
+{
+    static int state = 0;
+    sealed int IInterface.Method() => state++;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

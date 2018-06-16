@@ -330,5 +330,255 @@ public static class Module1
             dignostics.Length.Should().Be(0);
 
         }
+
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Middle : Base
+{
+    static int state = 0;
+    public override int Method() => state++;
+}
+
+public class Derived : Middle
+{
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Middle : Base
+{
+    public override int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+    public virtual int Method() => state++;
+}
+
+public class Middle : Base
+{
+    public override int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Middle : Base
+{
+    public sealed override int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Middle : Base
+{
+    static int state = 0;
+    public sealed override int Method() => state++;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    static int state = 0;
+    public virtual int Method() => state++;
+}
+
+public class Middle : Base
+{
+    public sealed override int Method() => 2;
+}
+
+public class Derived : Middle
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(object obj)
+    {
+        var v = (Derived)obj;
+
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
     }
 }
