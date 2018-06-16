@@ -200,7 +200,10 @@ namespace PurityAnalyzer
 
                 var interfaceMethodImplementations =
                     methodsOfInterfacesImplementedByDestionationType
-                        .Select(destinationType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>().ToArray();
+                        .Select(destinationType.FindImplementationForInterfaceMember)
+                        .OfType<IMethodSymbol>()
+                        .Select(x => FindMostDerivedMethod(allDestinationMethods, x))
+                        .ToArray();
 
                 if (interfaceMethodImplementations.Any(x => IsMethodPure(x) && !x.IsSealed))
                     return true;
@@ -216,6 +219,22 @@ namespace PurityAnalyzer
             }
 
             return false;
+        }
+
+        private IMethodSymbol FindMostDerivedMethod(IMethodSymbol[] allMethods, IMethodSymbol method)
+        {
+            var current = method;
+
+            while (true)
+            {
+                var next = allMethods
+                    .FirstOrDefault(x => x.OverriddenMethod != null && x.OverriddenMethod.Equals(current));
+
+                if (next == null)
+                    return current;
+
+                current = next;
+            }
         }
 
         private IMethodSymbol[] RemoveOverriddenMethods(IMethodSymbol[] methods)
