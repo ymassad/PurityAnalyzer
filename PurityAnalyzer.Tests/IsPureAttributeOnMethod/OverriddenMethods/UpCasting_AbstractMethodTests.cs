@@ -21,7 +21,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -52,7 +52,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -89,7 +89,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -125,7 +125,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -161,7 +161,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -197,7 +197,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -239,7 +239,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -281,7 +281,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -321,7 +321,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
@@ -361,7 +361,7 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class Base
+public abstract class Base
 {
     public abstract int Method();
 }
