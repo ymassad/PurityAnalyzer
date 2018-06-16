@@ -99,7 +99,7 @@ namespace PurityAnalyzer
 
             while (current != null)
             {
-                if(downUntilBefore.HasValue)
+                if (downUntilBefore.HasValue)
                     if (current.Equals(downUntilBefore.GetValue()))
                         break;
 
@@ -148,6 +148,11 @@ namespace PurityAnalyzer
 
         private bool IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
+            if (sourceType.Equals(destinationType))
+                return false;
+
+            var allDestinationMethods = GetAllMethods(destinationType).ToArray();
+
             if (IsDownCast(sourceType, destinationType))
             {
                 var methodsOfInterfacesImplementedByDestionationType =
@@ -155,23 +160,12 @@ namespace PurityAnalyzer
                         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
                         .ToArray();
 
-                var pureAbstractMethodsDefinedOnDestinationTypeOrItsBaseTypes =
-                    GetAllMethods(destinationType)
-                        .Where(x => x.IsAbstract)
-                        .Where(IsMethodPure)
-                        .ToArray();
-
-                var pureBaseVirtualMethodsDefinedOnDestinationTypeOrItsBaseTypes =
-                    GetAllMethods(destinationType)
-                        .Where(x => x.IsVirtual && !x.IsOverride)
-                        .Where(IsMethodPure)
-                        .ToArray();
-
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
-                    pureAbstractMethodsDefinedOnDestinationTypeOrItsBaseTypes
-                        .Concat(pureBaseVirtualMethodsDefinedOnDestinationTypeOrItsBaseTypes)
+                    allDestinationMethods
+                        .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
+                        .Where(IsMethodPure)
                         .ToArray();
-                
+
                 var sourceMethodsDownUntilBeforeDestionation = GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
 
                 var sourceMethodsThatOverrideSomePureDestionationBaseMethod = sourceMethodsDownUntilBeforeDestionation.Where(x =>
@@ -188,9 +182,55 @@ namespace PurityAnalyzer
                 if (sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces.Any(x => !IsMethodPure(x)))
                     return true;
             }
-            
+            else
+            {
+                if (destinationType.TypeKind == TypeKind.Interface)
+                    return true;
+
+                if (destinationType.GetMembers().OfType<IMethodSymbol>().Any(x => x.IsAbstract))
+                    return true;
+
+                if (destinationType.IsSealed)
+                    return false;
+
+                var methodsOfInterfacesImplementedByDestionationType =
+                    destinationType.AllInterfaces
+                        .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
+                        .ToArray();
+
+                var interfaceMethodImplementations =
+                    methodsOfInterfacesImplementedByDestionationType
+                        .Select(destinationType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>().ToArray();
+
+                if (interfaceMethodImplementations.Any(x => IsMethodPure(x) && !x.IsSealed))
+                    return true;
+
+                var mostDerivedOverriddenMethods = RemoveOverriddenMethods(allDestinationMethods)
+                    .Where(x => x.IsOverride || x.IsVirtual)
+                    .ToArray();
+
+                if (mostDerivedOverriddenMethods.Any(x => IsMethodPure(x) && !x.IsSealed))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
+
+        private IMethodSymbol[] RemoveOverriddenMethods(IMethodSymbol[] methods)
+        {
+            HashSet<IMethodSymbol> set = new HashSet<IMethodSymbol>(methods);
+
+            foreach (var method in methods)
+            {
+                if (method.OverriddenMethod != null)
+                    set.Remove(method.OverriddenMethod);
+            }
+
+            return set.ToArray();
+        }
+
 
         public override void DefaultVisit(SyntaxNode node)
         {
@@ -217,7 +257,7 @@ namespace PurityAnalyzer
 
         private IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
         {
-            
+
             if (symbol.Equals(objectType))
                 return new IMethodSymbol[0];
 
@@ -399,7 +439,7 @@ namespace PurityAnalyzer
                             {
                                 impurities.Add((node, "Non input based property read"));
                             }
-                            else if(IsImpure(GetPropertyGetter(property)))
+                            else if (IsImpure(GetPropertyGetter(property)))
                             {
                                 impurities.Add((node, "Impure property getter"));
                             }
@@ -527,12 +567,15 @@ namespace PurityAnalyzer
                 }
             }
 
-            
+
             base.VisitElementAccessExpression(node);
         }
 
         private bool IsMethodPure(IMethodSymbol method)
         {
+            if (method.IsAbstract)
+                return true;
+
             if (SymbolHasAssumeIsPureAttribute(method))
                 return true;
 
@@ -574,10 +617,10 @@ namespace PurityAnalyzer
                   .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
                   .ValueOr("");
 
-            return pureMethodsFileContents.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+            return pureMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Split(','))
                 .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure method line"))
-                .Select(x => new {Type = x[0], Method = x[1].Trim()})
+                .Select(x => new { Type = x[0], Method = x[1].Trim() })
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
                     x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
@@ -594,7 +637,7 @@ namespace PurityAnalyzer
                     .ValueOr("");
 
             var pureTypes =
-                pureTypesFileContents.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+                pureTypesFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
             return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
         }
