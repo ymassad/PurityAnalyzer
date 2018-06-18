@@ -160,6 +160,7 @@
     <Compile Include="IsPureAttributeOnMethod\ArrayTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CompiledMethodCallingTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\AssumeIsPureAttributeTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\InstanceFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DifferentFilesTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomBinaryOperatorsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomBinaryOperatorsWhereSecondOperandIsNumberTests.cs" />
