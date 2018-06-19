@@ -640,7 +640,7 @@ namespace PurityAnalyzer
 
                     var methodNode = localtionSourceTree.GetRoot().FindNode(localtion.SourceSpan);
 
-                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(localtionSourceTree));
+                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(localtionSourceTree), exceptLocally);
 
                     if (imp.Any()) return false;
                 }

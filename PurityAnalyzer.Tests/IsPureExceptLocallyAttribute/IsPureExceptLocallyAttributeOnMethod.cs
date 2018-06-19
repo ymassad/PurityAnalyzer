@@ -240,5 +240,88 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatCallsAnImpureMethodIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        DoSomethingImpure();
+        return 1;
+    }
+
+    static int state;
+
+    private void DoSomethingImpure() => state++;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatCallsAnPureMethodIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return PureMethod();
+    }
+
+    private int PureMethod() => 1;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAnPureExceptLocallyMethodIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return PureMethodExceptLocally();
+    }
+
+    int localState = 0;
+
+    private int PureMethodExceptLocally() => localState++;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
