@@ -391,68 +391,63 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-
-
-                if (!SymbolHasIsPureAttribute(field))
+                if (!(field.IsReadOnly || field.IsConst))
                 {
-                    if (!(field.IsReadOnly || field.IsConst))
+                    var constructorWhereIdentifierIsUsed =
+                        node.Ancestors()
+                            .OfType<ConstructorDeclarationSyntax>()
+                            .FirstOrDefault();
+
+                    bool accessingFieldFromMatchingConstructor = false;
+
+
+                    if (constructorWhereIdentifierIsUsed != null)
                     {
-                        var constructorWhereIdentifierIsUsed =
+                        var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
+
+                        var currentType = constructorSymbol.ContainingType;
+
+                        if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
+                        {
+                            accessingFieldFromMatchingConstructor = true;
+                        }
+                    }
+
+                    bool accessingLocalFieldLegally = false;
+
+                    if (exceptLocally)
+                    {
+                        var methodWhereIdentifierIsUsed =
                             node.Ancestors()
-                                .OfType<ConstructorDeclarationSyntax>()
-                                .FirstOrDefault();
+                                .OfType<MethodDeclarationSyntax>()
+                                .FirstOrNoValue();
 
-                        bool accessingFieldFromMatchingConstructor = false;
-
-
-                        if (constructorWhereIdentifierIsUsed != null)
+                        bool IsAccessingLocalField(MethodDeclarationSyntax m)
                         {
-                            var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
+                            var methodSymbol = semanticModel.GetDeclaredSymbol(m);
 
-                            var currentType = constructorSymbol.ContainingType;
+                            var currentType = methodSymbol.ContainingType;
 
-                            if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
-                            {
-                                accessingFieldFromMatchingConstructor = true;
-                            }
+                            return field.ContainingType == currentType && !field.IsStatic;
                         }
 
-                        bool accessingLocalFieldLegally = false;
+                        accessingLocalFieldLegally = 
+                            methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                    }
 
-                        if (exceptLocally)
+                    if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
+                    {
+                        var usage = GetUsage(node);
+
+                        if (usage.IsWrite())
                         {
-                            var methodWhereIdentifierIsUsed =
-                                node.Ancestors()
-                                    .OfType<MethodDeclarationSyntax>()
-                                    .FirstOrNoValue();
-
-                            bool IsAccessingLocalField(MethodDeclarationSyntax m)
-                            {
-                                var methodSymbol = semanticModel.GetDeclaredSymbol(m);
-
-                                var currentType = methodSymbol.ContainingType;
-
-                                return field.ContainingType == currentType && !field.IsStatic;
-                            }
-
-                            accessingLocalFieldLegally = 
-                                methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                            impurities.Add((node, "Write access to field"));
                         }
-
-                        if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
+                        else
                         {
-                            var usage = GetUsage(node);
-
-                            if (usage.IsWrite())
+                            if (!IsParameterBasedAccess(node))
                             {
-                                impurities.Add((node, "Write access to field"));
-                            }
-                            else
-                            {
-                                if (!IsParameterBasedAccess(node))
-                                {
-                                    impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
-                                }
+                                impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
                             }
                         }
                     }
