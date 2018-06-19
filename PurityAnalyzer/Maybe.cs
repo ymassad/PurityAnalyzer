@@ -154,5 +154,32 @@ namespace PurityAnalyzer
 
             throw new Exception(errorMessage.ValueOr("Value not available"));
         }
+
+        public static Maybe<T> FirstOrNoValue<T>(this IEnumerable<T> enumerable)
+        {
+            foreach (var item in enumerable)
+            {
+                return item;
+            }
+
+            return Maybe<T>.NoValue();
+        }
+
+        public static Maybe<T> FirstOrNoValue<T>(this IEnumerable<T> enumerable, Func<T, bool> predicate)
+        {
+            foreach (var item in enumerable)
+            {
+                if(predicate(item))
+                    return item;
+            }
+
+            return Maybe<T>.NoValue();
+        }
+
+        public static void ExecuteIfHasValue<T>(this Maybe<T> maybe, Action<T> action)
+        {
+            if (maybe.HasValue)
+                action(maybe.GetValue());
+        }
     }
 }

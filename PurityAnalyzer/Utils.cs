@@ -6,14 +6,29 @@ namespace PurityAnalyzer
 {
     public static class Utils
     {
+        public static bool IsIsPureAttribute(AttributeSyntax attribute)
+        {
+            return attribute.Name is IdentifierNameSyntax name && IsIsPureAttribute(name.Identifier.Text);
+        }
+
+        public static bool IsIsPureExceptLocallyAttribute(AttributeSyntax attribute)
+        {
+            return attribute.Name is IdentifierNameSyntax name && IsIsPureExceptLocallyAttribute(name.Identifier.Text);
+        }
+
         public static bool IsIsPureAttribute(string attributeName)
         {
             return attributeName == "IsPure" || attributeName == "IsPure" + "Attribute";
         }
 
-        public static (SyntaxNode node, string message)[] GetImpurities(SyntaxNode methodDeclaration, SemanticModel semanticModel)
+        public static bool IsIsPureExceptLocallyAttribute(string attributeName)
         {
-            var vis = new Visitor(semanticModel, IsIsPureAttribute);
+            return attributeName == "IsPureExceptLocally" || attributeName == "IsPureExceptLocally" + "Attribute";
+        }
+
+        public static (SyntaxNode node, string message)[] GetImpurities(SyntaxNode methodDeclaration, SemanticModel semanticModel, bool exceptLocally = false)
+        {
+            var vis = new Visitor(semanticModel, IsIsPureAttribute, exceptLocally);
 
             vis.Visit(methodDeclaration);
 

@@ -194,6 +194,7 @@
     <Compile Include="IsPureAttributeOnMethod\StaticFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\ConstFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\RecursiveMethodsTests.cs" />
+    <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnMethod.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

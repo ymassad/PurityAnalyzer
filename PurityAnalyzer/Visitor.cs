@@ -15,16 +15,18 @@ namespace PurityAnalyzer
         public List<(SyntaxNode node, string message)> impurities = new List<(SyntaxNode node, string message)>();
 
         private readonly Func<string, bool> isIsPureAttribute;
+        private readonly bool exceptLocally;
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
         private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
-        public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute)
+        public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute, bool exceptLocally)
         {
             this.semanticModel = semanticModel;
             this.isIsPureAttribute = isIsPureAttribute;
+            this.exceptLocally = exceptLocally;
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
@@ -389,6 +391,8 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
+
+
                 if (!SymbolHasIsPureAttribute(field))
                 {
                     if (!(field.IsReadOnly || field.IsConst))
@@ -413,7 +417,29 @@ namespace PurityAnalyzer
                             }
                         }
 
-                        if (!accessingFieldFromMatchingConstructor)
+                        bool accessingLocalFieldLegally = false;
+
+                        if (exceptLocally)
+                        {
+                            var methodWhereIdentifierIsUsed =
+                                node.Ancestors()
+                                    .OfType<MethodDeclarationSyntax>()
+                                    .FirstOrNoValue();
+
+                            bool IsAccessingLocalField(MethodDeclarationSyntax m)
+                            {
+                                var methodSymbol = semanticModel.GetDeclaredSymbol(m);
+
+                                var currentType = methodSymbol.ContainingType;
+
+                                return field.ContainingType == currentType && !field.IsStatic;
+                            }
+
+                            accessingLocalFieldLegally = 
+                                methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                        }
+
+                        if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
                         {
                             var usage = GetUsage(node);
 

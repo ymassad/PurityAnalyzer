@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
@@ -48,11 +49,35 @@ namespace PurityAnalyzer
         {
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
-            if (methodDeclaration.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
-                .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
+            var attributes = GetAttributes(methodDeclaration.AttributeLists);
+
+            if (attributes.Any(Utils.IsIsPureAttribute))
             {
                 ProcessImpuritiesForMethod(context, methodDeclaration);
+                return;
             }
+
+            attributes.FirstOrNoValue(Utils.IsIsPureExceptLocallyAttribute).ExecuteIfHasValue(attribute =>
+            {
+                if (methodDeclaration.IsStatic())
+                {
+                    var diagnostic = Diagnostic.Create(
+                        ImpurityRule,
+                        attribute.GetLocation(),
+                        "IsPureExceptLocallyAttribute cannot be applied on static methods");
+
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
+
+                ProcessImpuritiesForMethod(context, methodDeclaration, exceptLocally: true);
+            });
+        }
+
+
+        private static AttributeSyntax[] GetAttributes(SyntaxList<AttributeListSyntax> methodDeclarationAttributeLists)
+        {
+            return methodDeclarationAttributeLists.SelectMany(x => x.Attributes).ToArray();
         }
 
 
@@ -129,9 +154,10 @@ namespace PurityAnalyzer
 
         private static void ProcessImpuritiesForMethod(
             SyntaxNodeAnalysisContext context,
-            SyntaxNode methodLikeNode)
+            SyntaxNode methodLikeNode,
+            bool exceptLocally = false)
         {
-            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel).ToList();
+            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel, exceptLocally).ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)
             {
