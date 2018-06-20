@@ -142,5 +142,129 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class1().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class1().a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class1().a = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatIncrementsViaPlusPlusAReadWriteFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class1().a++;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
     }
 }
