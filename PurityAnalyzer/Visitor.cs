@@ -392,9 +392,9 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-                if (!IsAccessOnNewlyCreatedObject(node))
+                if (!(field.IsReadOnly || field.IsConst))
                 {
-                    if (!(field.IsReadOnly || field.IsConst))
+                    if (!IsAccessOnNewlyCreatedObject(node))
                     {
                         var constructorWhereIdentifierIsUsed =
                             node.Ancestors()
