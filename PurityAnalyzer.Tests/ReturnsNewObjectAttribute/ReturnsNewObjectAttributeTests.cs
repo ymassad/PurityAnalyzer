@@ -254,5 +254,54 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingACompiledMethodThatReturnsANewObjectReturnsNewObject()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static MutableDto1 DoSomething()
+    {
+        return StaticClass.CreateNew();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingACompiledMethodThatDoesNotReturnANewObjectDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static MutableDto1 DoSomething()
+    {
+        return StaticClass.ReturnExisting();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

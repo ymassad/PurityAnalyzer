@@ -90,7 +90,6 @@ namespace PurityAnalyzer
                 {
                     if (invokedMethod.IsInCode())
                     {
-
                         var location = invokedMethod.Locations.First();
 
                         var locationSourceTree = location.SourceTree;
@@ -101,6 +100,14 @@ namespace PurityAnalyzer
                         {
                             if (ReturnsNewObject(methodNode, semanticModel))
                                 return true;
+                        }
+                    }
+                    else
+                    {
+                        if (invokedMethod.GetAttributes()
+                            .Any(x => IsReturnsNewObjectAttribute(x.AttributeClass.Name)))
+                        {
+                            return true;
                         }
                     }
                 }
