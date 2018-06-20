@@ -671,6 +671,12 @@ namespace PurityAnalyzer
             if (SymbolHasAssumeIsPureAttribute(method.ContainingType))
                 return true;
 
+            if (exceptLocally)
+            {
+                if (SymbolHasIsPureExceptLocallyAttribute(method))
+                    return true;
+            }
+
             if (!SymbolHasIsPureAttribute(method))
             {
                 if (method.IsInCode())
@@ -759,6 +765,11 @@ namespace PurityAnalyzer
         private bool SymbolHasIsPureAttribute(ISymbol symbol)
         {
             return symbol.GetAttributes().Any(x => isIsPureAttribute(x.AttributeClass.Name));
+        }
+
+        private bool SymbolHasIsPureExceptLocallyAttribute(ISymbol symbol)
+        {
+            return symbol.GetAttributes().Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
         }
 
         private bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)

@@ -41,8 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ImmutableDto1WithIsPureAttributeOnClass.cs" />
+    <Compile Include="IsPureExceptLocallyAttribute.cs" />
+    <Compile Include="MutableClassWithPureMethodsExceptLocally.cs" />
     <Compile Include="MutableDto1.cs" />
-    <Compile Include="PureAttribute.cs" />
+    <Compile Include="IsPureAttribute.cs" />
     <Compile Include="ImmutableDto1.cs" />
     <Compile Include="ImmutableDto1WithPureAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
