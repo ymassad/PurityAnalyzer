@@ -31,10 +31,20 @@ namespace PurityAnalyzer
                 isEnabledByDefault: true,
                 description: "Impurity error");
 
+        private static DiagnosticDescriptor ReturnsNewObjectRule =
+            new DiagnosticDescriptor(
+                ReadDiagnosticId,
+                "Returns new object error",
+                "{0}",
+                Category,
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true,
+                description: "Returns new object error");
+
         public static Maybe<string> CustomPureTypesFilename { get; set; }
         public static Maybe<string> CustomPureMethodsFilename { get; set; }
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -72,6 +82,42 @@ namespace PurityAnalyzer
 
                 ProcessImpuritiesForMethod(context, methodDeclaration, exceptLocally: true);
             });
+
+            attributes.FirstOrNoValue(Utils.IsReturnsNewObjectAttribute).ExecuteIfHasValue(attribute =>
+            {
+                var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
+
+                if (methodSymbol != null)
+                {
+                    if (methodSymbol.ReturnType.IsValueType)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            ReturnsNewObjectRule,
+                            attribute.GetLocation(),
+                            "ReturnsNewObjectAttribute cannot be applied on methods that return value types");
+
+                        context.ReportDiagnostic(diagnostic);
+                        return;
+                    }
+
+                    ProcessNonNewObjectReturnsForMethod(context, methodDeclaration);
+
+                }
+            });
+
+        }
+
+        private void ProcessNonNewObjectReturnsForMethod(SyntaxNodeAnalysisContext context, BaseMethodDeclarationSyntax methodDeclaration)
+        {
+            foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel))
+            {
+                var diagnostic = Diagnostic.Create(
+                    ReturnsNewObjectRule,
+                    expression.Parent.GetLocation(),
+                    "non-new object return");
+
+                context.ReportDiagnostic(diagnostic);
+            }
         }
 
 

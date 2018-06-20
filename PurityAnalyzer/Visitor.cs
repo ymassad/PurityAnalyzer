@@ -555,60 +555,7 @@ namespace PurityAnalyzer
             if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
                 return false;
 
-            return IsNewlyCreatedObject(memberAccess.Expression);
-        }
-
-        private bool IsNewlyCreatedObject(ExpressionSyntax expression)
-        {
-            if (expression is ObjectCreationExpressionSyntax)
-                return true;
-
-            if (!(expression is IdentifierNameSyntax identifier))
-                return false;
-
-            var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
-
-
-            if (!(identifierSymbol is ILocalSymbol local))
-                return false;
-
-            var method = expression.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrNoValue();
-
-            if (method.HasNoValue)
-                return false;
-
-            List<ExpressionSyntax> FindValuesAssignedToVariable(SyntaxNode containingBlockNode, ILocalSymbol local1)
-            {
-                var declaration = local1.DeclaringSyntaxReferences.Single();
-
-                List<ExpressionSyntax> list = new List<ExpressionSyntax>();
-
-                var declarationNode = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
-
-                if (declarationNode is VariableDeclaratorSyntax variableDecl)
-                {
-                    if (variableDecl.Initializer != null)
-                    {
-                        list.Add(variableDecl.Initializer.Value);
-                    }
-                }
-
-                var usages = containingBlockNode
-                    .DescendantNodes()
-                    .OfType<IdentifierNameSyntax>()
-                    .Where(x => x.Identifier.Text == local1.Name)
-                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(local1) ?? false)
-                    .Where(x => x.Parent is AssignmentExpressionSyntax assignment && assignment.Left == x)
-                    .Select(x => ((AssignmentExpressionSyntax) x.Parent).Right)
-                    .ToArray();
-
-                list.AddRange(usages);
-
-                return list;
-            }
-
-
-            return FindValuesAssignedToVariable(method.GetValue().Body, local).All(x => x is ObjectCreationExpressionSyntax);
+            return Utils.IsNewlyCreatedObject(semanticModel, memberAccess.Expression);
         }
 
         private bool IsImpure(SyntaxNode methodLike)
@@ -731,13 +678,13 @@ namespace PurityAnalyzer
                     if (method.IsImplicitlyDeclared)
                         return true;
 
-                    var localtion = method.Locations.First();
+                    var location = method.Locations.First();
 
-                    var localtionSourceTree = localtion.SourceTree;
+                    var locationSourceTree = location.SourceTree;
 
-                    var methodNode = localtionSourceTree.GetRoot().FindNode(localtion.SourceSpan);
+                    var methodNode = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
-                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(localtionSourceTree), exceptLocally);
+                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), exceptLocally);
 
                     if (imp.Any()) return false;
                 }

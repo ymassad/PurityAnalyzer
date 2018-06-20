@@ -266,5 +266,274 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewlyCreatedObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        Create().Increment();
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return Create().a;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        Create().a = 2;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatIncrementsViaPlusPlusAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        Create().a++;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+        class1.Increment();
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+        return class1.a;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+        class1.a = 2;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatIncrementsViaPlusPlusAReadWriteFieldOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+        class1.a++;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }

@@ -72,7 +72,7 @@ public class Class1
 
 public static class Module1
 {
-    Class1 class1;
+    static Class1 class1;
 
     [ReturnsNewObject]
     public static Class1 DoSomething()
@@ -162,7 +162,7 @@ public static class Module1
         return DoSomething2();
     }
 
-    Class1 class1;
+    static Class1 class1;
 
     public static Class1 DoSomething2() => class1;
 }";
@@ -170,6 +170,35 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
         }
+
+        [Test]
+        public void ExpressionBodiedMethodThatReturnsTheResultOfCallingAMethodThatDoesNotReturnANewObjectDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething() => DoSomething2();
+
+    static Class1 class1;
+
+    public static Class1 DoSomething2() => class1;
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
 
         [Test]
         public void MethodThatReturnsTheResultOfCallingAMethodThatReturnsANewObjectReturnsNewObject()
