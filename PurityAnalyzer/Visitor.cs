@@ -166,7 +166,7 @@ namespace PurityAnalyzer
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
                     allDestinationMethods
                         .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
-                        .Where(IsMethodPure)
+                        .Where(method => IsMethodPure(method))
                         .ToArray();
 
                 var sourceMethodsDownUntilBeforeDestionation = GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
@@ -301,7 +301,7 @@ namespace PurityAnalyzer
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor)
-                    .All(IsMethodPure))
+                    .All(method => IsMethodPure(method)))
                 return false;
 
             if (symbol.IsInCode())
@@ -499,7 +499,7 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method))
+                if (!IsMethodPure(method, exceptLocally))
                 {
                     impurities.Add((node, "Method is impure"));
                 }
@@ -672,7 +672,7 @@ namespace PurityAnalyzer
             base.VisitElementAccessExpression(node);
         }
 
-        private bool IsMethodPure(IMethodSymbol method)
+        private bool IsMethodPure(IMethodSymbol method, bool exceptLocally = false)
         {
             if (method.IsAbstract)
                 return true;

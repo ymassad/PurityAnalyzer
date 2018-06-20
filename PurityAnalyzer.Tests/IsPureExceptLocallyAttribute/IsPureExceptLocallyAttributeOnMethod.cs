@@ -296,7 +296,7 @@ public class Class1
         }
 
         [Test]
-        public void MethodThatCallsAnPureExceptLocallyMethodIsPureExceptLocally()
+        public void MethodThatCallsAPureExceptLocallyMethodIsPureExceptLocally()
         {
             string code = @"
 using System;
@@ -321,6 +321,35 @@ public class Class1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectOfTheSameTypeStoredInAStaticFieldIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return instance.PureExceptLocally();
+    }
+
+    public int PureExceptLocally() => localState++;
+
+    int localState = 0;
+
+    public static Class1 instance = new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
         }
 
     }
