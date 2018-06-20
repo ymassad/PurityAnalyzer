@@ -527,7 +527,14 @@ namespace PurityAnalyzer
                 }
                 else
                 {
-                    if (!IsMethodPure(method))
+                    if (IsAccessOnNewlyCreatedObject(node))
+                    {
+                        if (!IsMethodPure(method, exceptLocally: true))
+                        {
+                            impurities.Add((node, "Method is impure"));
+                        }
+                    }
+                    else if (!IsMethodPure(method))
                     {
                         impurities.Add((node, "Method is impure"));
                     }
@@ -570,11 +577,12 @@ namespace PurityAnalyzer
             List<ExpressionSyntax> FindValuesAssignedToVariable(SyntaxNode containingBlockNode, ILocalSymbol local1)
             {
                 var declaration = local1.DeclaringSyntaxReferences.Single();
-                var z = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
 
                 List<ExpressionSyntax> list = new List<ExpressionSyntax>();
 
-                if (z is VariableDeclaratorSyntax variableDecl)
+                var declarationNode = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
+
+                if (declarationNode is VariableDeclaratorSyntax variableDecl)
                 {
                     if (variableDecl.Initializer != null)
                     {
