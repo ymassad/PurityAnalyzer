@@ -560,6 +560,9 @@ namespace PurityAnalyzer
 
         private bool IsNewlyCreatedObject(ExpressionSyntax expression)
         {
+            if (expression is ObjectCreationExpressionSyntax)
+                return true;
+
             if (!(expression is IdentifierNameSyntax identifier))
                 return false;
 
