@@ -196,6 +196,7 @@
     <Compile Include="IsPureAttributeOnMethod\ConstFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\RecursiveMethodsTests.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnMethod.cs" />
+    <Compile Include="ReturnsNewObjectAttribute\ReturnsNewObjectAttributeTests.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -222,6 +223,7 @@
   <ItemGroup>
     <Content Include="IsPureAttributeOnMethod\OverriddenMethods\Note.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
