@@ -499,10 +499,40 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method, exceptLocally))
+                if (exceptLocally)
                 {
-                    impurities.Add((node, "Method is impure"));
+                    if (node.Parent is InvocationExpressionSyntax)
+                    {
+                        if (!IsMethodPure(method, exceptLocally: true))
+                        {
+                            impurities.Add((node, "Method is impure"));
+                        }
+                    }
+
+                    else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
+                        memberAccess.Expression.Kind() == SyntaxKind.ThisExpression && memberAccess.Parent is InvocationExpressionSyntax)
+                    {
+                        if (!IsMethodPure(method, exceptLocally: true))
+                        {
+                            impurities.Add((node, "Method is impure"));
+                        }
+                    }
+                    else
+                    {
+                        if (!IsMethodPure(method, exceptLocally: false))
+                        {
+                            impurities.Add((node, "Method is impure"));
+                        }
+                    }
                 }
+                else
+                {
+                    if (!IsMethodPure(method))
+                    {
+                        impurities.Add((node, "Method is impure"));
+                    }
+                }
+
             }
 
             if (symbol.Symbol is IEventSymbol)
