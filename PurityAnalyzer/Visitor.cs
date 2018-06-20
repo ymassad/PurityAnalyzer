@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace PurityAnalyzer
 {
@@ -391,63 +392,66 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-                if (!(field.IsReadOnly || field.IsConst))
+                if (!IsAccessOnNewlyCreatedObject(node))
                 {
-                    var constructorWhereIdentifierIsUsed =
-                        node.Ancestors()
-                            .OfType<ConstructorDeclarationSyntax>()
-                            .FirstOrDefault();
-
-                    bool accessingFieldFromMatchingConstructor = false;
-
-
-                    if (constructorWhereIdentifierIsUsed != null)
+                    if (!(field.IsReadOnly || field.IsConst))
                     {
-                        var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
-
-                        var currentType = constructorSymbol.ContainingType;
-
-                        if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
-                        {
-                            accessingFieldFromMatchingConstructor = true;
-                        }
-                    }
-
-                    bool accessingLocalFieldLegally = false;
-
-                    if (exceptLocally)
-                    {
-                        var methodWhereIdentifierIsUsed =
+                        var constructorWhereIdentifierIsUsed =
                             node.Ancestors()
-                                .OfType<MethodDeclarationSyntax>()
-                                .FirstOrNoValue();
+                                .OfType<ConstructorDeclarationSyntax>()
+                                .FirstOrDefault();
 
-                        bool IsAccessingLocalField(MethodDeclarationSyntax m)
+                        bool accessingFieldFromMatchingConstructor = false;
+
+
+                        if (constructorWhereIdentifierIsUsed != null)
                         {
-                            var methodSymbol = semanticModel.GetDeclaredSymbol(m);
+                            var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
 
-                            var currentType = methodSymbol.ContainingType;
+                            var currentType = constructorSymbol.ContainingType;
 
-                            return field.ContainingType == currentType && !field.IsStatic;
-                        }
-
-                        accessingLocalFieldLegally = 
-                            methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
-                    }
-
-                    if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
-                    {
-                        var usage = GetUsage(node);
-
-                        if (usage.IsWrite())
-                        {
-                            impurities.Add((node, "Write access to field"));
-                        }
-                        else
-                        {
-                            if (!IsParameterBasedAccess(node))
+                            if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
                             {
-                                impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                accessingFieldFromMatchingConstructor = true;
+                            }
+                        }
+
+                        bool accessingLocalFieldLegally = false;
+
+                        if (exceptLocally)
+                        {
+                            var methodWhereIdentifierIsUsed =
+                                node.Ancestors()
+                                    .OfType<MethodDeclarationSyntax>()
+                                    .FirstOrNoValue();
+
+                            bool IsAccessingLocalField(MethodDeclarationSyntax m)
+                            {
+                                var methodSymbol = semanticModel.GetDeclaredSymbol(m);
+
+                                var currentType = methodSymbol.ContainingType;
+
+                                return field.ContainingType == currentType && !field.IsStatic;
+                            }
+
+                            accessingLocalFieldLegally = 
+                                methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                        }
+
+                        if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
+                        {
+                            var usage = GetUsage(node);
+
+                            if (usage.IsWrite())
+                            {
+                                impurities.Add((node, "Write access to field"));
+                            }
+                            else
+                            {
+                                if (!IsParameterBasedAccess(node))
+                                {
+                                    impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                }
                             }
                         }
                     }
@@ -507,6 +511,63 @@ namespace PurityAnalyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        private bool IsAccessOnNewlyCreatedObject(IdentifierNameSyntax node)
+        {
+            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
+                return false;
+
+            return IsNewlyCreatedObject(memberAccess.Expression);
+        }
+
+        private bool IsNewlyCreatedObject(ExpressionSyntax expression)
+        {
+            if (!(expression is IdentifierNameSyntax identifier))
+                return false;
+
+            var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
+
+
+            if (!(identifierSymbol is ILocalSymbol local))
+                return false;
+
+            var method = expression.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrNoValue();
+
+            if (method.HasNoValue)
+                return false;
+
+            List<ExpressionSyntax> FindValuesAssignedToVariable(SyntaxNode containingBlockNode, ILocalSymbol local1)
+            {
+                var declaration = local1.DeclaringSyntaxReferences.Single();
+                var z = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
+
+                List<ExpressionSyntax> list = new List<ExpressionSyntax>();
+
+                if (z is VariableDeclaratorSyntax variableDecl)
+                {
+                    if (variableDecl.Initializer != null)
+                    {
+                        list.Add(variableDecl.Initializer.Value);
+                    }
+                }
+
+                var usages = containingBlockNode
+                    .DescendantNodes()
+                    .OfType<IdentifierNameSyntax>()
+                    .Where(x => x.Identifier.Text == local1.Name)
+                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(local1) ?? false)
+                    .Where(x => x.Parent is AssignmentExpressionSyntax assignment && assignment.Left == x)
+                    .Select(x => ((AssignmentExpressionSyntax) x.Parent).Right)
+                    .ToArray();
+
+                list.AddRange(usages);
+
+                return list;
+            }
+
+
+            return FindValuesAssignedToVariable(method.GetValue().Body, local).All(x => x is ObjectCreationExpressionSyntax);
         }
 
         private bool IsImpure(SyntaxNode methodLike)
