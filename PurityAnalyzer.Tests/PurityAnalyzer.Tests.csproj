@@ -156,6 +156,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IsPureAttributeOnMethod\InvokingNewObjectTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CompiledFieldsOnInputParameterTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\ArrayTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CompiledMethodCallingTests.cs" />
