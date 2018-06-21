@@ -223,7 +223,13 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             bool exceptLocally = false)
         {
-            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel, knownReturnsNewObjectMethods, exceptLocally).ToList();
+            var impurities =
+                Utils.GetImpurities(
+                    GetBodyIfDeclaration(methodLikeNode),
+                    context.SemanticModel,
+                    knownReturnsNewObjectMethods,
+                    exceptLocally)
+                    .ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)
             {
@@ -245,6 +251,19 @@ namespace PurityAnalyzer
 
                 context.ReportDiagnostic(diagnostic);
             }
+        }
+
+        public static SyntaxNode GetBodyIfDeclaration(SyntaxNode method)
+        {
+            if (method is BaseMethodDeclarationSyntax declarationSyntax)
+                return GetMethodBody(declarationSyntax);
+
+            return method;
+        }
+
+        public static SyntaxNode GetMethodBody(BaseMethodDeclarationSyntax method)
+        {
+            return method.Body ?? (SyntaxNode)method.ExpressionBody;
         }
     }
 }
