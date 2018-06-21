@@ -525,48 +525,34 @@ namespace PurityAnalyzer
             }
         }
 
-        private void ProcessMethodSymbol(IdentifierNameSyntax node, IMethodSymbol method1)
+        private void ProcessMethodSymbol(IdentifierNameSyntax node, IMethodSymbol method)
         {
+            bool acceptMethodToBePureExceptLocally = false;
+
             if (exceptLocally)
             {
                 if (node.Parent is InvocationExpressionSyntax)
                 {
-                    if (!IsMethodPure(method1, exceptLocally: true))
-                    {
-                        impurities.Add((node, "Method is impure"));
-                    }
+                    acceptMethodToBePureExceptLocally = true;
                 }
-
                 else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
                          memberAccess.Expression.Kind() == SyntaxKind.ThisExpression &&
                          memberAccess.Parent is InvocationExpressionSyntax)
                 {
-                    if (!IsMethodPure(method1, exceptLocally: true))
-                    {
-                        impurities.Add((node, "Method is impure"));
-                    }
-                }
-                else
-                {
-                    if (!IsMethodPure(method1, exceptLocally: false))
-                    {
-                        impurities.Add((node, "Method is impure"));
-                    }
+                    acceptMethodToBePureExceptLocally = true;
                 }
             }
             else
             {
                 if (IsAccessOnNewlyCreatedObject(node))
                 {
-                    if (!IsMethodPure(method1, exceptLocally: true))
-                    {
-                        impurities.Add((node, "Method is impure"));
-                    }
-                }
-                else if (!IsMethodPure(method1))
-                {
-                    impurities.Add((node, "Method is impure"));
-                }
+                    acceptMethodToBePureExceptLocally = true;
+                } 
+            }
+
+            if (!IsMethodPure(method, acceptMethodToBePureExceptLocally))
+            {
+                impurities.Add((node, "Method is impure"));
             }
         }
 
