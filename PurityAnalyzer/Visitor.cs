@@ -726,11 +726,11 @@ namespace PurityAnalyzer
         public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureExceptLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
-                Resources.PureExceptLocallyMethods;
-                //+ Environment.NewLine
-                //+ PurityAnalyzerAnalyzer
-                //    .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
-                //    .ValueOr("");
+                Resources.PureExceptLocallyMethods
+                    +Environment.NewLine
+                    + PurityAnalyzerAnalyzer
+                        .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
+                        .ValueOr("");
 
             return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Split(','))

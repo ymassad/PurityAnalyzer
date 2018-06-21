@@ -44,6 +44,8 @@ namespace PurityAnalyzer
         public static Maybe<string> CustomPureTypesFilename { get; set; }
         public static Maybe<string> CustomPureMethodsFilename { get; set; }
 
+        public static Maybe<string> CustomPureExceptLocallyMethodsFilename { get; set; }
+        
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule);
 
         public override void Initialize(AnalysisContext context)
