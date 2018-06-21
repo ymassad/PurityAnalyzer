@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
 {
     [TestFixture]
-    public class CallingPureExceptLocallyMethodsOnNewDotNetObjectsTests
+    public class CallingPureExceptLocallyMethodsAndPropertiesOnNewDotNetObjectsTests
     {
         [TestCaseSource(nameof(GetCases))]
         public void TestPureInvocation(string invocation)
