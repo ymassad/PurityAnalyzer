@@ -62,7 +62,27 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to System.Text.StringBuilder, AppendLine.
+        /// </summary>
+        internal static string PureExceptLocallyMethods {
+            get {
+                return ResourceManager.GetString("PureExceptLocallyMethods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System.Int32, ToString
+        ///System.Boolean, ToString
+        ///System.Double, ToString
+        ///System.Single, ToString
+        ///System.Decimal, ToString
+        ///System.String, ToString
+        ///System.Guid, ToString
+        ///System.Guid, Parse
+        ///System.String, Join
+        ///System.String, Equals
+        ///System.Array, GetEnumerator
+        ///System.Text.StringBuilder, .ctor.
         /// </summary>
         internal static string PureMethods {
             get {
@@ -71,7 +91,9 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to System.Linq.Enumerable
+        ///System.Linq.IGrouping`2
+        ///.
         /// </summary>
         internal static string PureTypes {
             get {

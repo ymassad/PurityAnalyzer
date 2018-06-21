@@ -9,3 +9,4 @@ System.Guid, Parse
 System.String, Join
 System.String, Equals
 System.Array, GetEnumerator
+System.Text.StringBuilder, .ctor

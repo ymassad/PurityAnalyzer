@@ -21,6 +21,7 @@ namespace PurityAnalyzer
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
         private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
+        private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureExceptLocallyMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
         public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute, bool exceptLocally)
@@ -32,7 +33,7 @@ namespace PurityAnalyzer
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
             knownPureMethods = GetKnownPureMethods();
-
+            knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
             knownPureTypes = GetKnownPureTypes();
         }
 
@@ -696,7 +697,7 @@ namespace PurityAnalyzer
                 }
                 else
                 {
-                    if (!IsKnownPureMethod(method)) return false;
+                    if (!IsKnownPureMethod(method, exceptLocally)) return false;
                 }
             }
 
@@ -722,6 +723,25 @@ namespace PurityAnalyzer
                     x => new HashSet<string>(x));
         }
 
+        public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureExceptLocallyMethods()
+        {
+            var pureMethodsExceptLocallyFileContents =
+                Resources.PureExceptLocallyMethods;
+                //+ Environment.NewLine
+                //+ PurityAnalyzerAnalyzer
+                //    .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
+                //    .ValueOr("");
+
+            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(','))
+                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure-except-locally method line"))
+                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                    x => new HashSet<string>(x));
+        }
+
         public HashSet<INamedTypeSymbol> GetKnownPureTypes()
         {
             var pureTypesFileContents =
@@ -737,7 +757,7 @@ namespace PurityAnalyzer
             return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
         }
 
-        private bool IsKnownPureMethod(IMethodSymbol method)
+        private bool IsKnownPureMethod(IMethodSymbol method, bool exceptLocally = false)
         {
             if (method.ContainingType.TypeKind == TypeKind.Delegate)
                 return true;
@@ -753,11 +773,22 @@ namespace PurityAnalyzer
                     return true;
             }
 
-            if (knownPureMethods.TryGetValue(method.ContainingType, out var methods) &&
-                methods.Contains(method.Name))
+
+            if (knownPureMethods.TryGetValue(method.ContainingType, out var pureMethods) &&
+                pureMethods.Contains(method.Name))
             {
                 return true;
             }
+            
+            if(exceptLocally)
+            {
+                if (knownPureExceptLocallyMethods.TryGetValue(method.ContainingType, out var pureExceptLocallyMethods) &&
+                    pureExceptLocallyMethods.Contains(method.Name))
+                {
+                    return true;
+                }
+            }
+
 
             return false;
         }
