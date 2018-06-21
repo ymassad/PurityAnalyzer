@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -38,16 +40,23 @@ namespace PurityAnalyzer
             return attributeName == "IsPureExceptLocally" || attributeName == "IsPureExceptLocally" + "Attribute";
         }
 
-        public static (SyntaxNode node, string message)[] GetImpurities(SyntaxNode methodDeclaration, SemanticModel semanticModel, bool exceptLocally = false)
+        public static (SyntaxNode node, string message)[] GetImpurities(SyntaxNode methodDeclaration,
+            SemanticModel semanticModel,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            bool exceptLocally = false)
         {
-            var vis = new Visitor(semanticModel, IsIsPureAttribute, exceptLocally);
+            var vis = new Visitor(semanticModel, IsIsPureAttribute, exceptLocally, knownReturnsNewObjectMethods);
 
             vis.Visit(methodDeclaration);
 
             return vis.impurities.ToArray();
         }
 
-        public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration, SemanticModel semanticModel, bool onlyStaticFields = false)
+        public static bool AnyImpurePropertyInitializer(
+            TypeDeclarationSyntax typeDeclaration,
+            SemanticModel semanticModel,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            bool onlyStaticFields = false)
         {
             var props = typeDeclaration
                 .Members
@@ -57,13 +66,17 @@ namespace PurityAnalyzer
 
             foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
             {
-                if (Utils.GetImpurities(var, semanticModel).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods).Any()) return true;
             }
 
             return false;
         }
 
-        public static bool AnyImpureFieldInitializer(TypeDeclarationSyntax typeDeclaration, SemanticModel semanticModel, bool onlyStaticFields = false)
+        public static bool AnyImpureFieldInitializer(
+            TypeDeclarationSyntax typeDeclaration,
+            SemanticModel semanticModel,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            bool onlyStaticFields = false)
         {
             var fields =
                 typeDeclaration.Members
@@ -73,13 +86,16 @@ namespace PurityAnalyzer
 
             foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
             {
-                if (Utils.GetImpurities(var, semanticModel).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods).Any()) return true;
             }
 
             return false;
         }
 
-        public static bool IsNewlyCreatedObject(SemanticModel semanticModel, ExpressionSyntax expression)
+        public static bool IsNewlyCreatedObject(
+            SemanticModel semanticModel,
+            ExpressionSyntax expression,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             if (expression is ObjectCreationExpressionSyntax)
                 return true;
@@ -98,7 +114,7 @@ namespace PurityAnalyzer
 
                         if (node is BaseMethodDeclarationSyntax methodNode)
                         {
-                            if (ReturnsNewObject(methodNode, semanticModel))
+                            if (ReturnsNewObject(methodNode, semanticModel, knownReturnsNewObjectMethods))
                                 return true;
                         }
                     }
@@ -106,6 +122,13 @@ namespace PurityAnalyzer
                     {
                         if (invokedMethod.GetAttributes()
                             .Any(x => IsReturnsNewObjectAttribute(x.AttributeClass.Name)))
+                        {
+                            return true;
+                        }
+
+                        if (knownReturnsNewObjectMethods.TryGetValue(
+                                Utils.GetFullMetaDataName(invokedMethod.ContainingType), out var methods) &&
+                            methods.Contains(invokedMethod.Name))
                         {
                             return true;
                         }
@@ -156,15 +179,18 @@ namespace PurityAnalyzer
                 return list;
             }
             
-            return FindValuesAssignedToVariable(method.GetValue().Body, local).All(x => IsNewlyCreatedObject(semanticModel, x));
+            return FindValuesAssignedToVariable(method.GetValue().Body, local).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
         }
 
-        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel)
+        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
-            return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel).Any();
+            return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownReturnsNewObjectMethods).Any();
         }
 
-        public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForMethod(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel)
+        public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForMethod(
+            BaseMethodDeclarationSyntax methodDeclaration,
+            SemanticModel semanticModel,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             var returnExpressions =
                 methodDeclaration.Body != null
@@ -177,11 +203,59 @@ namespace PurityAnalyzer
 
             foreach (var expression in returnExpressions)
             {
-                if (!Utils.IsNewlyCreatedObject(semanticModel, expression))
+                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownReturnsNewObjectMethods))
                 {
                     yield return expression;
                 }
             }
+        }
+
+        public static Dictionary<string, HashSet<string>> GetKnownReturnsNewObjectMethods(SemanticModel semanticModel)
+        {
+            var returnsNewObjectMethodsFileContents =
+                Resources.ReturnsNewObjectMethods
+                    + Environment.NewLine
+                    + PurityAnalyzerAnalyzer
+                        .CustomReturnsNewObjectMethodsFilename.ChainValue(File.ReadAllText)
+                        .ValueOr("");
+
+            return returnsNewObjectMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(','))
+                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid returns-new-object method line"))
+                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<string>(x));
+        }
+
+        public static string GetFullMetaDataName(INamedTypeSymbol typeSymbol)
+        {
+            string name = typeSymbol.MetadataName;
+
+            if (typeSymbol.ContainingType != null)
+                return GetFullMetaDataName(typeSymbol.ContainingType) + "." + name;
+
+            if (typeSymbol.ContainingNamespace != null)
+            {
+                if (typeSymbol.ContainingNamespace.IsGlobalNamespace)
+                    return name;
+
+                return GetFullMetaDataName(typeSymbol.ContainingNamespace) + "." + name;
+            }
+
+            return name;
+        }
+
+        public static string GetFullMetaDataName(INamespaceSymbol @namespace)
+        {
+            string name = @namespace.Name;
+
+            if (@namespace.ContainingNamespace != null && !@namespace.ContainingNamespace.IsGlobalNamespace)
+                return GetFullMetaDataName(@namespace.ContainingNamespace) + "." + name;
+
+            return name;
+
         }
     }
 }

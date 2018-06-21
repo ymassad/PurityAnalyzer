@@ -62,7 +62,9 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to System.Text.StringBuilder, AppendLine.
+        ///   Looks up a localized string similar to System.Text.StringBuilder, AppendLine
+        ///System.Xml.XmlDocument, CreateElement
+        ///System.Xml.XmlElement, SetAttribute.
         /// </summary>
         internal static string PureExceptLocallyMethods {
             get {
@@ -82,7 +84,8 @@ namespace PurityAnalyzer {
         ///System.String, Join
         ///System.String, Equals
         ///System.Array, GetEnumerator
-        ///System.Text.StringBuilder, .ctor.
+        ///System.Text.StringBuilder, .ctor
+        ///System.Xml.XmlDocument, .ctor.
         /// </summary>
         internal static string PureMethods {
             get {
@@ -98,6 +101,16 @@ namespace PurityAnalyzer {
         internal static string PureTypes {
             get {
                 return ResourceManager.GetString("PureTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///.
+        /// </summary>
+        internal static string ReturnsNewObjectMethods {
+            get {
+                return ResourceManager.GetString("ReturnsNewObjectMethods", resourceCulture);
             }
         }
     }

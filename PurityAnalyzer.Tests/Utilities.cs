@@ -45,6 +45,11 @@ namespace PurityAnalyzer.Tests
             return MetadataReference.CreateFromFile(typeof(ImmutableDto1).Assembly.Location);
         }
 
+        public static PortableExecutableReference CreateFromType<T>()
+        {
+            return MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
+        }
+
         public static Diagnostic[] RunPurityAnalyzer(string content, params MetadataReference[] additionalReferences)
         {
             return RunPurityAnalyzer(content, Maybe.NoValue, additionalReferences);

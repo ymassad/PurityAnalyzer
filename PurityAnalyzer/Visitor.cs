@@ -20,15 +20,17 @@ namespace PurityAnalyzer
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureMethods;
-        private readonly Dictionary<INamedTypeSymbol, HashSet<string>> knownPureExceptLocallyMethods;
+        private readonly Dictionary<string, HashSet<string>> knownPureMethods;
+        private readonly Dictionary<string, HashSet<string>> knownPureExceptLocallyMethods;
+        private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
-        public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute, bool exceptLocally)
+        public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             this.semanticModel = semanticModel;
             this.isIsPureAttribute = isIsPureAttribute;
             this.exceptLocally = exceptLocally;
+            this.knownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
@@ -339,7 +341,7 @@ namespace PurityAnalyzer
                 symbol.Locations
                     .Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel));
+                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel, knownReturnsNewObjectMethods));
         }
 
         private bool AnyImpureFieldInitializer(INamedTypeSymbol symbol)
@@ -347,7 +349,7 @@ namespace PurityAnalyzer
             return
                 symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel));
+                    .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods));
         }
 
         private bool IsParameterBasedAccess(MemberAccessExpressionSyntax node)
@@ -556,12 +558,12 @@ namespace PurityAnalyzer
             if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
                 return false;
 
-            return Utils.IsNewlyCreatedObject(semanticModel, memberAccess.Expression);
+            return Utils.IsNewlyCreatedObject(semanticModel, memberAccess.Expression, knownReturnsNewObjectMethods);
         }
 
         private bool IsImpure(SyntaxNode methodLike)
         {
-            var imp = Utils.GetImpurities(methodLike, semanticModel);
+            var imp = Utils.GetImpurities(methodLike, semanticModel, knownReturnsNewObjectMethods);
 
             return imp.Any();
         }
@@ -691,7 +693,7 @@ namespace PurityAnalyzer
 
                     var methodNode = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
-                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), exceptLocally);
+                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), knownReturnsNewObjectMethods, exceptLocally);
 
                     if (imp.Any()) return false;
                 }
@@ -704,7 +706,7 @@ namespace PurityAnalyzer
             return true;
         }
 
-        public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureMethods()
+        public Dictionary<string, HashSet<string>> GetKnownPureMethods()
         {
             var pureMethodsFileContents =
                 Resources.PureMethods
@@ -719,11 +721,11 @@ namespace PurityAnalyzer
                 .Select(x => new { Type = x[0], Method = x[1].Trim() })
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
-                    x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                    x => x.Key,
                     x => new HashSet<string>(x));
         }
 
-        public Dictionary<INamedTypeSymbol, HashSet<string>> GetKnownPureExceptLocallyMethods()
+        public Dictionary<string, HashSet<string>> GetKnownPureExceptLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptLocallyMethods
@@ -738,7 +740,7 @@ namespace PurityAnalyzer
                 .Select(x => new { Type = x[0], Method = x[1].Trim() })
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
-                    x => semanticModel.Compilation.GetTypeByMetadataName(x.Key),
+                    x => x.Key,
                     x => new HashSet<string>(x));
         }
 
@@ -774,7 +776,7 @@ namespace PurityAnalyzer
             }
 
 
-            if (knownPureMethods.TryGetValue(method.ContainingType, out var pureMethods) &&
+            if (knownPureMethods.TryGetValue(Utils.GetFullMetaDataName(method.ContainingType), out var pureMethods) &&
                 pureMethods.Contains(method.Name))
             {
                 return true;
@@ -782,7 +784,9 @@ namespace PurityAnalyzer
             
             if(exceptLocally)
             {
-                if (knownPureExceptLocallyMethods.TryGetValue(method.ContainingType, out var pureExceptLocallyMethods) &&
+                if (knownPureExceptLocallyMethods.TryGetValue(
+                        Utils.GetFullMetaDataName(method.ContainingType),
+                        out var pureExceptLocallyMethods) &&
                     pureExceptLocallyMethods.Contains(method.Name))
                 {
                     return true;

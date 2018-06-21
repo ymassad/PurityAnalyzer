@@ -45,7 +45,8 @@ namespace PurityAnalyzer
         public static Maybe<string> CustomPureMethodsFilename { get; set; }
 
         public static Maybe<string> CustomPureExceptLocallyMethodsFilename { get; set; }
-        
+        public static Maybe<string> CustomReturnsNewObjectMethodsFilename { get; set; }
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule);
 
         public override void Initialize(AnalysisContext context)
@@ -59,13 +60,17 @@ namespace PurityAnalyzer
 
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
         {
+
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+                Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
+
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
             var attributes = GetAttributes(methodDeclaration.AttributeLists);
 
             if (attributes.Any(Utils.IsIsPureAttribute))
             {
-                ProcessImpuritiesForMethod(context, methodDeclaration);
+                ProcessImpuritiesForMethod(context, methodDeclaration, knownReturnsNewObjectMethods);
                 return;
             }
 
@@ -82,7 +87,7 @@ namespace PurityAnalyzer
                     return;
                 }
 
-                ProcessImpuritiesForMethod(context, methodDeclaration, exceptLocally: true);
+                ProcessImpuritiesForMethod(context, methodDeclaration, knownReturnsNewObjectMethods, exceptLocally: true);
             });
 
             attributes.FirstOrNoValue(Utils.IsReturnsNewObjectAttribute).ExecuteIfHasValue(attribute =>
@@ -102,16 +107,19 @@ namespace PurityAnalyzer
                         return;
                     }
 
-                    ProcessNonNewObjectReturnsForMethod(context, methodDeclaration);
+                    ProcessNonNewObjectReturnsForMethod(context, methodDeclaration, knownReturnsNewObjectMethods);
 
                 }
             });
 
         }
 
-        private void ProcessNonNewObjectReturnsForMethod(SyntaxNodeAnalysisContext context, BaseMethodDeclarationSyntax methodDeclaration)
+        private void ProcessNonNewObjectReturnsForMethod(
+            SyntaxNodeAnalysisContext context,
+            BaseMethodDeclarationSyntax methodDeclaration,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
-            foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel))
+            foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel, knownReturnsNewObjectMethods))
             {
                 var diagnostic = Diagnostic.Create(
                     ReturnsNewObjectRule,
@@ -131,6 +139,9 @@ namespace PurityAnalyzer
 
         private void AnalyzeClassSyntaxNode(SyntaxNodeAnalysisContext context)
         {
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+                Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
+
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             if (classDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
@@ -142,12 +153,12 @@ namespace PurityAnalyzer
                         .Cast<MemberDeclarationSyntax>()
                         .Concat(classDeclarationSyntax.Members.OfType<ConstructorDeclarationSyntax>()))
                 {
-                    ProcessImpuritiesForMethod(context, methodDeclaration);
+                    ProcessImpuritiesForMethod(context, methodDeclaration, knownReturnsNewObjectMethods);
                 }
 
                 foreach (var propertyDeclaration in classDeclarationSyntax.Members.OfType<PropertyDeclarationSyntax>())
                 {
-                    ProcessImpuritiesForProperty(context, propertyDeclaration);
+                    ProcessImpuritiesForProperty(context, propertyDeclaration, knownReturnsNewObjectMethods);
                 }
 
                 foreach (var fieldDeclaration in classDeclarationSyntax.Members.OfType<FieldDeclarationSyntax>())
@@ -158,44 +169,50 @@ namespace PurityAnalyzer
                         {
                             var initializedTo = fieldVar.Initializer.Value;
 
-                            ProcessImpuritiesForMethod(context, initializedTo);
+                            ProcessImpuritiesForMethod(context, initializedTo, knownReturnsNewObjectMethods);
                         }
                     }
                 }
             }
         }
 
-        private void AnalyzePropertySyntaxNode(SyntaxNodeAnalysisContext context)
+        private void AnalyzePropertySyntaxNode(
+            SyntaxNodeAnalysisContext context)
         {
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+                Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
+
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
 
             if (propertyDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
                 .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
             {
-                ProcessImpuritiesForProperty(context, propertyDeclarationSyntax);
+                ProcessImpuritiesForProperty(context, propertyDeclarationSyntax, knownReturnsNewObjectMethods);
             }
         }
 
-        private static void ProcessImpuritiesForProperty(SyntaxNodeAnalysisContext context,
-            PropertyDeclarationSyntax propertyDeclarationSyntax)
+        private static void ProcessImpuritiesForProperty(
+            SyntaxNodeAnalysisContext context,
+            PropertyDeclarationSyntax propertyDeclarationSyntax,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             if (propertyDeclarationSyntax.AccessorList != null)
             {
                 foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
                 {
-                    ProcessImpuritiesForMethod(context, accessor);
+                    ProcessImpuritiesForMethod(context, accessor, knownReturnsNewObjectMethods);
                 }
             }
             else if (propertyDeclarationSyntax.ExpressionBody != null)
             {
-                ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody);
+                ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody, knownReturnsNewObjectMethods);
             }
 
             if (propertyDeclarationSyntax.Initializer != null)
             {
                 var initializedTo = propertyDeclarationSyntax.Initializer.Value;
 
-                ProcessImpuritiesForMethod(context, initializedTo);
+                ProcessImpuritiesForMethod(context, initializedTo, knownReturnsNewObjectMethods);
             }
 
         }
@@ -203,18 +220,19 @@ namespace PurityAnalyzer
         private static void ProcessImpuritiesForMethod(
             SyntaxNodeAnalysisContext context,
             SyntaxNode methodLikeNode,
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             bool exceptLocally = false)
         {
-            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel, exceptLocally).ToList();
+            var impurities = Utils.GetImpurities(methodLikeNode, context.SemanticModel, knownReturnsNewObjectMethods, exceptLocally).ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)
             {
                 var containingType = constructor.FirstAncestorOrSelf<TypeDeclarationSyntax>();
 
-                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, constructor.IsStatic()))
+                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, constructor.IsStatic()))
                     impurities.Add((methodLikeNode, "There are impure field initializers"));
 
-                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, constructor.IsStatic()))
+                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, constructor.IsStatic()))
                     impurities.Add((methodLikeNode, "There are impure property initializers"));
             }
 

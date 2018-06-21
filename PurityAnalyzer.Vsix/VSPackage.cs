@@ -81,6 +81,7 @@ namespace PurityAnalyzer.Vsix
             PurityAnalyzerAnalyzer.CustomPureMethodsFilename = CustomPureMethodsFilename.ToMaybe().If(x => x != "");
             PurityAnalyzerAnalyzer.CustomPureExceptLocallyMethodsFilename = CustomPureExceptLocallyMethodsFilename.ToMaybe().If(x => x != "");
             PurityAnalyzerAnalyzer.CustomPureTypesFilename = CustomPureTypesFilename.ToMaybe().If(x => x != "");
+            PurityAnalyzerAnalyzer.CustomReturnsNewObjectMethodsFilename = CustomReturnsNewObjectMethodsFilename.ToMaybe().If(x => x != "");
         }
 
         #endregion
@@ -111,6 +112,15 @@ namespace PurityAnalyzer.Vsix
                 return page.CustomPureExceptLocallyMethodsFilename;
             }
         }
+
+        public string CustomReturnsNewObjectMethodsFilename
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.CustomReturnsNewObjectMethodsFilename;
+            }
+        }
     }
 
     public class OptionPageGrid : DialogPage
@@ -129,6 +139,11 @@ namespace PurityAnalyzer.Vsix
         [DisplayName("Custom Pure Except Locally Methods Filename")]
         [Description("Full filename that contains custom methods to consider pure-except-locally")]
         public string CustomPureExceptLocallyMethodsFilename { get; set; } = "";
+
+        [Category("Purity Analyzer")]
+        [DisplayName("Custom Returns New Object Methods Filename")]
+        [Description("Full filename that contains custom methods that return new objects")]
+        public string CustomReturnsNewObjectMethodsFilename { get; set; } = "";
     }
 
 }
