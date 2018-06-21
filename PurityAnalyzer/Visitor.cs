@@ -395,154 +395,17 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-                if (!(field.IsReadOnly || field.IsConst))
-                {
-                    if (!IsAccessOnNewlyCreatedObject(node))
-                    {
-                        var constructorWhereIdentifierIsUsed =
-                            node.Ancestors()
-                                .OfType<ConstructorDeclarationSyntax>()
-                                .FirstOrDefault();
-
-                        bool accessingFieldFromMatchingConstructor = false;
-
-
-                        if (constructorWhereIdentifierIsUsed != null)
-                        {
-                            var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
-
-                            var currentType = constructorSymbol.ContainingType;
-
-                            if (field.ContainingType == currentType && field.IsStatic == constructorSymbol.IsStatic)
-                            {
-                                accessingFieldFromMatchingConstructor = true;
-                            }
-                        }
-
-                        bool accessingLocalFieldLegally = false;
-
-                        if (exceptLocally)
-                        {
-                            var methodWhereIdentifierIsUsed =
-                                node.Ancestors()
-                                    .OfType<MethodDeclarationSyntax>()
-                                    .FirstOrNoValue();
-
-                            bool IsAccessingLocalField(MethodDeclarationSyntax m)
-                            {
-                                var methodSymbol = semanticModel.GetDeclaredSymbol(m);
-
-                                var currentType = methodSymbol.ContainingType;
-
-                                return field.ContainingType == currentType && !field.IsStatic;
-                            }
-
-                            accessingLocalFieldLegally = 
-                                methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
-                        }
-
-                        if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
-                        {
-                            var usage = GetUsage(node);
-
-                            if (usage.IsWrite())
-                            {
-                                impurities.Add((node, "Write access to field"));
-                            }
-                            else
-                            {
-                                if (!IsParameterBasedAccess(node))
-                                {
-                                    impurities.Add((node, "Read access to non-readonly and non-const and non-input parameter based field"));
-                                }
-                            }
-                        }
-                    }
-                }
+                ProcessFieldSymbol(node, field);
             }
 
             if (symbol.Symbol is IPropertySymbol property)
             {
-                if (!SymbolHasIsPureAttribute(property) && !SymbolHasIsPureAttribute(property.ContainingSymbol))
-                {
-                    if (property.IsCompiled())
-                    {
-                        if (!property.IsReadOnly || !IsKnownPureMethod(property.GetMethod))
-                        {
-                            impurities.Add((node, "Property access on type that is not in code and that does not have the Pure attribute"));
-                        }
-                    }
-                    else if (!property.IsReadOnly)
-                    {
-                        var usage = GetUsage(node);
-
-                        if (usage.IsWrite())
-                        {
-                            impurities.Add((node, "Write property access"));
-                        }
-                        else
-                        {
-                            if (!IsParameterBasedAccess(node))
-                            {
-                                impurities.Add((node, "Non input based property read"));
-                            }
-                            else if (IsImpure(GetPropertyGetter(property)))
-                            {
-                                impurities.Add((node, "Impure property getter"));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (IsImpure(GetPropertyGetter(property)))
-                            impurities.Add((node, "Property getter is impure"));
-                    }
-                }
+                ProcessPropertySymbol(node, property);
             }
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                if (exceptLocally)
-                {
-                    if (node.Parent is InvocationExpressionSyntax)
-                    {
-                        if (!IsMethodPure(method, exceptLocally: true))
-                        {
-                            impurities.Add((node, "Method is impure"));
-                        }
-                    }
-
-                    else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
-                        memberAccess.Expression.Kind() == SyntaxKind.ThisExpression && memberAccess.Parent is InvocationExpressionSyntax)
-                    {
-                        if (!IsMethodPure(method, exceptLocally: true))
-                        {
-                            impurities.Add((node, "Method is impure"));
-                        }
-                    }
-                    else
-                    {
-                        if (!IsMethodPure(method, exceptLocally: false))
-                        {
-                            impurities.Add((node, "Method is impure"));
-                        }
-                    }
-                }
-                else
-                {
-                    if (IsAccessOnNewlyCreatedObject(node))
-                    {
-                        if (!IsMethodPure(method, exceptLocally: true))
-                        {
-                            impurities.Add((node, "Method is impure"));
-                        }
-                    }
-                    else if (!IsMethodPure(method))
-                    {
-                        impurities.Add((node, "Method is impure"));
-                    }
-                }
-
+                ProcessMethodSymbol(node, method);
             }
 
             if (symbol.Symbol is IEventSymbol)
@@ -551,6 +414,160 @@ namespace PurityAnalyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        private void ProcessFieldSymbol(IdentifierNameSyntax node, IFieldSymbol fieldSymbol)
+        {
+            if (!(fieldSymbol.IsReadOnly || fieldSymbol.IsConst))
+            {
+                if (!IsAccessOnNewlyCreatedObject(node))
+                {
+                    var constructorWhereIdentifierIsUsed =
+                        node.Ancestors()
+                            .OfType<ConstructorDeclarationSyntax>()
+                            .FirstOrDefault();
+
+                    bool accessingFieldFromMatchingConstructor = false;
+
+
+                    if (constructorWhereIdentifierIsUsed != null)
+                    {
+                        var constructorSymbol = semanticModel.GetDeclaredSymbol(constructorWhereIdentifierIsUsed);
+
+                        var currentType = constructorSymbol.ContainingType;
+
+                        if (fieldSymbol.ContainingType == currentType && fieldSymbol.IsStatic == constructorSymbol.IsStatic)
+                        {
+                            accessingFieldFromMatchingConstructor = true;
+                        }
+                    }
+
+                    bool accessingLocalFieldLegally = false;
+
+                    if (exceptLocally)
+                    {
+                        var methodWhereIdentifierIsUsed =
+                            node.Ancestors()
+                                .OfType<MethodDeclarationSyntax>()
+                                .FirstOrNoValue();
+
+                        bool IsAccessingLocalField(MethodDeclarationSyntax m)
+                        {
+                            var methodSymbol = semanticModel.GetDeclaredSymbol(m);
+
+                            var currentType = methodSymbol.ContainingType;
+
+                            return fieldSymbol.ContainingType == currentType && !fieldSymbol.IsStatic;
+                        }
+
+                        accessingLocalFieldLegally =
+                            methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                    }
+
+                    if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
+                    {
+                        var usage = GetUsage(node);
+
+                        if (usage.IsWrite())
+                        {
+                            impurities.Add((node, "Write access to field"));
+                        }
+                        else
+                        {
+                            if (!IsParameterBasedAccess(node))
+                            {
+                                impurities.Add(
+                                    (node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ProcessPropertySymbol(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
+        {
+            if (!SymbolHasIsPureAttribute(propertySymbol) && !SymbolHasIsPureAttribute(propertySymbol.ContainingSymbol))
+            {
+                if (propertySymbol.IsCompiled())
+                {
+                    if (!propertySymbol.IsReadOnly || !IsKnownPureMethod(propertySymbol.GetMethod))
+                    {
+                        impurities.Add(
+                            (node, "Property access on type that is not in code and that does not have the Pure attribute"));
+                    }
+                }
+                else if (!propertySymbol.IsReadOnly)
+                {
+                    var usage = GetUsage(node);
+
+                    if (usage.IsWrite())
+                    {
+                        impurities.Add((node, "Write property access"));
+                    }
+                    else
+                    {
+                        if (!IsParameterBasedAccess(node))
+                        {
+                            impurities.Add((node, "Non input based property read"));
+                        }
+                        else if (IsImpure(GetPropertyGetter(propertySymbol)))
+                        {
+                            impurities.Add((node, "Impure property getter"));
+                        }
+                    }
+                }
+                else
+                {
+                    if (IsImpure(GetPropertyGetter(propertySymbol)))
+                        impurities.Add((node, "Property getter is impure"));
+                }
+            }
+        }
+
+        private void ProcessMethodSymbol(IdentifierNameSyntax node, IMethodSymbol method1)
+        {
+            if (exceptLocally)
+            {
+                if (node.Parent is InvocationExpressionSyntax)
+                {
+                    if (!IsMethodPure(method1, exceptLocally: true))
+                    {
+                        impurities.Add((node, "Method is impure"));
+                    }
+                }
+
+                else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
+                         memberAccess.Expression.Kind() == SyntaxKind.ThisExpression &&
+                         memberAccess.Parent is InvocationExpressionSyntax)
+                {
+                    if (!IsMethodPure(method1, exceptLocally: true))
+                    {
+                        impurities.Add((node, "Method is impure"));
+                    }
+                }
+                else
+                {
+                    if (!IsMethodPure(method1, exceptLocally: false))
+                    {
+                        impurities.Add((node, "Method is impure"));
+                    }
+                }
+            }
+            else
+            {
+                if (IsAccessOnNewlyCreatedObject(node))
+                {
+                    if (!IsMethodPure(method1, exceptLocally: true))
+                    {
+                        impurities.Add((node, "Method is impure"));
+                    }
+                }
+                else if (!IsMethodPure(method1))
+                {
+                    impurities.Add((node, "Method is impure"));
+                }
+            }
         }
 
         private bool IsAccessOnNewlyCreatedObject(IdentifierNameSyntax node)
