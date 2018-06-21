@@ -88,7 +88,7 @@ namespace PurityAnalyzer.Tests
 
             bool IsFromPurityAnalyzer(Diagnostic x)
             {
-                return x.Descriptor.Id == "ReadPurityAnalyzer" || x.Descriptor.Id == "WritePurityAnalyzer";
+                return x.Descriptor.Id == PurityAnalyzerAnalyzer.PurityDiagnosticId || x.Descriptor.Id == PurityAnalyzerAnalyzer.ReturnsNewObjectDiagnosticId;
             }
 
             var diagnostics = results.Where(IsFromPurityAnalyzer).ToArray();

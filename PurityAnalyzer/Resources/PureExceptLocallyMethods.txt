@@ -1,3 +1,4 @@
 System.Text.StringBuilder, AppendLine
 System.Xml.XmlDocument, CreateElement
 System.Xml.XmlElement, SetAttribute
+System.Xml.XmlNode, get_OuterXml

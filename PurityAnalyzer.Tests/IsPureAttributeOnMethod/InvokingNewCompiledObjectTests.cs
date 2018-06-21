@@ -455,5 +455,432 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatInvokesGetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new MutableClassWithPurePropertiesExceptLocally();
+
+        return instance.PureExceptLocallyProperty;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesGetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyProperty;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesGetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return Create().PureExceptLocallyProperty;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesGetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = Create();
+        return instance.PureExceptLocallyProperty;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesSetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new MutableClassWithPurePropertiesExceptLocally();
+
+        instance.PureExceptLocallyProperty = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesSetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{ 
+    [IsPure]
+    public static int DoSomething()
+    {
+        new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyProperty = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesSetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Create().PureExceptLocallyProperty = 2;
+
+        return 1;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesSetterOfAPureExceptLocallyPropertyOnNewlyCreatedCompiledObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = Create();
+        instance.PureExceptLocallyProperty = 2;
+
+        return 1;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new MutableClassWithPurePropertiesExceptLocally();
+
+        return instance.PureExceptLocallyPropertyGetterAndSetter;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyPropertyGetterAndSetter;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return Create().PureExceptLocallyPropertyGetterAndSetter;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = Create();
+        return instance.PureExceptLocallyPropertyGetterAndSetter;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterSetOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new MutableClassWithPurePropertiesExceptLocally();
+
+        instance.PureExceptLocallyPropertyGetterAndSetter = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterSetOnNewlyCreatedCompiledObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{ 
+    [IsPure]
+    public static int DoSomething()
+    {
+        new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyPropertyGetterAndSetter = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterSetOnNewlyCreatedCompiledObjectViaAnotherMethodIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Create().PureExceptLocallyPropertyGetterAndSetter = 2;
+
+        return 1;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertyGetterAndSetterSetOnNewlyCreatedCompiledObjectViaAnotherMethodAndAssignedToVariableIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = Create();
+        instance.PureExceptLocallyPropertyGetterAndSetter = 2;
+
+        return 1;
+    }
+
+    public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
     }
 }

@@ -14,16 +14,15 @@ namespace PurityAnalyzer
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class PurityAnalyzerAnalyzer : DiagnosticAnalyzer
     {
-        public const string ReadDiagnosticId = "ReadPurityAnalyzer";
-
-
+        public const string PurityDiagnosticId = "PurityAnalyzer";
+        public const string ReturnsNewObjectDiagnosticId = "ReturnsNewObjectAnalyzer";
 
         private const string Category = "Purity";
 
 
         private static DiagnosticDescriptor ImpurityRule =
             new DiagnosticDescriptor(
-                ReadDiagnosticId,
+                PurityDiagnosticId,
                 "Impurity error",
                 "{0}",
                 Category,
@@ -33,7 +32,7 @@ namespace PurityAnalyzer
 
         private static DiagnosticDescriptor ReturnsNewObjectRule =
             new DiagnosticDescriptor(
-                ReadDiagnosticId,
+                ReturnsNewObjectDiagnosticId,
                 "Returns new object error",
                 "{0}",
                 Category,

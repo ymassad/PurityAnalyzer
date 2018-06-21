@@ -41,6 +41,7 @@ public static class Module1
         {
             yield return "new StringBuilder().AppendLine()";
             yield return "new XmlDocument().CreateElement(\"ele\").SetAttribute(\"attribute\", \"value\")";
+            yield return "var result = new XmlDocument().OuterXml";
         }
     }
 }
