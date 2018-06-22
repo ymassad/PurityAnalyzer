@@ -48,9 +48,7 @@ namespace PurityAnalyzer
         {
             var vis = new Visitor(semanticModel, exceptLocally, knownReturnsNewObjectMethods);
 
-            vis.Visit(methodDeclaration);
-
-            return vis.impurities.ToArray();
+            return vis.GetImpurities(methodDeclaration).ToArray();
         }
 
         public static bool AnyImpurePropertyInitializer(

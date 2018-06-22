@@ -11,11 +11,8 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
-    public class Visitor : CSharpSyntaxWalker
+    public class Visitor
     {
-
-        public List<Impurity> impurities = new List<Impurity>();
-
         private readonly bool exceptLocally;
 
         private readonly SemanticModel semanticModel;
@@ -38,20 +35,61 @@ namespace PurityAnalyzer
             knownPureTypes = GetKnownPureTypes();
         }
 
-        public override void VisitCastExpression(CastExpressionSyntax node)
+        public IEnumerable<Impurity> GetImpurities(SyntaxNode node)
+        {
+            var allNodes = node.DescendantNodesAndSelf();
+
+            foreach (var subNode in allNodes)
+            {
+                if (ContainsImpureCast(subNode))
+                {
+                    yield return new Impurity(node, "Cast is impure");
+                }
+
+                if (subNode is CastExpressionSyntax castExpression)
+                {
+                    foreach (var impurity in GetImpurities(castExpression))
+                        yield return impurity;
+                }
+                else if (subNode is ObjectCreationExpressionSyntax objectCreation)
+                {
+                    foreach (var impurity in GetImpurities(objectCreation))
+                        yield return impurity;
+                }
+                else if (subNode is IdentifierNameSyntax identifierName)
+                {
+                    foreach (var impurity in GetImpurities(identifierName))
+                        yield return impurity;
+                }
+                else if (subNode is BinaryExpressionSyntax binaryExpression)
+                {
+                    foreach (var impurity in GetImpurities(binaryExpression))
+                        yield return impurity;
+                }
+                else if (subNode is AssignmentExpressionSyntax assignmentExpression)
+                {
+                    foreach (var impurity in GetImpurities(assignmentExpression))
+                        yield return impurity;
+                }
+                else if (subNode is ElementAccessExpressionSyntax elementAccessExpression)
+                {
+                    foreach (var impurity in GetImpurities(elementAccessExpression))
+                        yield return impurity;
+                }
+            }
+        }
+
+        private IEnumerable<Impurity> GetImpurities(CastExpressionSyntax node)
         {
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
                 semanticModel.GetTypeInfo(node.Expression).Type is ITypeSymbol sourceType)
             {
                 if (IsImpureCast(sourceType, destinationType))
                 {
-                    impurities.Add(new Impurity(node, "Cast is impure"));
+                    yield return new Impurity(node, "Cast is impure");
                 }
             }
-
-            base.VisitCastExpression(node);
         }
-
 
         private bool IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
@@ -127,30 +165,16 @@ namespace PurityAnalyzer
             return false;
         }
 
-
-        public override void DefaultVisit(SyntaxNode node)
-        {
-            if (ContainsImpureCast(node))
-            {
-                impurities.Add(new Impurity(node, "Cast is impure"));
-            }
-
-            base.DefaultVisit(node);
-        }
-
-        public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities(ObjectCreationExpressionSyntax node)
         {
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is INamedTypeSymbol symbol)
             {
                 if (!IsTypePureForConstruction(symbol))
                 {
-                    impurities.Add(new Impurity(node, "Constructed object is not pure"));
+                    yield return new Impurity(node, "Constructed object is not pure");
                 }
             }
-
-            base.VisitObjectCreationExpression(node);
         }
-
 
         private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
         {
@@ -227,7 +251,7 @@ namespace PurityAnalyzer
             return node.Parent is MemberAccessExpressionSyntax memberAccess && IsParameterBasedAccess(memberAccess);
         }
 
-        public bool ContainsImpureCast(SyntaxNode node)
+        private bool ContainsImpureCast(SyntaxNode node)
         {
             var typeInfo = semanticModel.GetTypeInfo(node);
 
@@ -246,34 +270,34 @@ namespace PurityAnalyzer
             return false;
         }
 
-        public override void VisitIdentifierName(IdentifierNameSyntax node)
+        private IEnumerable<Impurity> GetImpurities(IdentifierNameSyntax node)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-                ProcessFieldSymbol(node, field);
+                return GetImpuritiesForFieldAccess(node, field);
             }
 
             if (symbol.Symbol is IPropertySymbol property)
             {
-                ProcessPropertySymbol(node, property);
+                return GetImpuritiesForPropertyAccess(node, property);
             }
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                ProcessMethodSymbol(node, method);
+                return GetImpuritiesForMethodAccess(node, method);
             }
 
             if (symbol.Symbol is IEventSymbol)
             {
-                impurities.Add(new Impurity(node, "Event access"));
+                return new []{new Impurity(node, "Event access")};
             }
 
-            base.VisitIdentifierName(node);
+            return Enumerable.Empty<Impurity>();
         }
 
-        private void ProcessFieldSymbol(IdentifierNameSyntax node, IFieldSymbol fieldSymbol)
+        private IEnumerable<Impurity> GetImpuritiesForFieldAccess(IdentifierNameSyntax node, IFieldSymbol fieldSymbol)
         {
             if (!(fieldSymbol.IsReadOnly || fieldSymbol.IsConst))
             {
@@ -330,14 +354,14 @@ namespace PurityAnalyzer
 
                         if (usage.IsWrite())
                         {
-                            impurities.Add(new Impurity(node, "Write access to field"));
+                             yield return new Impurity(node, "Write access to field");
                         }
                         else
                         {
                             if (!IsParameterBasedAccess(node))
                             {
-                                impurities.Add(
-                                    new Impurity(node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                yield return
+                                    new Impurity(node, "Read access to non-readonly and non-const and non-input parameter based field");
                             }
                         }
                     }
@@ -345,7 +369,7 @@ namespace PurityAnalyzer
             }
         }
 
-        private void ProcessPropertySymbol(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
+        private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
         {
             var usage = Utils.GetUsage(node);
 
@@ -353,11 +377,13 @@ namespace PurityAnalyzer
 
             if (method != null)
             {
-                ProcessMethodSymbol(node, method);
+                return GetImpuritiesForMethodAccess(node, method);
             }
+
+            return Enumerable.Empty<Impurity>();
         }
 
-        private void ProcessMethodSymbol(IdentifierNameSyntax node, IMethodSymbol method)
+        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(IdentifierNameSyntax node, IMethodSymbol method)
         {
             bool acceptMethodToBePureExceptLocally = false;
 
@@ -406,24 +432,22 @@ namespace PurityAnalyzer
 
             if (!IsMethodPure(method, acceptMethodToBePureExceptLocally))
             {
-                impurities.Add(new Impurity(node, "Method is impure"));
+                yield return new Impurity(node, "Method is impure");
             }
         }
 
-        public override void VisitBinaryExpression(BinaryExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities(BinaryExpressionSyntax node)
         {
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
                 if (!IsMethodPure(method))
                 {
-                    impurities.Add(new Impurity(node, "Operator is impure"));
+                    yield return new Impurity(node, "Operator is impure");
                 }
             }
-
-            base.VisitBinaryExpression(node);
         }
 
-        public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities(AssignmentExpressionSyntax node)
         {
             var kind = node.Kind();
 
@@ -442,17 +466,14 @@ namespace PurityAnalyzer
                 {
                     if (!IsMethodPure(method))
                     {
-                        impurities.Add(new Impurity(node, "Operator is impure"));
+                        yield return new Impurity(node, "Operator is impure");
                     }
                 }
             }
-
-            base.VisitAssignmentExpression(node);
         }
 
-        public override void VisitElementAccessExpression(ElementAccessExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities(ElementAccessExpressionSyntax node)
         {
-
             var type = semanticModel.GetTypeInfo(node.Expression).Type;
 
             if (type?.TypeKind == TypeKind.Array)
@@ -461,14 +482,14 @@ namespace PurityAnalyzer
 
                 if (usage.IsWrite())
                 {
-                    impurities.Add(new Impurity(node, "Impure array set"));
+                    yield return new Impurity(node, "Impure array set");
                 }
 
                 if (usage.IsRead())
                 {
                     if (semanticModel.GetSymbolInfo(node.Expression).Symbol is IFieldSymbol field && field.IsStatic)
                     {
-                        impurities.Add(new Impurity(node, "Impure array read"));
+                        yield return new Impurity(node, "Impure array read");
                     }
                 }
             }
@@ -483,19 +504,16 @@ namespace PurityAnalyzer
                     if (usage.IsRead())
                     {
                         if (!IsMethodPure(propertySymbol.GetMethod))
-                            impurities.Add(new Impurity(node, "Impure get"));
+                            yield return new Impurity(node, "Impure get");
                     }
 
                     if (usage.IsWrite())
                     {
                         if (!IsMethodPure(propertySymbol.SetMethod))
-                            impurities.Add(new Impurity(node, "Impure set"));
+                            yield return new Impurity(node, "Impure set");
                     }
                 }
             }
-
-
-            base.VisitElementAccessExpression(node);
         }
 
         private bool IsMethodPure(IMethodSymbol method, bool exceptLocally = false)
@@ -564,7 +582,7 @@ namespace PurityAnalyzer
             return true;
         }
 
-        public Dictionary<string, HashSet<string>> GetKnownPureMethods()
+        private Dictionary<string, HashSet<string>> GetKnownPureMethods()
         {
             var pureMethodsFileContents =
                 Resources.PureMethods
@@ -583,7 +601,7 @@ namespace PurityAnalyzer
                     x => new HashSet<string>(x));
         }
 
-        public Dictionary<string, HashSet<string>> GetKnownPureExceptLocallyMethods()
+        private Dictionary<string, HashSet<string>> GetKnownPureExceptLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptLocallyMethods
@@ -602,7 +620,7 @@ namespace PurityAnalyzer
                     x => new HashSet<string>(x));
         }
 
-        public HashSet<INamedTypeSymbol> GetKnownPureTypes()
+        private HashSet<INamedTypeSymbol> GetKnownPureTypes()
         {
             var pureTypesFileContents =
                 Resources.PureTypes
