@@ -120,7 +120,7 @@ namespace PurityAnalyzer
                     }
                     else
                     {
-                        if (invokedMethod.GetAttributes()
+                        if (GetAllAttributes(invokedMethod)
                             .Any(x => IsReturnsNewObjectAttribute(x.AttributeClass.Name)))
                         {
                             return true;
@@ -210,6 +210,27 @@ namespace PurityAnalyzer
             }
         }
 
+        public static AttributeData[] GetAllAttributes(ISymbol symbol)
+        {
+            if (symbol is IMethodSymbol methodSymbol)
+                return GetAllAttributes(methodSymbol);
+
+            return symbol.GetAttributes().ToArray();
+        }
+
+        public static AttributeData[] GetAllAttributes(IMethodSymbol methodSymbol)
+        {
+            var attributes = methodSymbol.GetAttributes().ToList();
+
+            if (methodSymbol.MethodKind == MethodKind.PropertyGet || methodSymbol.MethodKind == MethodKind.PropertySet)
+            {
+                var property = (IPropertySymbol) methodSymbol.AssociatedSymbol;
+
+                attributes.AddRange(property.GetAttributes());
+            }
+
+            return attributes.ToArray();
+        }
         public static Dictionary<string, HashSet<string>> GetKnownReturnsNewObjectMethods(SemanticModel semanticModel)
         {
             var returnsNewObjectMethodsFileContents =

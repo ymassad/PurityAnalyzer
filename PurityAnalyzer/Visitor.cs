@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
@@ -446,12 +447,15 @@ namespace PurityAnalyzer
 
                     if (exceptLocally)
                     {
-                        var methodWhereIdentifierIsUsed =
+                        var methodOrPropertyWhereIdentifierIsUsed =
                             node.Ancestors()
                                 .OfType<MethodDeclarationSyntax>()
+                                .Cast<MemberDeclarationSyntax>()
+                                .Concat(node.Ancestors()
+                                    .OfType<PropertyDeclarationSyntax>())
                                 .FirstOrNoValue();
 
-                        bool IsAccessingLocalField(MethodDeclarationSyntax m)
+                        bool IsAccessingLocalField(MemberDeclarationSyntax m)
                         {
                             var methodSymbol = semanticModel.GetDeclaredSymbol(m);
 
@@ -461,7 +465,7 @@ namespace PurityAnalyzer
                         }
 
                         accessingLocalFieldLegally =
-                            methodWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                            methodOrPropertyWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
                     }
 
                     if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
@@ -487,41 +491,13 @@ namespace PurityAnalyzer
 
         private void ProcessPropertySymbol(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
         {
-            if (!SymbolHasIsPureAttribute(propertySymbol) && !SymbolHasIsPureAttribute(propertySymbol.ContainingSymbol))
-            {
-                if (propertySymbol.IsCompiled())
-                {
-                    if (!propertySymbol.IsReadOnly || !IsKnownPureMethod(propertySymbol.GetMethod))
-                    {
-                        impurities.Add(
-                            (node, "Property access on type that is not in code and that does not have the Pure attribute"));
-                    }
-                }
-                else if (!propertySymbol.IsReadOnly)
-                {
-                    var usage = GetUsage(node);
+            var usage = GetUsage(node);
 
-                    if (usage.IsWrite())
-                    {
-                        impurities.Add((node, "Write property access"));
-                    }
-                    else
-                    {
-                        if (!IsParameterBasedAccess(node))
-                        {
-                            impurities.Add((node, "Non input based property read"));
-                        }
-                        else if (IsImpure(GetPropertyGetter(propertySymbol)))
-                        {
-                            impurities.Add((node, "Impure property getter"));
-                        }
-                    }
-                }
-                else
-                {
-                    if (IsImpure(GetPropertyGetter(propertySymbol)))
-                        impurities.Add((node, "Property getter is impure"));
-                }
+            var method = usage.IsWrite() ? propertySymbol.SetMethod : propertySymbol.GetMethod;
+
+            if (method != null)
+            {
+                ProcessMethodSymbol(node, method);
             }
         }
 
@@ -536,10 +512,32 @@ namespace PurityAnalyzer
                     acceptMethodToBePureExceptLocally = true;
                 }
                 else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
-                         memberAccess.Expression.Kind() == SyntaxKind.ThisExpression &&
-                         memberAccess.Parent is InvocationExpressionSyntax)
+                         memberAccess.Expression.Kind() == SyntaxKind.ThisExpression)
                 {
-                    acceptMethodToBePureExceptLocally = true;
+                    if (memberAccess.Parent is InvocationExpressionSyntax)
+                    {
+                        acceptMethodToBePureExceptLocally = true;
+                    }
+                    else
+                    {
+                        var operation = semanticModel.GetOperation(memberAccess);
+
+                        if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
+                            propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
+                        {
+                            acceptMethodToBePureExceptLocally = true;
+                        }
+                    }
+                }
+                else
+                {
+                    var operation = semanticModel.GetOperation(node);
+
+                    if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
+                        propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
+                    {
+                        acceptMethodToBePureExceptLocally = true;
+                    }
                 }
             }
             else
@@ -564,9 +562,9 @@ namespace PurityAnalyzer
             return Utils.IsNewlyCreatedObject(semanticModel, memberAccess.Expression, knownReturnsNewObjectMethods);
         }
 
-        private bool IsImpure(SyntaxNode methodLike)
+        private bool IsImpure(SyntaxNode methodLike, bool exceptLocally = false)
         {
-            var imp = Utils.GetImpurities(methodLike, semanticModel, knownReturnsNewObjectMethods);
+            var imp = Utils.GetImpurities(methodLike, semanticModel, knownReturnsNewObjectMethods, exceptLocally);
 
             return imp.Any();
         }
@@ -574,6 +572,13 @@ namespace PurityAnalyzer
         private SyntaxNode GetPropertyGetter(IPropertySymbol propertySymbol)
         {
             var localtion = propertySymbol.GetMethod.Locations.First();
+
+            return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
+        }
+
+        private SyntaxNode GetPropertySetter(IPropertySymbol propertySymbol)
+        {
+            var localtion = propertySymbol.SetMethod.Locations.First();
 
             return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
         }
@@ -683,27 +688,50 @@ namespace PurityAnalyzer
                     return true;
             }
 
-            if (!SymbolHasIsPureAttribute(method))
+            if (SymbolHasIsPureAttribute(method))
+                return true;
+
+            if (SymbolHasIsPureAttribute(method.ContainingType))
+                return true;
+
+            if (method.IsInCode())
             {
-                if (method.IsInCode())
+                if (method.IsImplicitlyDeclared)
+                    return true;
+
+                var location = method.Locations.First();
+
+                var locationSourceTree = location.SourceTree;
+
+                var methodNode = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
+
+                if (methodNode is AccessorDeclarationSyntax accessor)
                 {
-                    if (method.IsImplicitlyDeclared)
-                        return true;
+                    if (accessor.Body == null && accessor.ExpressionBody == null) //Auto property
+                    {
+                        var property = (IPropertySymbol)method.AssociatedSymbol;
 
-                    var location = method.Locations.First();
 
-                    var locationSourceTree = location.SourceTree;
-
-                    var methodNode = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
-
-                    var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), knownReturnsNewObjectMethods, exceptLocally);
-
-                    if (imp.Any()) return false;
+                        if (accessor.Kind() == SyntaxKind.SetAccessorDeclaration)
+                        {
+                            return
+                                property.IsReadOnly //This happens in constructors
+                                || exceptLocally;
+                        }
+                        if (accessor.Kind() == SyntaxKind.GetAccessorDeclaration)
+                        {
+                            return property.IsReadOnly || exceptLocally;
+                        }
+                    }
                 }
-                else
-                {
-                    if (!IsKnownPureMethod(method, exceptLocally)) return false;
-                }
+
+                var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), knownReturnsNewObjectMethods, exceptLocally);
+
+                if (imp.Any()) return false;
+            }
+            else
+            {
+                if (!IsKnownPureMethod(method, exceptLocally)) return false;
             }
 
             return true;
@@ -802,17 +830,17 @@ namespace PurityAnalyzer
 
         private bool SymbolHasIsPureAttribute(ISymbol symbol)
         {
-            return symbol.GetAttributes().Any(x => isIsPureAttribute(x.AttributeClass.Name));
+            return Utils.GetAllAttributes(symbol).Any(x => isIsPureAttribute(x.AttributeClass.Name));
         }
 
         private bool SymbolHasIsPureExceptLocallyAttribute(ISymbol symbol)
         {
-            return symbol.GetAttributes().Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
+            return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
         }
 
         private bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)
         {
-            return symbol.GetAttributes().Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
+            return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
     }
 }
