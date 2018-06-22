@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -45,7 +46,7 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             bool exceptLocally = false)
         {
-            var vis = new Visitor(semanticModel, IsIsPureAttribute, exceptLocally, knownReturnsNewObjectMethods);
+            var vis = new Visitor(semanticModel, exceptLocally, knownReturnsNewObjectMethods);
 
             vis.Visit(methodDeclaration);
 
@@ -358,6 +359,51 @@ namespace PurityAnalyzer
         public static IEnumerable<IMethodSymbol> GetMethods(ITypeSymbol typeSymbol)
         {
             return typeSymbol.GetMembers().OfType<IMethodSymbol>();
+        }
+
+        public static bool IsDownCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        {
+            if (destinationType.TypeKind == TypeKind.Interface)
+            {
+                return sourceType.AllInterfaces.Contains(destinationType);
+            }
+
+            var current = sourceType.BaseType;
+
+            while (current != null)
+            {
+                if (current.Equals(destinationType))
+                    return true;
+
+                current = current.BaseType;
+            }
+
+            return false;
+        }
+
+        public static ImmutableArray<INamedTypeSymbol> GetAllInterfaceIncludingSelfIfIsInterface(ITypeSymbol type)
+        {
+            var allInterfaces = type.AllInterfaces;
+
+            if (type.TypeKind == TypeKind.Interface)
+                return allInterfaces.Add((INamedTypeSymbol)type);
+
+            return allInterfaces;
+        }
+
+        public static bool SymbolHasIsPureAttribute(ISymbol symbol)
+        {
+            return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureAttribute(x.AttributeClass.Name));
+        }
+
+        public static bool SymbolHasIsPureExceptLocallyAttribute(ISymbol symbol)
+        {
+            return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
+        }
+
+        public static bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)
+        {
+            return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
     }
 }

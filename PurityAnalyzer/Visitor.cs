@@ -16,7 +16,6 @@ namespace PurityAnalyzer
 
         public List<(SyntaxNode node, string message)> impurities = new List<(SyntaxNode node, string message)>();
 
-        private readonly Func<string, bool> isIsPureAttribute;
         private readonly bool exceptLocally;
 
         private readonly SemanticModel semanticModel;
@@ -26,10 +25,9 @@ namespace PurityAnalyzer
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
-        public Visitor(SemanticModel semanticModel, Func<string, bool> isIsPureAttribute, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+        public Visitor(SemanticModel semanticModel, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             this.semanticModel = semanticModel;
-            this.isIsPureAttribute = isIsPureAttribute;
             this.exceptLocally = exceptLocally;
             this.knownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
 
@@ -55,36 +53,6 @@ namespace PurityAnalyzer
         }
 
 
-        private bool IsDownCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
-        {
-            if (destinationType.TypeKind == TypeKind.Interface)
-            {
-                return sourceType.AllInterfaces.Contains(destinationType);
-            }
-
-            var current = sourceType.BaseType;
-
-            while (current != null)
-            {
-                if (current.Equals(destinationType))
-                    return true;
-
-                current = current.BaseType;
-            }
-
-            return false;
-        }
-
-        private ImmutableArray<INamedTypeSymbol> GetAllInterfaceIncludingSelfIfIsInterface(ITypeSymbol type)
-        {
-            var allInterfaces = type.AllInterfaces;
-
-            if (type.TypeKind == TypeKind.Interface)
-                return allInterfaces.Add((INamedTypeSymbol)type);
-
-            return allInterfaces;
-        }
-
         private bool IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
             if (sourceType.Equals(destinationType))
@@ -92,10 +60,9 @@ namespace PurityAnalyzer
 
             var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
-            if (IsDownCast(sourceType, destinationType))
+            if (Utils.IsDownCast(sourceType, destinationType))
             {
-                var methodsOfInterfacesImplementedByDestionationType =
-                    GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
+                var methodsOfInterfacesImplementedByDestionationType = Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
                         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
                         .ToArray();
 
@@ -216,7 +183,7 @@ namespace PurityAnalyzer
 
         private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
         {
-            if (SymbolHasAssumeIsPureAttribute(symbol))
+            if (Utils.SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
             if (!Utils.GetAllMethods(symbol)
@@ -594,22 +561,22 @@ namespace PurityAnalyzer
             if (method.IsAbstract)
                 return true;
 
-            if (SymbolHasAssumeIsPureAttribute(method))
+            if (Utils.SymbolHasAssumeIsPureAttribute(method))
                 return true;
 
-            if (SymbolHasAssumeIsPureAttribute(method.ContainingType))
+            if (Utils.SymbolHasAssumeIsPureAttribute(method.ContainingType))
                 return true;
 
             if (exceptLocally)
             {
-                if (SymbolHasIsPureExceptLocallyAttribute(method))
+                if (Utils.SymbolHasIsPureExceptLocallyAttribute(method))
                     return true;
             }
 
-            if (SymbolHasIsPureAttribute(method))
+            if (Utils.SymbolHasIsPureAttribute(method))
                 return true;
 
-            if (SymbolHasIsPureAttribute(method.ContainingType))
+            if (Utils.SymbolHasIsPureAttribute(method.ContainingType))
                 return true;
 
             if (method.IsInCode())
@@ -744,21 +711,6 @@ namespace PurityAnalyzer
 
 
             return false;
-        }
-
-        private bool SymbolHasIsPureAttribute(ISymbol symbol)
-        {
-            return Utils.GetAllAttributes(symbol).Any(x => isIsPureAttribute(x.AttributeClass.Name));
-        }
-
-        private bool SymbolHasIsPureExceptLocallyAttribute(ISymbol symbol)
-        {
-            return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
-        }
-
-        private bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)
-        {
-            return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
     }
 }
