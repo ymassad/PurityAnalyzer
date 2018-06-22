@@ -108,13 +108,13 @@ namespace PurityAnalyzer
                     methodsOfInterfacesImplementedByDestionationType
                         .Select(destinationType.FindImplementationForInterfaceMember)
                         .OfType<IMethodSymbol>()
-                        .Select(x => FindMostDerivedMethod(allDestinationMethods, x))
+                        .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
                 if (interfaceMethodImplementations.Any(x => IsMethodPure(x) && !x.IsSealed))
                     return true;
 
-                var mostDerivedOverriddenMethods = RemoveOverriddenMethods(allDestinationMethods)
+                var mostDerivedOverriddenMethods = Utils.RemoveOverriddenMethods(allDestinationMethods)
                     .Where(x => x.IsOverride || x.IsVirtual)
                     .ToArray();
 
@@ -125,35 +125,6 @@ namespace PurityAnalyzer
             }
 
             return false;
-        }
-
-        private IMethodSymbol FindMostDerivedMethod(IMethodSymbol[] allMethods, IMethodSymbol method)
-        {
-            var current = method;
-
-            while (true)
-            {
-                var next = allMethods
-                    .FirstOrDefault(x => x.OverriddenMethod != null && x.OverriddenMethod.Equals(current));
-
-                if (next == null)
-                    return current;
-
-                current = next;
-            }
-        }
-
-        private IMethodSymbol[] RemoveOverriddenMethods(IMethodSymbol[] methods)
-        {
-            HashSet<IMethodSymbol> set = new HashSet<IMethodSymbol>(methods);
-
-            foreach (var method in methods)
-            {
-                if (method.OverriddenMethod != null)
-                    set.Remove(method.OverriddenMethod);
-            }
-
-            return set.ToArray();
         }
 
 
@@ -306,7 +277,7 @@ namespace PurityAnalyzer
         {
             if (!(fieldSymbol.IsReadOnly || fieldSymbol.IsConst))
             {
-                if (!IsAccessOnNewlyCreatedObject(node))
+                if (!Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
                 {
                     var constructorWhereIdentifierIsUsed =
                         node.Ancestors()
@@ -427,7 +398,7 @@ namespace PurityAnalyzer
             }
             else
             {
-                if (IsAccessOnNewlyCreatedObject(node))
+                if (Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
                 {
                     acceptMethodToBePureExceptLocally = true;
                 } 
@@ -437,35 +408,6 @@ namespace PurityAnalyzer
             {
                 impurities.Add((node, "Method is impure"));
             }
-        }
-
-        private bool IsAccessOnNewlyCreatedObject(IdentifierNameSyntax node)
-        {
-            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
-                return false;
-
-            return Utils.IsNewlyCreatedObject(semanticModel, memberAccess.Expression, knownReturnsNewObjectMethods);
-        }
-
-        private bool IsImpure(SyntaxNode methodLike, bool exceptLocally = false)
-        {
-            var imp = Utils.GetImpurities(methodLike, semanticModel, knownReturnsNewObjectMethods, exceptLocally);
-
-            return imp.Any();
-        }
-
-        private SyntaxNode GetPropertyGetter(IPropertySymbol propertySymbol)
-        {
-            var localtion = propertySymbol.GetMethod.Locations.First();
-
-            return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
-        }
-
-        private SyntaxNode GetPropertySetter(IPropertySymbol propertySymbol)
-        {
-            var localtion = propertySymbol.SetMethod.Locations.First();
-
-            return localtion.SourceTree.GetRoot().FindNode(localtion.SourceSpan);
         }
 
         public override void VisitBinaryExpression(BinaryExpressionSyntax node)

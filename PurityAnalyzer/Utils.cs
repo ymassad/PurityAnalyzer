@@ -405,5 +405,42 @@ namespace PurityAnalyzer
         {
             return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
+
+        public static IMethodSymbol FindMostDerivedMethod(IMethodSymbol[] allMethods, IMethodSymbol method)
+        {
+            var current = method;
+
+            while (true)
+            {
+                var next = allMethods
+                    .FirstOrDefault(x => x.OverriddenMethod != null && x.OverriddenMethod.Equals(current));
+
+                if (next == null)
+                    return current;
+
+                current = next;
+            }
+        }
+
+        public static IMethodSymbol[] RemoveOverriddenMethods(IMethodSymbol[] methods)
+        {
+            HashSet<IMethodSymbol> set = new HashSet<IMethodSymbol>(methods);
+
+            foreach (var method in methods)
+            {
+                if (method.OverriddenMethod != null)
+                    set.Remove(method.OverriddenMethod);
+            }
+
+            return set.ToArray();
+        }
+
+        public static bool IsAccessOnNewlyCreatedObject(Dictionary<string, HashSet<string>> dictionary, SemanticModel semanticModel1, IdentifierNameSyntax node)
+        {
+            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
+                return false;
+
+            return Utils.IsNewlyCreatedObject(semanticModel1, memberAccess.Expression, dictionary);
+        }
     }
 }
