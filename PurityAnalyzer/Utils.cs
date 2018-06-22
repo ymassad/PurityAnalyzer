@@ -316,5 +316,48 @@ namespace PurityAnalyzer
 
             return GetUsageForOperation(identifier.Parent);
         }
+
+        public static IEnumerable<IMethodSymbol> GetAllMethods(
+            ITypeSymbol typeSymbol,
+            Maybe<ITypeSymbol> downUntilBefore = default)
+        {
+
+            var myMethods = GetMethods(typeSymbol);
+
+            foreach (var myMethod in myMethods)
+                yield return myMethod;
+
+            var current = typeSymbol.BaseType;
+
+            while (current != null)
+            {
+                if (downUntilBefore.HasValue)
+                    if (current.Equals(downUntilBefore.GetValue()))
+                        break;
+
+                foreach (var method in GetAllMethods(current))
+                    yield return method;
+
+                current = current.BaseType;
+            }
+        }
+
+        public static IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
+        {
+            if (Utils.GetFullMetaDataName(symbol).Equals(typeof(object).FullName))
+                return new IMethodSymbol[0];
+
+            return
+                symbol
+                    .GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Concat(GetAllMethods(symbol.BaseType))
+                    .ToArray();
+        }
+
+        public static IEnumerable<IMethodSymbol> GetMethods(ITypeSymbol typeSymbol)
+        {
+            return typeSymbol.GetMembers().OfType<IMethodSymbol>();
+        }
     }
 }

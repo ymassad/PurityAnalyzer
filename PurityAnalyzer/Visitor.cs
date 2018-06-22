@@ -54,35 +54,6 @@ namespace PurityAnalyzer
             base.VisitCastExpression(node);
         }
 
-        public IEnumerable<IMethodSymbol> GetAllMethods(
-            ITypeSymbol typeSymbol,
-            Maybe<ITypeSymbol> downUntilBefore = default)
-        {
-
-            var myMethods = GetMethods(typeSymbol);
-
-            foreach (var myMethod in myMethods)
-                yield return myMethod;
-
-            var current = typeSymbol.BaseType;
-
-            while (current != null)
-            {
-                if (downUntilBefore.HasValue)
-                    if (current.Equals(downUntilBefore.GetValue()))
-                        break;
-
-                foreach (var method in GetAllMethods(current))
-                    yield return method;
-
-                current = current.BaseType;
-            }
-        }
-
-        private static IEnumerable<IMethodSymbol> GetMethods(ITypeSymbol typeSymbol)
-        {
-            return typeSymbol.GetMembers().OfType<IMethodSymbol>();
-        }
 
         private bool IsDownCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
@@ -95,7 +66,6 @@ namespace PurityAnalyzer
 
             while (current != null)
             {
-
                 if (current.Equals(destinationType))
                     return true;
 
@@ -120,7 +90,7 @@ namespace PurityAnalyzer
             if (sourceType.Equals(destinationType))
                 return false;
 
-            var allDestinationMethods = GetAllMethods(destinationType).ToArray();
+            var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
             if (IsDownCast(sourceType, destinationType))
             {
@@ -135,7 +105,7 @@ namespace PurityAnalyzer
                         .Where(method => IsMethodPure(method))
                         .ToArray();
 
-                var sourceMethodsDownUntilBeforeDestionation = GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
+                var sourceMethodsDownUntilBeforeDestionation = Utils.GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
 
                 var sourceMethodsThatOverrideSomePureDestionationBaseMethod = sourceMethodsDownUntilBeforeDestionation.Where(x =>
                     x.IsOverride && x.OverriddenMethod != null && allPureOverridableMethodsOnDestionationOrItsBaseTypes.Contains(x.OverriddenMethod)).ToArray();
@@ -243,27 +213,13 @@ namespace PurityAnalyzer
             base.VisitObjectCreationExpression(node);
         }
 
-        private IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
-        {
-
-            if (symbol.Equals(objectType))
-                return new IMethodSymbol[0];
-
-            return
-                symbol
-                    .GetMembers()
-                    .OfType<IMethodSymbol>()
-                    .Concat(GetAllMethods(symbol.BaseType))
-                    .ToArray();
-        }
 
         private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
         {
             if (SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
-            if (!
-                GetAllMethods(symbol)
+            if (!Utils.GetAllMethods(symbol)
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor)
