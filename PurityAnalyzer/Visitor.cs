@@ -14,7 +14,7 @@ namespace PurityAnalyzer
     public class Visitor : CSharpSyntaxWalker
     {
 
-        public List<(SyntaxNode node, string message)> impurities = new List<(SyntaxNode node, string message)>();
+        public List<Impurity> impurities = new List<Impurity>();
 
         private readonly bool exceptLocally;
 
@@ -45,7 +45,7 @@ namespace PurityAnalyzer
             {
                 if (IsImpureCast(sourceType, destinationType))
                 {
-                    impurities.Add((node, "Cast is impure"));
+                    impurities.Add(new Impurity(node, "Cast is impure"));
                 }
             }
 
@@ -132,7 +132,7 @@ namespace PurityAnalyzer
         {
             if (ContainsImpureCast(node))
             {
-                impurities.Add((node, "Cast is impure"));
+                impurities.Add(new Impurity(node, "Cast is impure"));
             }
 
             base.DefaultVisit(node);
@@ -144,7 +144,7 @@ namespace PurityAnalyzer
             {
                 if (!IsTypePureForConstruction(symbol))
                 {
-                    impurities.Add((node, "Constructed object is not pure"));
+                    impurities.Add(new Impurity(node, "Constructed object is not pure"));
                 }
             }
 
@@ -267,7 +267,7 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IEventSymbol)
             {
-                impurities.Add((node, "Event access"));
+                impurities.Add(new Impurity(node, "Event access"));
             }
 
             base.VisitIdentifierName(node);
@@ -330,14 +330,14 @@ namespace PurityAnalyzer
 
                         if (usage.IsWrite())
                         {
-                            impurities.Add((node, "Write access to field"));
+                            impurities.Add(new Impurity(node, "Write access to field"));
                         }
                         else
                         {
                             if (!IsParameterBasedAccess(node))
                             {
                                 impurities.Add(
-                                    (node, "Read access to non-readonly and non-const and non-input parameter based field"));
+                                    new Impurity(node, "Read access to non-readonly and non-const and non-input parameter based field"));
                             }
                         }
                     }
@@ -406,7 +406,7 @@ namespace PurityAnalyzer
 
             if (!IsMethodPure(method, acceptMethodToBePureExceptLocally))
             {
-                impurities.Add((node, "Method is impure"));
+                impurities.Add(new Impurity(node, "Method is impure"));
             }
         }
 
@@ -416,7 +416,7 @@ namespace PurityAnalyzer
             {
                 if (!IsMethodPure(method))
                 {
-                    impurities.Add((node, "Operator is impure"));
+                    impurities.Add(new Impurity(node, "Operator is impure"));
                 }
             }
 
@@ -442,7 +442,7 @@ namespace PurityAnalyzer
                 {
                     if (!IsMethodPure(method))
                     {
-                        impurities.Add((node, "Operator is impure"));
+                        impurities.Add(new Impurity(node, "Operator is impure"));
                     }
                 }
             }
@@ -461,14 +461,14 @@ namespace PurityAnalyzer
 
                 if (usage.IsWrite())
                 {
-                    impurities.Add((node, "Impure array set"));
+                    impurities.Add(new Impurity(node, "Impure array set"));
                 }
 
                 if (usage.IsRead())
                 {
                     if (semanticModel.GetSymbolInfo(node.Expression).Symbol is IFieldSymbol field && field.IsStatic)
                     {
-                        impurities.Add((node, "Impure array read"));
+                        impurities.Add(new Impurity(node, "Impure array read"));
                     }
                 }
             }
@@ -483,13 +483,13 @@ namespace PurityAnalyzer
                     if (usage.IsRead())
                     {
                         if (!IsMethodPure(propertySymbol.GetMethod))
-                            impurities.Add((node, "Impure get"));
+                            impurities.Add(new Impurity(node, "Impure get"));
                     }
 
                     if (usage.IsWrite())
                     {
                         if (!IsMethodPure(propertySymbol.SetMethod))
-                            impurities.Add((node, "Impure set"));
+                            impurities.Add(new Impurity(node, "Impure set"));
                     }
                 }
             }

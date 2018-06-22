@@ -41,7 +41,7 @@ namespace PurityAnalyzer
             return attributeName == "IsPureExceptLocally" || attributeName == "IsPureExceptLocally" + "Attribute";
         }
 
-        public static (SyntaxNode node, string message)[] GetImpurities(SyntaxNode methodDeclaration,
+        public static Impurity[] GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             bool exceptLocally = false)
