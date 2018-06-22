@@ -40,44 +40,6 @@ namespace PurityAnalyzer
             knownPureTypes = GetKnownPureTypes();
         }
 
-        private IdentifierUsage GetUsage(SyntaxNode identifier)
-        {
-            if (identifier.Parent is MemberAccessExpressionSyntax memberAccess)
-            {
-                return GetUsageForOperation(memberAccess.Parent);
-            }
-
-            if (identifier.Parent is ElementAccessExpressionSyntax elementAccess)
-            {
-                return GetUsageForOperation(elementAccess.Parent);
-            }
-
-            IdentifierUsage GetUsageForOperation(SyntaxNode operationNode)
-            {
-                if (operationNode is AssignmentExpressionSyntax assignent)
-                {
-                    switch (assignent.Kind())
-                    {
-                        case SyntaxKind.SimpleAssignmentExpression:
-                            return IdentifierUsage.WrittenTo();
-                        case SyntaxKind.AddAssignmentExpression:
-                        case SyntaxKind.SubtractAssignmentExpression:
-                            //TODO: add more assignment expressions
-                            return IdentifierUsage.ReadFromAndWrittenTo();
-
-                    }
-                }
-                else if (operationNode is PostfixUnaryExpressionSyntax postfix)
-                {
-                    return IdentifierUsage.ReadFromAndWrittenTo();
-                }
-
-                return IdentifierUsage.ReadFrom();
-            }
-
-            return GetUsageForOperation(identifier.Parent);
-        }
-
         public override void VisitCastExpression(CastExpressionSyntax node)
         {
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
@@ -470,7 +432,7 @@ namespace PurityAnalyzer
 
                     if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
                     {
-                        var usage = GetUsage(node);
+                        var usage = Utils.GetUsage(node);
 
                         if (usage.IsWrite())
                         {
@@ -491,7 +453,7 @@ namespace PurityAnalyzer
 
         private void ProcessPropertySymbol(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
         {
-            var usage = GetUsage(node);
+            var usage = Utils.GetUsage(node);
 
             var method = usage.IsWrite() ? propertySymbol.SetMethod : propertySymbol.GetMethod;
 
@@ -630,7 +592,7 @@ namespace PurityAnalyzer
 
             if (type?.TypeKind == TypeKind.Array)
             {
-                var usage = GetUsage(node.Expression);
+                var usage = Utils.GetUsage(node.Expression);
 
                 if (usage.IsWrite())
                 {
@@ -651,7 +613,7 @@ namespace PurityAnalyzer
 
                 if (symbol is IPropertySymbol propertySymbol)
                 {
-                    var usage = GetUsage(node.Expression);
+                    var usage = Utils.GetUsage(node.Expression);
 
                     if (usage.IsRead())
                     {

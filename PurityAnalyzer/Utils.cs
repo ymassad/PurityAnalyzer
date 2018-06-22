@@ -278,5 +278,43 @@ namespace PurityAnalyzer
             return name;
 
         }
+
+        public static IdentifierUsage GetUsage(SyntaxNode identifier)
+        {
+            if (identifier.Parent is MemberAccessExpressionSyntax memberAccess)
+            {
+                return GetUsageForOperation(memberAccess.Parent);
+            }
+
+            if (identifier.Parent is ElementAccessExpressionSyntax elementAccess)
+            {
+                return GetUsageForOperation(elementAccess.Parent);
+            }
+
+            IdentifierUsage GetUsageForOperation(SyntaxNode operationNode)
+            {
+                if (operationNode is AssignmentExpressionSyntax assignent)
+                {
+                    switch (assignent.Kind())
+                    {
+                        case SyntaxKind.SimpleAssignmentExpression:
+                            return IdentifierUsage.WrittenTo();
+                        case SyntaxKind.AddAssignmentExpression:
+                        case SyntaxKind.SubtractAssignmentExpression:
+                            //TODO: add more assignment expressions
+                            return IdentifierUsage.ReadFromAndWrittenTo();
+
+                    }
+                }
+                else if (operationNode is PostfixUnaryExpressionSyntax postfix)
+                {
+                    return IdentifierUsage.ReadFromAndWrittenTo();
+                }
+
+                return IdentifierUsage.ReadFrom();
+            }
+
+            return GetUsageForOperation(identifier.Parent);
+        }
     }
 }
