@@ -46,9 +46,9 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             bool exceptLocally = false)
         {
-            var vis = new Visitor(semanticModel, exceptLocally, knownReturnsNewObjectMethods);
+            var impuritiesFinder = new ImpuritiesFinder(semanticModel, exceptLocally, knownReturnsNewObjectMethods);
 
-            return vis.GetImpurities(methodDeclaration).ToArray();
+            return impuritiesFinder.GetImpurities(methodDeclaration).ToArray();
         }
 
         public static bool AnyImpurePropertyInitializer(

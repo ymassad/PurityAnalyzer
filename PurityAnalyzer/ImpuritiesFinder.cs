@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
-    public class Visitor
+    public class ImpuritiesFinder
     {
         private readonly bool exceptLocally;
 
@@ -22,7 +22,7 @@ namespace PurityAnalyzer
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
-        public Visitor(SemanticModel semanticModel, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+        public ImpuritiesFinder(SemanticModel semanticModel, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             this.semanticModel = semanticModel;
             this.exceptLocally = exceptLocally;
