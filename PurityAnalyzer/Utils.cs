@@ -409,6 +409,11 @@ namespace PurityAnalyzer
             return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureExceptLocallyAttribute(x.AttributeClass.Name));
         }
 
+        public static bool SymbolHasIsPureExceptReadLocallyAttribute(ISymbol symbol)
+        {
+            return Utils.GetAllAttributes(symbol).Any(x => Utils.IsIsPureExceptReadLocallyAttribute(x.AttributeClass.Name));
+        }
+
         public static bool SymbolHasAssumeIsPureAttribute(ISymbol symbol)
         {
             return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");

@@ -90,6 +90,26 @@ namespace PurityAnalyzer
                     PurityType.PureExceptLocally);
             });
 
+            attributes.FirstOrNoValue(Utils.IsIsPureExceptReadLocallyAttribute).ExecuteIfHasValue(attribute =>
+            {
+                if (methodDeclaration.IsStatic())
+                {
+                    var diagnostic = Diagnostic.Create(
+                        ImpurityRule,
+                        attribute.GetLocation(),
+                        "IsPureExceptReadLocallyAttribute cannot be applied on static methods");
+
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
+
+                ProcessImpuritiesForMethod(
+                    context,
+                    methodDeclaration,
+                    knownReturnsNewObjectMethods,
+                    PurityType.PureExceptReadLocally);
+            });
+
             attributes.FirstOrNoValue(Utils.IsReturnsNewObjectAttribute).ExecuteIfHasValue(attribute =>
             {
                 var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
@@ -210,6 +230,27 @@ namespace PurityAnalyzer
                     knownReturnsNewObjectMethods,
                     purityType: PurityType.PureExceptLocally);
             });
+
+            attributes.FirstOrNoValue(Utils.IsIsPureExceptReadLocallyAttribute).ExecuteIfHasValue(attribute =>
+            {
+                if (propertyDeclarationSyntax.IsStatic())
+                {
+                    var diagnostic = Diagnostic.Create(
+                        ImpurityRule,
+                        attribute.GetLocation(),
+                        "IsPureExceptReadLocallyAttribute cannot be applied on static properties");
+
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
+
+                ProcessImpuritiesForProperty(
+                    context,
+                    propertyDeclarationSyntax,
+                    knownReturnsNewObjectMethods,
+                    purityType: PurityType.PureExceptReadLocally);
+            });
+
 
         }
 

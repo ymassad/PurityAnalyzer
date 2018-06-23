@@ -325,7 +325,7 @@ namespace PurityAnalyzer
 
                     bool accessingLocalFieldLegally = false;
 
-                    if (purityType == PurityType.PureExceptLocally)
+                    if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
                     {
                         var methodOrPropertyWhereIdentifierIsUsed =
                             node.Ancestors()
@@ -335,17 +335,20 @@ namespace PurityAnalyzer
                                     .OfType<PropertyDeclarationSyntax>())
                                 .FirstOrNoValue();
 
-                        bool IsAccessingLocalField(MemberDeclarationSyntax m)
+                        bool IsAccessingLocalField(MemberDeclarationSyntax member)
                         {
-                            var methodSymbol = semanticModel.GetDeclaredSymbol(m);
+                            var memberSymbol = semanticModel.GetDeclaredSymbol(member);
 
-                            var currentType = methodSymbol.ContainingType;
+                            var currentType = memberSymbol.ContainingType;
 
                             return fieldSymbol.ContainingType == currentType && !fieldSymbol.IsStatic;
                         }
 
                         accessingLocalFieldLegally =
-                            methodOrPropertyWhereIdentifierIsUsed.ChainValue(IsAccessingLocalField).ValueOr(false);
+                            methodOrPropertyWhereIdentifierIsUsed
+                                .ChainValue(IsAccessingLocalField)
+                                .ValueOr(false)
+                            && (purityType == PurityType.PureExceptLocally || !Utils.GetUsage(node).IsWrite());
                     }
 
                     if (!accessingFieldFromMatchingConstructor && !accessingLocalFieldLegally)
@@ -387,18 +390,18 @@ namespace PurityAnalyzer
         {
             PurityType acceptedPurityType = PurityType.Pure;
 
-            if (purityType == PurityType.PureExceptLocally)
+            if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
             {
                 if (node.Parent is InvocationExpressionSyntax)
                 {
-                    acceptedPurityType = PurityType.PureExceptLocally;
+                    acceptedPurityType = purityType;
                 }
                 else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
                          memberAccess.Expression.Kind() == SyntaxKind.ThisExpression)
                 {
                     if (memberAccess.Parent is InvocationExpressionSyntax)
                     {
-                        acceptedPurityType = PurityType.PureExceptLocally;
+                        acceptedPurityType = purityType;
                     }
                     else
                     {
@@ -407,7 +410,7 @@ namespace PurityAnalyzer
                         if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
                             propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
                         {
-                            acceptedPurityType = PurityType.PureExceptLocally;
+                            acceptedPurityType = purityType;
                         }
                     }
                 }
@@ -418,7 +421,7 @@ namespace PurityAnalyzer
                     if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
                         propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
                     {
-                        acceptedPurityType = PurityType.PureExceptLocally;
+                        acceptedPurityType = purityType;
                     }
                 }
             }
@@ -527,6 +530,12 @@ namespace PurityAnalyzer
             if (Utils.SymbolHasAssumeIsPureAttribute(method.ContainingType))
                 return true;
 
+            if (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)
+            {
+                if (Utils.SymbolHasIsPureExceptReadLocallyAttribute(method))
+                    return true;
+            }
+
             if (purityType == PurityType.PureExceptLocally)
             {
                 if (Utils.SymbolHasIsPureExceptLocallyAttribute(method))
@@ -565,7 +574,7 @@ namespace PurityAnalyzer
                         }
                         if (accessor.Kind() == SyntaxKind.GetAccessorDeclaration)
                         {
-                            return property.IsReadOnly || purityType == PurityType.PureExceptLocally;
+                            return property.IsReadOnly || purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally;
                         }
                     }
                 }
