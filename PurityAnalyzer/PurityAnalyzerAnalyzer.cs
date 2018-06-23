@@ -183,35 +183,64 @@ namespace PurityAnalyzer
 
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
 
-            if (propertyDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).Select(x => x.Name)
-                .OfType<IdentifierNameSyntax>().Any(x => Utils.IsIsPureAttribute(x.Identifier.Text)))
+            var attributes = propertyDeclarationSyntax.AttributeLists.SelectMany(x => x.Attributes).ToArray();
+
+            if (attributes.Any(Utils.IsIsPureAttribute))
             {
                 ProcessImpuritiesForProperty(context, propertyDeclarationSyntax, knownReturnsNewObjectMethods);
             }
+
+            attributes.FirstOrNoValue(Utils.IsIsPureExceptLocallyAttribute).ExecuteIfHasValue(attribute =>
+            {
+                if (propertyDeclarationSyntax.IsStatic())
+                {
+                    var diagnostic = Diagnostic.Create(
+                        ImpurityRule,
+                        attribute.GetLocation(),
+                        "IsPureExceptLocallyAttribute cannot be applied on static properties");
+
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
+
+                ProcessImpuritiesForProperty(
+                    context,
+                    propertyDeclarationSyntax,
+                    knownReturnsNewObjectMethods,
+                    exceptLocally: true);
+            });
+
         }
 
         private static void ProcessImpuritiesForProperty(
             SyntaxNodeAnalysisContext context,
             PropertyDeclarationSyntax propertyDeclarationSyntax,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            bool exceptLocally = false)
         {
             if (propertyDeclarationSyntax.AccessorList != null)
             {
                 foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
                 {
-                    ProcessImpuritiesForMethod(context, accessor, knownReturnsNewObjectMethods);
+                    ProcessImpuritiesForMethod(
+                        context, accessor, knownReturnsNewObjectMethods, exceptLocally);
                 }
             }
             else if (propertyDeclarationSyntax.ExpressionBody != null)
             {
-                ProcessImpuritiesForMethod(context, propertyDeclarationSyntax.ExpressionBody, knownReturnsNewObjectMethods);
+                ProcessImpuritiesForMethod(
+                    context,
+                    propertyDeclarationSyntax.ExpressionBody,
+                    knownReturnsNewObjectMethods,
+                    exceptLocally);
             }
 
             if (propertyDeclarationSyntax.Initializer != null)
             {
                 var initializedTo = propertyDeclarationSyntax.Initializer.Value;
 
-                ProcessImpuritiesForMethod(context, initializedTo, knownReturnsNewObjectMethods);
+                ProcessImpuritiesForMethod(
+                    context, initializedTo, knownReturnsNewObjectMethods, exceptLocally);
             }
 
         }
