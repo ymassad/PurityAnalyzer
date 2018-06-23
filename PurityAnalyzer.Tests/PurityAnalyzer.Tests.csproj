@@ -198,6 +198,8 @@
     <Compile Include="IsPureAttributeOnMethod\StaticFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\ConstFieldTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\RecursiveMethodsTests.cs" />
+    <Compile Include="IsPureExceptReadLocallyAttribute\IsPureExceptReadLocallyAttributeOnMethod.cs" />
+    <Compile Include="IsPureExceptReadLocallyAttribute\IsPureExceptReadLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnMethod.cs" />
     <Compile Include="ReturnsNewObjectAttribute\ReturnsNewObjectAttributeTests.cs" />
