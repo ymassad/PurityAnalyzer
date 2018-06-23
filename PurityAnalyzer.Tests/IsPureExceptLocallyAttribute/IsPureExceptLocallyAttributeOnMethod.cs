@@ -879,6 +879,32 @@ public class Class1
         }
 
         [Test]
+        public void MethodThatGetsALocalAutomaticPropertyIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return PureProperty;
+    }
+
+    private int PureProperty {get; set;}
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
         public void MethodThatCallsAPureExceptLocallyPropertySetterIsPureExceptLocally()
         {
             string code = @"
