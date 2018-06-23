@@ -13,7 +13,7 @@ namespace PurityAnalyzer
 {
     public class ImpuritiesFinder
     {
-        private readonly bool exceptLocally;
+        private readonly PurityType purityType;
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
@@ -22,10 +22,10 @@ namespace PurityAnalyzer
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
-        public ImpuritiesFinder(SemanticModel semanticModel, bool exceptLocally, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+        public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
             this.semanticModel = semanticModel;
-            this.exceptLocally = exceptLocally;
+            this.purityType = purityType;
             this.knownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
@@ -325,7 +325,7 @@ namespace PurityAnalyzer
 
                     bool accessingLocalFieldLegally = false;
 
-                    if (exceptLocally)
+                    if (purityType == PurityType.PureExceptLocally)
                     {
                         var methodOrPropertyWhereIdentifierIsUsed =
                             node.Ancestors()
@@ -385,20 +385,20 @@ namespace PurityAnalyzer
 
         private IEnumerable<Impurity> GetImpuritiesForMethodAccess(IdentifierNameSyntax node, IMethodSymbol method)
         {
-            bool acceptMethodToBePureExceptLocally = false;
+            PurityType acceptedPurityType = PurityType.Pure;
 
-            if (exceptLocally)
+            if (purityType == PurityType.PureExceptLocally)
             {
                 if (node.Parent is InvocationExpressionSyntax)
                 {
-                    acceptMethodToBePureExceptLocally = true;
+                    acceptedPurityType = PurityType.PureExceptLocally;
                 }
                 else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
                          memberAccess.Expression.Kind() == SyntaxKind.ThisExpression)
                 {
                     if (memberAccess.Parent is InvocationExpressionSyntax)
                     {
-                        acceptMethodToBePureExceptLocally = true;
+                        acceptedPurityType = PurityType.PureExceptLocally;
                     }
                     else
                     {
@@ -407,7 +407,7 @@ namespace PurityAnalyzer
                         if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
                             propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
                         {
-                            acceptMethodToBePureExceptLocally = true;
+                            acceptedPurityType = PurityType.PureExceptLocally;
                         }
                     }
                 }
@@ -418,7 +418,7 @@ namespace PurityAnalyzer
                     if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
                         propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
                     {
-                        acceptMethodToBePureExceptLocally = true;
+                        acceptedPurityType = PurityType.PureExceptLocally;
                     }
                 }
             }
@@ -426,11 +426,11 @@ namespace PurityAnalyzer
             {
                 if (Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
                 {
-                    acceptMethodToBePureExceptLocally = true;
+                    acceptedPurityType = PurityType.PureExceptLocally;
                 } 
             }
 
-            if (!IsMethodPure(method, acceptMethodToBePureExceptLocally))
+            if (!IsMethodPure(method, acceptedPurityType))
             {
                 yield return new Impurity(node, "Method is impure");
             }
@@ -516,7 +516,7 @@ namespace PurityAnalyzer
             }
         }
 
-        private bool IsMethodPure(IMethodSymbol method, bool exceptLocally = false)
+        private bool IsMethodPure(IMethodSymbol method, PurityType purityType = PurityType.Pure)
         {
             if (method.IsAbstract)
                 return true;
@@ -527,7 +527,7 @@ namespace PurityAnalyzer
             if (Utils.SymbolHasAssumeIsPureAttribute(method.ContainingType))
                 return true;
 
-            if (exceptLocally)
+            if (purityType == PurityType.PureExceptLocally)
             {
                 if (Utils.SymbolHasIsPureExceptLocallyAttribute(method))
                     return true;
@@ -561,22 +561,26 @@ namespace PurityAnalyzer
                         {
                             return
                                 property.IsReadOnly //This happens in constructors
-                                || exceptLocally;
+                                || purityType == PurityType.PureExceptLocally;
                         }
                         if (accessor.Kind() == SyntaxKind.GetAccessorDeclaration)
                         {
-                            return property.IsReadOnly || exceptLocally;
+                            return property.IsReadOnly || purityType == PurityType.PureExceptLocally;
                         }
                     }
                 }
 
-                var imp = Utils.GetImpurities(methodNode, semanticModel.Compilation.GetSemanticModel(locationSourceTree), knownReturnsNewObjectMethods, exceptLocally);
+                var imp = Utils.GetImpurities(
+                    methodNode,
+                    semanticModel.Compilation.GetSemanticModel(locationSourceTree),
+                    knownReturnsNewObjectMethods,
+                    purityType);
 
                 if (imp.Any()) return false;
             }
             else
             {
-                if (!IsKnownPureMethod(method, exceptLocally)) return false;
+                if (!IsKnownPureMethod(method, purityType)) return false;
             }
 
             return true;
@@ -635,7 +639,7 @@ namespace PurityAnalyzer
             return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
         }
 
-        private bool IsKnownPureMethod(IMethodSymbol method, bool exceptLocally = false)
+        private bool IsKnownPureMethod(IMethodSymbol method, PurityType purityType = PurityType.Pure)
         {
             if (method.ContainingType.TypeKind == TypeKind.Delegate)
                 return true;
@@ -658,7 +662,7 @@ namespace PurityAnalyzer
                 return true;
             }
             
-            if(exceptLocally)
+            if(purityType == PurityType.PureExceptLocally)
             {
                 if (knownPureExceptLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
@@ -668,7 +672,6 @@ namespace PurityAnalyzer
                     return true;
                 }
             }
-
 
             return false;
         }

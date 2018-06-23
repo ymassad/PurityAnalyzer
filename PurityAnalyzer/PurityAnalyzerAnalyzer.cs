@@ -1,13 +1,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace PurityAnalyzer
 {
@@ -86,7 +83,11 @@ namespace PurityAnalyzer
                     return;
                 }
 
-                ProcessImpuritiesForMethod(context, methodDeclaration, knownReturnsNewObjectMethods, exceptLocally: true);
+                ProcessImpuritiesForMethod(
+                    context,
+                    methodDeclaration,
+                    knownReturnsNewObjectMethods,
+                    PurityType.PureExceptLocally);
             });
 
             attributes.FirstOrNoValue(Utils.IsReturnsNewObjectAttribute).ExecuteIfHasValue(attribute =>
@@ -207,7 +208,7 @@ namespace PurityAnalyzer
                     context,
                     propertyDeclarationSyntax,
                     knownReturnsNewObjectMethods,
-                    exceptLocally: true);
+                    purityType: PurityType.PureExceptLocally);
             });
 
         }
@@ -216,14 +217,14 @@ namespace PurityAnalyzer
             SyntaxNodeAnalysisContext context,
             PropertyDeclarationSyntax propertyDeclarationSyntax,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            bool exceptLocally = false)
+            PurityType purityType = PurityType.Pure)
         {
             if (propertyDeclarationSyntax.AccessorList != null)
             {
                 foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
                 {
                     ProcessImpuritiesForMethod(
-                        context, accessor, knownReturnsNewObjectMethods, exceptLocally);
+                        context, accessor, knownReturnsNewObjectMethods, purityType);
                 }
             }
             else if (propertyDeclarationSyntax.ExpressionBody != null)
@@ -232,7 +233,7 @@ namespace PurityAnalyzer
                     context,
                     propertyDeclarationSyntax.ExpressionBody,
                     knownReturnsNewObjectMethods,
-                    exceptLocally);
+                    purityType);
             }
 
             if (propertyDeclarationSyntax.Initializer != null)
@@ -240,23 +241,22 @@ namespace PurityAnalyzer
                 var initializedTo = propertyDeclarationSyntax.Initializer.Value;
 
                 ProcessImpuritiesForMethod(
-                    context, initializedTo, knownReturnsNewObjectMethods, exceptLocally);
+                    context, initializedTo, knownReturnsNewObjectMethods, purityType);
             }
 
         }
 
-        private static void ProcessImpuritiesForMethod(
-            SyntaxNodeAnalysisContext context,
+        private static void ProcessImpuritiesForMethod(SyntaxNodeAnalysisContext context,
             SyntaxNode methodLikeNode,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            bool exceptLocally = false)
+            PurityType purityType = PurityType.Pure)
         {
             var impurities =
                 Utils.GetImpurities(
                     GetBodyIfDeclaration(methodLikeNode),
                     context.SemanticModel,
                     knownReturnsNewObjectMethods,
-                    exceptLocally)
+                    purityType)
                     .ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)

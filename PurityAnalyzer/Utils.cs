@@ -31,6 +31,11 @@ namespace PurityAnalyzer
             return attribute.Name is IdentifierNameSyntax name && IsIsPureExceptLocallyAttribute(name.Identifier.Text);
         }
 
+        public static bool IsIsPureExceptReadLocallyAttribute(AttributeSyntax attribute)
+        {
+            return attribute.Name is IdentifierNameSyntax name && IsIsPureExceptReadLocallyAttribute(name.Identifier.Text);
+        }
+
         public static bool IsIsPureAttribute(string attributeName)
         {
             return attributeName == "IsPure" || attributeName == "IsPure" + "Attribute";
@@ -41,12 +46,17 @@ namespace PurityAnalyzer
             return attributeName == "IsPureExceptLocally" || attributeName == "IsPureExceptLocally" + "Attribute";
         }
 
+        public static bool IsIsPureExceptReadLocallyAttribute(string attributeName)
+        {
+            return attributeName == "IsPureExceptReadLocally" || attributeName == "IsPureExceptReadLocally" + "Attribute";
+        }
+
         public static Impurity[] GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            bool exceptLocally = false)
+            PurityType purityType = PurityType.Pure)
         {
-            var impuritiesFinder = new ImpuritiesFinder(semanticModel, exceptLocally, knownReturnsNewObjectMethods);
+            var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
 
             return impuritiesFinder.GetImpurities(methodDeclaration).ToArray();
         }
