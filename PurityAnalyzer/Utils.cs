@@ -158,37 +158,40 @@ namespace PurityAnalyzer
             if (method.HasNoValue)
                 return false;
 
-            List<ExpressionSyntax> FindValuesAssignedToVariable(SyntaxNode containingBlockNode, ILocalSymbol local1)
+            return FindValuesAssignedToVariable(semanticModel, local, method.GetValue().Body).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+        }
+
+        public static List<ExpressionSyntax> FindValuesAssignedToVariable(
+            SemanticModel semanticModel,
+            ILocalSymbol variable,
+            SyntaxNode containingBlockNode)
+        {
+            var declaration = variable.DeclaringSyntaxReferences.Single();
+
+            List<ExpressionSyntax> list = new List<ExpressionSyntax>();
+
+            var declarationNode = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
+
+            if (declarationNode is VariableDeclaratorSyntax variableDecl)
             {
-                var declaration = local1.DeclaringSyntaxReferences.Single();
-
-                List<ExpressionSyntax> list = new List<ExpressionSyntax>();
-
-                var declarationNode = declaration.SyntaxTree.GetRoot().FindNode(declaration.Span);
-
-                if (declarationNode is VariableDeclaratorSyntax variableDecl)
+                if (variableDecl.Initializer != null)
                 {
-                    if (variableDecl.Initializer != null)
-                    {
-                        list.Add(variableDecl.Initializer.Value);
-                    }
+                    list.Add(variableDecl.Initializer.Value);
                 }
-
-                var usages = containingBlockNode
-                    .DescendantNodes()
-                    .OfType<IdentifierNameSyntax>()
-                    .Where(x => x.Identifier.Text == local1.Name)
-                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(local1) ?? false)
-                    .Where(x => x.Parent is AssignmentExpressionSyntax assignment && assignment.Left == x)
-                    .Select(x => ((AssignmentExpressionSyntax) x.Parent).Right)
-                    .ToArray();
-
-                list.AddRange(usages);
-
-                return list;
             }
-            
-            return FindValuesAssignedToVariable(method.GetValue().Body, local).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+
+            var usages = containingBlockNode
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>()
+                .Where(x => x.Identifier.Text == variable.Name)
+                .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(variable) ?? false)
+                .Where(x => x.Parent is AssignmentExpressionSyntax assignment && assignment.Left == x)
+                .Select(x => ((AssignmentExpressionSyntax) x.Parent).Right)
+                .ToArray();
+
+            list.AddRange(usages);
+
+            return list;
         }
 
         public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)

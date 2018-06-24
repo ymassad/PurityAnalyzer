@@ -233,22 +233,39 @@ namespace PurityAnalyzer
                     .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods));
         }
 
-        private bool IsParameterBasedAccess(MemberAccessExpressionSyntax node)
+        private bool IsParameter(ExpressionSyntax node)
         {
-            var accessedSymbol = semanticModel.GetSymbolInfo(node.Expression).Symbol;
+            var accessedSymbol = semanticModel.GetSymbolInfo(node).Symbol;
 
             if (accessedSymbol is IParameterSymbol)
                 return true;
 
-            if (node.Expression is MemberAccessExpressionSyntax parentExpression)
-                return IsParameterBasedAccess(parentExpression);
+            if (node is MemberAccessExpressionSyntax parentExpression)
+                return IsParameter(parentExpression.Expression);
 
-            return false;
+            if (!(node is IdentifierNameSyntax identifier))
+                return false;
+
+            var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
+
+            if (!(identifierSymbol is ILocalSymbol local))
+                return false;
+
+            var method = node.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrNoValue();
+
+            if (method.HasNoValue)
+                return false;
+
+            return Utils.FindValuesAssignedToVariable(
+                semanticModel, local, method.GetValue().Body)
+                .All(IsParameter);
         }
 
         private bool IsParameterBasedAccess(IdentifierNameSyntax node)
         {
-            return node.Parent is MemberAccessExpressionSyntax memberAccess && IsParameterBasedAccess(memberAccess);
+            return node.Parent is MemberAccessExpressionSyntax memberAccess
+                   && memberAccess.Name == node
+                   && IsParameter(memberAccess.Expression);
         }
 
         private bool ContainsImpureCast(SyntaxNode node)

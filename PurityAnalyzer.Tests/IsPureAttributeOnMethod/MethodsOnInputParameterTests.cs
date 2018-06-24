@@ -311,5 +311,147 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatInvokesAMethodThatInvokesAnotherMethodThatReadsMutableStateOnParameterWhoseTypeIsDefinedInCodeIndirectlyViaVariableIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+
+    public int Method() => Method2();
+    public int Method2() => state;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        var v = input;
+        return v.Method().ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatInvokesAnotherMethodThatReadsMutableStateOnParameterWhoseTypeIsDefinedInCodeIndirectlyViaTwoVariablesIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+
+    public int Method() => Method2();
+    public int Method2() => state;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        var v = input;
+        var v2 = v;
+        return v2.Method().ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatInvokesAnotherMethodThatWritesMutableStateOnParameterWhoseTypeIsDefinedInCodeIndirectlyViaVariableIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+
+    public int Method() => Method2();
+    public int Method2()
+    {
+        state = 2;
+        return 1;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        var v = input;
+        return v.Method().ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatInvokesAnotherMethodThatWritesMutableStateOnParameterWhoseTypeIsDefinedInCodeIndirectlyViaTwoVariablesIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+
+    public int Method() => Method2();
+    public int Method2()
+    {
+        state = 2;
+        return 1;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        var v = input;
+        var v2 = v;
+        return v2.Method().ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
