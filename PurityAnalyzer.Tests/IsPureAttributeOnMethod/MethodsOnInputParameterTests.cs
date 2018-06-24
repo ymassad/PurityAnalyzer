@@ -27,7 +27,7 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }
@@ -59,7 +59,7 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }
@@ -86,16 +86,15 @@ public class Dto1
     
     public int Method()
     {
-        Prop = 1;
+        Prop1 = 1;
         return 1;
     }
-
 }
 
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }
@@ -126,7 +125,7 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }
@@ -157,7 +156,7 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }
@@ -192,7 +191,7 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         return input.Method();
     }

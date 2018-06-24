@@ -430,7 +430,11 @@ namespace PurityAnalyzer
                 if (Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
                 {
                     acceptedPurityType = PurityType.PureExceptLocally;
-                } 
+                }
+                else if (IsParameterBasedAccess(node))
+                {
+                    acceptedPurityType = PurityType.PureExceptReadLocally;
+                }
             }
 
             if (!IsMethodPure(method, acceptedPurityType))
