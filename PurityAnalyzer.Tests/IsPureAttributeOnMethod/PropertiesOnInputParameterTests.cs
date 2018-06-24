@@ -341,5 +341,78 @@ public static class Module1
 
             dignostics.Length.Should().BePositive();
         }
+
+
+
+        [Test]
+        public void MethodThatReadsAnReadOnlyPropertyThatInvokesAMethodThatReadsMutableStateOnParameterWhoseTypeIsDefinedInCodeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+    
+    int Method() => state;
+
+    public int Prop1 => Method();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        return input.Prop1.ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAnReadOnlyPropertyThatInvokesAMethodThatWritesMutableStateOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    int state = 0;
+    
+    int Method()
+    {
+        state = 1;
+        return 1;
+    }
+
+    public int Prop1 => Method();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething(Dto1 input)
+    {
+        return input.Prop1.ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
