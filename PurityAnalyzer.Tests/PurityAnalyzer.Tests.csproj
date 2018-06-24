@@ -187,6 +187,7 @@
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByCallingMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\NewObjectTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CallingPureExceptLocallyMethodsAndPropertiesOnNewDotNetObjectsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\MethodsOnInputParameterTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\SimpleDotNetMethodTests.cs" />
     <Compile Include="IsPureAttributeOnProperty\IsPureAttributeOnPropertyTests.cs" />
     <Compile Include="IsPureAttributeOnClass\IsPureAttributeOnClassTests.cs" />
