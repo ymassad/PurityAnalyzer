@@ -804,5 +804,92 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatInvokesAPureExceptLocallyPropertySetOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableTwiceIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public int Prop { set => a = value; }
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+
+        var instance = class1;
+        
+        instance.Prop = 2;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAnImpurePropertySetOnNewlyCreatedObjectViaAnotherMethodAndAssignedToVariableTwiceIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public int Prop
+    {
+        set 
+        {
+            a = value;
+            state++;
+        }
+    }
+
+    static int state = 0;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var class1 = Create();
+
+        var instance = class1;
+        
+        instance.Prop = 2;
+
+        return 1;
+    }
+
+    public static Class1 Create() => new Class1();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
     }
 }
