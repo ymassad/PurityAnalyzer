@@ -153,12 +153,18 @@ namespace PurityAnalyzer
             if (!(identifierSymbol is ILocalSymbol local))
                 return false;
 
-            var method = expression.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrNoValue();
+            var methodBody =
+                expression
+                    .Ancestors()
+                    .OfType<MethodDeclarationSyntax>()
+                    .FirstOrNoValue()
+                    .ChainValue(x => x.Body)
+                    .ValueOrMaybe(() => expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue().ChainValue(x => x.Body));
 
-            if (method.HasNoValue)
+            if (methodBody.HasNoValue)
                 return false;
 
-            return FindValuesAssignedToVariable(semanticModel, local, method.GetValue().Body).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+            return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
         }
 
         public static List<ExpressionSyntax> FindValuesAssignedToVariable(

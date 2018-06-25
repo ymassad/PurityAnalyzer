@@ -111,5 +111,54 @@ public class Class1
 
         }
 
+        [Test]
+        public void PropertyWhoseGetterInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int Prop
+    {
+        get
+        {
+            var instance = new MutableClassWithPurePropertiesExceptLocally();
+
+            return instance.PureExceptLocallyPropertyGetterAndSetter;
+        }
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void ExpressionBodiedPropertyThatInvokesAPureExceptLocallyPropertyGetterAndSetterGetOnNewlyCreatedCompiledObjectIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int Prop => new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyPropertyGetterAndSetter;
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
     }
 }
