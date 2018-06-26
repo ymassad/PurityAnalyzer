@@ -602,5 +602,155 @@ public static class Module1
 
             dignostics.Length.Should().BePositive();
         }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadWriteFieldOnParameterWhoseTypeIsDefinedInCodeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Field = 5;
+    
+    public int Method() => Field;
+}
+
+public class Dto0
+{
+    public Dto1 Dto = new Dto1();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Dto0 input)
+    {
+        return input.Dto.Method();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadWriteFieldOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Field = 5;
+    
+    public int Method()
+    {
+        Field = 1;
+        return 1;
+    }
+}
+
+public class Dto0
+{
+    public Dto1 Dto = new Dto1();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Dto0 input)
+    {
+        return input.Dto.Method();
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Field = 5;
+    
+    public int Method() => Field;
+}
+
+public class Dto0
+{
+    public Dto1 Dto { get; set; } = new Dto1();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Dto0 input)
+    {
+        return input.Dto.Method();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Field = 5;
+    
+    public int Method()
+    {
+        Field = 1;
+        return 1;
+    }
+}
+
+public class Dto0
+{
+    public Dto1 Dto {get; set; } = new Dto1();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Dto0 input)
+    {
+        return input.Dto.Method();
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
     }
 }
