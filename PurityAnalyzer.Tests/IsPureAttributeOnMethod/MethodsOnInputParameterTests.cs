@@ -529,7 +529,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadOnlyPropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
+        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadOnlyAutoPropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
         {
             string code = @"
 using System;
@@ -565,7 +565,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadOnlyPropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadOnlyAutoPropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
         {
             string code = @"
 using System;
@@ -679,7 +679,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
+        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadWriteAutoPropertyOnParameterWhoseTypeIsDefinedInCodeIsPure()
         {
             string code = @"
 using System;
@@ -715,7 +715,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadWritePropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        public void MethodThatInvokesAMethodThatWritesAnReadWriteFieldOnObjectObtainedViaReadWriteAutoPropertyOnParameterWhoseTypeIsDefinedInCodeIsImpure()
         {
             string code = @"
 using System;
