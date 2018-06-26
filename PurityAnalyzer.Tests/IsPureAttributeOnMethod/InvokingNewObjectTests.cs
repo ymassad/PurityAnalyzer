@@ -962,5 +962,43 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAReadWriteFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public class Class0
+{
+    public Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
