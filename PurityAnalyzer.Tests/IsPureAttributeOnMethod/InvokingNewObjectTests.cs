@@ -1000,5 +1000,75 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaAutoReadonlyPropertyOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    public Class1 class1 {get;} = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class0().class1.a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaReadonlyPropertyThatReturnsStaticObjectOnNewlyCreatedObjectDirectlyIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    public Class1 class1 => c1;
+
+    static Class1 c1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class0().class1.a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
