@@ -752,5 +752,44 @@ public static class Module1
 
             dignostics.Length.Should().BePositive();
         }
+
+
+        [Test]
+        public void MethodThatInvokesAMethodThatReadsAnReadWriteFieldOnObjectObtainedViaReadOnlyPropertyThatReturnsStaticObjectOnParameterWhoseTypeIsDefinedInCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Field = 5;
+    
+    public int Method() => Field;
+}
+
+public class Dto0
+{
+    public Dto1 Dto => dto;
+
+    static Dto1 dto = new Dto1();
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Dto0 input)
+    {
+        return input.Dto.Method();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().BePositive();
+        }
     }
 }
