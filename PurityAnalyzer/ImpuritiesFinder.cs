@@ -659,11 +659,11 @@ namespace PurityAnalyzer
         private Dictionary<string, HashSet<string>> GetKnownPureExceptReadLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
-                Resources.PureExceptReadLocallyMethods;
-                //+ Environment.NewLine
-                //+ PurityAnalyzerAnalyzer
-                //    .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
-                //    .ValueOr("");
+                Resources.PureExceptReadLocallyMethods
+                    +Environment.NewLine
+                    + PurityAnalyzerAnalyzer
+                        .CustomPureExceptReadLocallyMethodsFilename.ChainValue(File.ReadAllText)
+                        .ValueOr("");
 
             return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(x => x.Split(','))
