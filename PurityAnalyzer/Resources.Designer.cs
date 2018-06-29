@@ -73,6 +73,15 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to System.Xml.XmlNode, get_OuterXml.
+        /// </summary>
+        internal static string PureExceptReadLocallyMethods {
+            get {
+                return ResourceManager.GetString("PureExceptReadLocallyMethods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to System.Int32, ToString
         ///System.Boolean, ToString
         ///System.Double, ToString
@@ -106,7 +115,7 @@ namespace PurityAnalyzer {
         
         /// <summary>
         ///   Looks up a localized string similar to 
-        ///.
+        ///System.Xml.XmlDocument, CreateElement.
         /// </summary>
         internal static string ReturnsNewObjectMethods {
             get {

@@ -19,6 +19,7 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol objectType;
         private readonly Dictionary<string, HashSet<string>> knownPureMethods;
         private readonly Dictionary<string, HashSet<string>> knownPureExceptLocallyMethods;
+        private readonly Dictionary<string, HashSet<string>> knownPureExceptReadLocallyMethods;
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
 
@@ -32,6 +33,7 @@ namespace PurityAnalyzer
 
             knownPureMethods = GetKnownPureMethods();
             knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
+            knownPureExceptReadLocallyMethods = GetKnownPureExceptReadLocallyMethods();
             knownPureTypes = GetKnownPureTypes();
         }
 
@@ -654,6 +656,25 @@ namespace PurityAnalyzer
                     x => new HashSet<string>(x));
         }
 
+        private Dictionary<string, HashSet<string>> GetKnownPureExceptReadLocallyMethods()
+        {
+            var pureMethodsExceptLocallyFileContents =
+                Resources.PureExceptReadLocallyMethods;
+                //+ Environment.NewLine
+                //+ PurityAnalyzerAnalyzer
+                //    .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
+                //    .ValueOr("");
+
+            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split(','))
+                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure-except-read-locally method line"))
+                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<string>(x));
+        }
+
         private HashSet<INamedTypeSymbol> GetKnownPureTypes()
         {
             var pureTypesFileContents =
@@ -691,7 +712,18 @@ namespace PurityAnalyzer
             {
                 return true;
             }
-            
+
+            if (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)
+            {
+                if (knownPureExceptReadLocallyMethods.TryGetValue(
+                        Utils.GetFullMetaDataName(method.ContainingType),
+                        out var pureExceptReadLocallyMethods) &&
+                    pureExceptReadLocallyMethods.Contains(method.Name))
+                {
+                    return true;
+                }
+            }
+
             if(purityType == PurityType.PureExceptLocally)
             {
                 if (knownPureExceptLocallyMethods.TryGetValue(
@@ -702,6 +734,9 @@ namespace PurityAnalyzer
                     return true;
                 }
             }
+
+
+
 
             return false;
         }
