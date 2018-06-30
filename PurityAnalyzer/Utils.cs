@@ -109,6 +109,16 @@ namespace PurityAnalyzer
             if (expression is ObjectCreationExpressionSyntax)
                 return true;
 
+            if (expression is ArrayCreationExpressionSyntax)
+                return true;
+
+            if (expression is ImplicitArrayCreationExpressionSyntax)
+                return true;
+
+            if (expression is InitializerExpressionSyntax initSyntax &&
+                initSyntax.Kind() == SyntaxKind.ArrayInitializerExpression)
+                return true;
+
             if (expression is InvocationExpressionSyntax invocationExpression)
             {
                 if (semanticModel.GetSymbolInfo(invocationExpression.Expression).Symbol is IMethodSymbol invokedMethod)

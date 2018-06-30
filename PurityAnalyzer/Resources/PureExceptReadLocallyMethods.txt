@@ -1,1 +1,2 @@
 System.Xml.XmlNode, get_OuterXml
+System.Array, System.Collections.IList.get_Item

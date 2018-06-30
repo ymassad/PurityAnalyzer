@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -22,6 +25,7 @@ namespace PurityAnalyzer
         private readonly Dictionary<string, HashSet<string>> knownPureExceptReadLocallyMethods;
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
+        private readonly IPropertySymbol arrayIListItemProperty;
 
         public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
@@ -30,6 +34,13 @@ namespace PurityAnalyzer
             this.knownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
 
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
+
+            var arrayType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Array).FullName);
+
+            arrayIListItemProperty =
+                arrayType.GetMembers("System.Collections.IList.Item")
+                    .OfType<IPropertySymbol>()
+                    .Single();
 
             knownPureMethods = GetKnownPureMethods();
             knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
@@ -513,20 +524,11 @@ namespace PurityAnalyzer
 
             if (type?.TypeKind == TypeKind.Array)
             {
-                var usage = Utils.GetUsage(node.Expression);
-                
-                if (usage.IsWrite())
-                {
-                    yield return new Impurity(node, "Impure array set");
-                }
-
-                if (usage.IsRead())
-                {
-                    if (semanticModel.GetSymbolInfo(node.Expression).Symbol is IFieldSymbol field && field.IsStatic)
-                    {
-                        yield return new Impurity(node, "Impure array read");
-                    }
-                }
+                //Arrays element access in .NET is not a property or a method. Here I assume that
+                //The explicit property IList.Item is being accessed.
+                //This allows me to delegate to the code that handles properties
+                foreach (var imp in GetImpuritiesForPropertyAccess(node, arrayIListItemProperty))
+                    yield return imp;
             }
             else
             {

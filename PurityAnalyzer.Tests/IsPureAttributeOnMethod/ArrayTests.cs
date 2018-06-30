@@ -141,6 +141,33 @@ public static class Module1
 
         }
 
+        [Test]
+        public void MethodThatGetsElementInArrayCreatedInsideMethodAndSpecifyingElementTypeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = new int[]{1,2,3};
+        var v = arr[1];
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
 
         [Test]
         public void MethodThatSetsElementInArrayCreatedInsideMethodIsPure()
@@ -168,6 +195,34 @@ public static class Module1
             dignostics.Length.Should().Be(0);
 
         }
+
+        [Test]
+        public void MethodThatSetsElementInArrayCreatedInsideMethodAndSpecifyingElementTypeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = new int[]{1,2,3};
+        arr[1] = 5;
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
 
         [Test]
         public void MethodThatGetsElementInArrayCreatedInsideMethodWithoutNewKeywordIsPure()
