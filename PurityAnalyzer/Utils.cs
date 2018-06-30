@@ -457,7 +457,10 @@ namespace PurityAnalyzer
             return set.ToArray();
         }
 
-        public static bool IsAccessOnNewlyCreatedObject(Dictionary<string, HashSet<string>> dictionary, SemanticModel semanticModel, IdentifierNameSyntax node)
+        public static bool IsAccessOnNewlyCreatedObject(
+            Dictionary<string, HashSet<string>> dictionary,
+            SemanticModel semanticModel,
+            ExpressionSyntax node)
         {
             if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
                 return false;

@@ -263,7 +263,7 @@ namespace PurityAnalyzer
                 .All(IsParameter);
         }
 
-        private bool IsParameterBasedAccess(IdentifierNameSyntax node)
+        private bool IsParameterBasedAccess(ExpressionSyntax node)
         {
             return node.Parent is MemberAccessExpressionSyntax memberAccess
                    && memberAccess.Name == node
@@ -391,7 +391,7 @@ namespace PurityAnalyzer
             }
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(IdentifierNameSyntax node, IPropertySymbol propertySymbol)
+        private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(ExpressionSyntax node, IPropertySymbol propertySymbol)
         {
             var usage = Utils.GetUsage(node);
 
@@ -405,7 +405,7 @@ namespace PurityAnalyzer
             return Enumerable.Empty<Impurity>();
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(IdentifierNameSyntax node, IMethodSymbol method)
+        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(ExpressionSyntax node, IMethodSymbol method)
         {
             PurityType acceptedPurityType = PurityType.Pure;
 
@@ -525,19 +525,8 @@ namespace PurityAnalyzer
 
                 if (symbol is IPropertySymbol propertySymbol)
                 {
-                    var usage = Utils.GetUsage(node.Expression);
-
-                    if (usage.IsRead())
-                    {
-                        if (!IsMethodPure(propertySymbol.GetMethod))
-                            yield return new Impurity(node, "Impure get");
-                    }
-
-                    if (usage.IsWrite())
-                    {
-                        if (!IsMethodPure(propertySymbol.SetMethod))
-                            yield return new Impurity(node, "Impure set");
-                    }
+                    foreach (var imp in GetImpuritiesForPropertyAccess(node, propertySymbol))
+                        yield return imp;
                 }
             }
         }
