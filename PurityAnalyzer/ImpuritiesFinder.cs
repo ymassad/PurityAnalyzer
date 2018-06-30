@@ -265,9 +265,16 @@ namespace PurityAnalyzer
 
         private bool IsParameterBasedAccess(ExpressionSyntax node)
         {
-            return node.Parent is MemberAccessExpressionSyntax memberAccess
-                   && memberAccess.Name == node
-                   && IsParameter(memberAccess.Expression);
+            if (node.Parent is MemberAccessExpressionSyntax memberAccess
+                && memberAccess.Name == node
+                && IsParameter(memberAccess.Expression))
+                return true;
+
+            if (node is ElementAccessExpressionSyntax elementAccess
+                && IsParameter(elementAccess.Expression))
+                return true;
+
+            return false;
         }
 
         private bool ContainsImpureCast(SyntaxNode node)
@@ -346,12 +353,14 @@ namespace PurityAnalyzer
 
                     if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
                     {
-                        var methodOrPropertyWhereIdentifierIsUsed =
+                        var methodOrPropertyOrIndexerWhereIdentifierIsUsed =
                             node.Ancestors()
                                 .OfType<MethodDeclarationSyntax>()
                                 .Cast<MemberDeclarationSyntax>()
                                 .Concat(node.Ancestors()
                                     .OfType<PropertyDeclarationSyntax>())
+                                .Concat(node.Ancestors()
+                                    .OfType<IndexerDeclarationSyntax>())
                                 .FirstOrNoValue();
 
                         bool IsAccessingLocalField(MemberDeclarationSyntax member)
@@ -364,7 +373,7 @@ namespace PurityAnalyzer
                         }
 
                         accessingLocalFieldLegally =
-                            methodOrPropertyWhereIdentifierIsUsed
+                            methodOrPropertyOrIndexerWhereIdentifierIsUsed
                                 .ChainValue(IsAccessingLocalField)
                                 .ValueOr(false)
                             && (purityType == PurityType.PureExceptLocally || !Utils.GetUsage(node).IsWrite());
@@ -505,7 +514,7 @@ namespace PurityAnalyzer
             if (type?.TypeKind == TypeKind.Array)
             {
                 var usage = Utils.GetUsage(node.Expression);
-
+                
                 if (usage.IsWrite())
                 {
                     yield return new Impurity(node, "Impure array set");

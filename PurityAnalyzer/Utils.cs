@@ -462,17 +462,30 @@ namespace PurityAnalyzer
             SemanticModel semanticModel,
             ExpressionSyntax node)
         {
-            if (!(node.Parent is MemberAccessExpressionSyntax memberAccess))
-                return false;
-
-            var expression = memberAccess.Expression;
-
-            while (expression is MemberAccessExpressionSyntax parentMmberAccessExpression)
+            bool IsOnNewlyCreatedObject(ExpressionSyntax exp)
             {
-                expression = parentMmberAccessExpression.Expression;
+                if (exp is MemberAccessExpressionSyntax memberAccess1)
+                {
+                    return IsOnNewlyCreatedObject(memberAccess1.Expression);
+                }
+                if (exp is ElementAccessExpressionSyntax elementAccess1)
+                {
+                    return IsOnNewlyCreatedObject(elementAccess1.Expression);
+                }
+                return Utils.IsNewlyCreatedObject(semanticModel, exp, dictionary);
             }
 
-            return Utils.IsNewlyCreatedObject(semanticModel, expression, dictionary);
+            if (node.Parent is MemberAccessExpressionSyntax memberAccess)
+            {
+                return IsOnNewlyCreatedObject(memberAccess);
+            }
+
+            if (node is ElementAccessExpressionSyntax elementAccess)
+            {
+                return IsOnNewlyCreatedObject(elementAccess);
+            }
+
+            return false;
         }
     }
 }

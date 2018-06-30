@@ -113,6 +113,117 @@ public static class Module1
 
         }
 
+
+        [Test]
+        public void MethodThatGetsElementInArrayCreatedInsideMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = new []{1,2,3};
+        var v = arr[1];
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void MethodThatSetsElementInArrayCreatedInsideMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = new []{1,2,3};
+        arr[1] = 5;
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatGetsElementInArrayCreatedInsideMethodWithoutNewKeywordIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = {1,2,3};
+        var v = arr[1];
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        [Test]
+        public void MethodThatSetsElementInArrayCreatedInsideMethodWithoutNewKeywordIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static string DoSomething()
+    {
+        int[] arr = {1,2,3};
+        arr[1] = 5;
+        return """";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 
 
