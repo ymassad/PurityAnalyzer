@@ -1149,5 +1149,110 @@ public class Class1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatReadsLocalMutableArrayElementIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    int[] arr = {1,2,3};
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsLocalReadonlyArrayElementIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    readonly int[] arr = {1,2,3};
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        return arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
+        public void MethodThatWritesLocalMutableArrayElementIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    int[] arr = {1,2,3};
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesLocalReadonlyArrayElementIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    readonly int[] arr = {1,2,3};
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
