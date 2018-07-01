@@ -1254,5 +1254,110 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+
+        [Test]
+        public void MethodThatReadsLocalMutableArrayElementIsPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    int[] arr = {1,2,3};
+
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsLocalReadonlyArrayElementIsPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    readonly int[] arr = {1,2,3};
+
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
+        public void MethodThatWritesLocalMutableArrayElementIsNotPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    int[] arr = {1,2,3};
+
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatWritesLocalReadonlyArrayElementIsNotPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    readonly int[] arr = {1,2,3};
+
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
     }
 }
