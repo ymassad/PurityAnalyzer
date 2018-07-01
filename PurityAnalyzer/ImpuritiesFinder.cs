@@ -453,6 +453,10 @@ namespace PurityAnalyzer
                         }
                     }
                 }
+                else if (node is ElementAccessExpressionSyntax)
+                {
+                    acceptedPurityType = purityType;
+                }
                 else
                 {
                     var operation = semanticModel.GetOperation(node);
