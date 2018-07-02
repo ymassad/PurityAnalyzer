@@ -1070,5 +1070,361 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatReadsAnElementOnMutableArrayObtainedFromFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        return instance.arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAnElementOnMutableArrayObtainedFromFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        instance.arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAnElementOnMutableArrayObtainedFromReadOnlyAutoPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr {get;} = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        return instance.arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAnElementOnMutableArrayObtainedFromReadOnlyAutoPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr {get;} = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        instance.arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAnElementOnMutableArrayObtainedFromReadWriteAutoPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr {get; set;} = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        return instance.arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAnElementOnMutableArrayObtainedFromReadWriteAutoPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int[] arr {get; set;} = {1,2,3};
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        instance.arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAnElementOnMutableArrayObtainedFromReadWriteWithBackingFieldPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private int[] _arr = {1,2,3};
+    
+    public int[] arr
+    {
+        get => _arr;
+        set => _arr = value;
+    }
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        return instance.arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatWritesAnElementOnMutableArrayObtainedFromReadWriteWithBackingFieldPropertyOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private int[] _arr = {1,2,3};
+    
+    public int[] arr
+    {
+        get => _arr;
+        set => _arr = value;
+    }
+}
+
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        instance.arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReadsAnElementOnMutableArrayObtainedFromReadWriteWithBackingFieldPropertyOnNewlyCreatedObjectAndPropertyGetMutatesStaticFieldIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private int[] _arr = {1,2,3};
+    
+    static int state = 0;
+
+    public int[] arr
+    {
+        get 
+        {
+            state++;
+            return _arr;
+        }
+        set => _arr = value;
+    }
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        return instance.arr[0];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatWritesAnElementOnMutableArrayObtainedFromReadWriteWithBackingFieldPropertyOnNewlyCreatedObjectAndPropertySetMutatesStaticFieldIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private int[] _arr = {1,2,3};
+    
+    static int state = 0;
+
+    public int[] arr
+    {
+        get => _arr;
+        set
+        {
+            state++;
+            _arr = value;
+        }
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = new Class1();
+
+        instance.arr[0] = 2;
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
