@@ -178,6 +178,7 @@
     <Compile Include="IsPureAttributeOnMethod\HigherOrderFunctionsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\LinqTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\IsPureAttributeOnConstructor.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByReturning.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_AbstractMethod_AndInterfaceImplementationTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_InterfaceMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_AbstractMethodTests.cs" />
