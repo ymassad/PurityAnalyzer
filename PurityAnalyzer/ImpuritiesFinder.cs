@@ -26,6 +26,10 @@ namespace PurityAnalyzer
         private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
         private readonly IPropertySymbol arrayIListItemProperty;
+        private readonly INamedTypeSymbol genericIenumeratorType;
+        private readonly INamedTypeSymbol ienumeratorType;
+        private readonly INamedTypeSymbol boolType;
+        private readonly INamedTypeSymbol idisposableType;
 
         public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
@@ -41,6 +45,11 @@ namespace PurityAnalyzer
                 arrayType.GetMembers("System.Collections.IList.Item")
                     .OfType<IPropertySymbol>()
                     .Single();
+
+            ienumeratorType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IEnumerator).FullName);
+            genericIenumeratorType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IEnumerator<>).FullName);
+            boolType = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
+            idisposableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IDisposable).FullName);
 
             knownPureMethods = GetKnownPureMethods();
             knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
@@ -88,6 +97,80 @@ namespace PurityAnalyzer
                 {
                     foreach (var impurity in GetImpurities(elementAccessExpression))
                         yield return impurity;
+                }
+                else if (subNode is CommonForEachStatementSyntax forEachStatement)
+                {
+                    foreach (var impurity in GetImpurities(forEachStatement))
+                        yield return impurity;
+                }
+            }
+        }
+
+        public IEnumerable<Impurity> GetImpurities(CommonForEachStatementSyntax forEachStatement)
+        {
+            var expressionType = semanticModel.GetTypeInfo(forEachStatement.Expression);
+
+            if (expressionType.Type is ITypeSymbol typeSymbol)
+            {
+                var getEnumeratorMethods = typeSymbol.GetMembers("GetEnumerator").OfType<IMethodSymbol>().ToList();
+
+                var getEnumeratorMethod =
+                    new[]
+                    {
+                        getEnumeratorMethods.Where(x => x.ReturnType.Equals(genericIenumeratorType)),
+                        getEnumeratorMethods.Where(x => x.ReturnType.Equals(ienumeratorType)),
+                        getEnumeratorMethods
+                    }
+                        .SelectMany(x => x)
+                        .FirstOrNoValue();
+
+
+
+                if (getEnumeratorMethod.HasValue)
+                {
+                    if(!IsMethodPure(getEnumeratorMethod.GetValue()))
+                        yield return new Impurity(forEachStatement, "GetEnumerator method is impure");
+
+
+                    var returnType = getEnumeratorMethod.GetValue().ReturnType;
+
+                    var currentPropertyGetter =
+                        returnType.GetMembers("Current")
+                            .OfType<IPropertySymbol>()
+                            .FirstOrNoValue()
+                            .ChainValue(x => x.GetMethod);
+
+                    if (currentPropertyGetter.HasValue)
+                    {
+                        if (!IsMethodPure(currentPropertyGetter.GetValue()))
+                            yield return new Impurity(forEachStatement, "Current property is impure");
+                    }
+
+                    var moveNextMethod =
+                        returnType.GetMembers("MoveNext")
+                            .OfType<IMethodSymbol>()
+                            .Where(x => x.Parameters.Length == 0)
+                            .Where(x => x.TypeParameters.Length == 0)
+                            .Where(x => x.ReturnType.Equals(boolType))
+                            .FirstOrNoValue();
+
+                    if (moveNextMethod.HasValue)
+                    {
+                        if (!IsMethodPure(moveNextMethod.GetValue()))
+                            yield return new Impurity(forEachStatement, "MoveNext method is impure");
+                    }
+
+                    if (returnType.Interfaces.Any(x => x.Equals(idisposableType)))
+                    {
+                        if (
+                            returnType
+                                .FindImplementationForInterfaceMember(
+                                    idisposableType.GetMembers("Dispose").First()) is IMethodSymbol disposeMethod)
+                        {
+                            if (!IsMethodPure(disposeMethod))
+                                yield return new Impurity(forEachStatement, "Dispose method is impure");
+                        }
+                    }
                 }
             }
         }

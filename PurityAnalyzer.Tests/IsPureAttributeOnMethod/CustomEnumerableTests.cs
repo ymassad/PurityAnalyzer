@@ -275,6 +275,54 @@ public static class Module1
 
         }
 
+        [Test]
+        public void MethodThatEnumeratesACustomEnumerableAndEnumeratorImplmenetsIDisposableExplicitlyAndTheDisposeMethodIsImpureIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class EnumerableClass
+{
+    public EnumeratorClass GetEnumerator() => new EnumeratorClass();
+}
+
+public class EnumeratorClass : IDisposable
+{
+    public int Current => 1;
+
+    public bool MoveNext() => true;
+
+    static int state = 0;
+
+    void IDisposable.Dispose()
+    {
+        state++;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        foreach (var item in new EnumerableClass())
+        {
+        }
+        
+        return 0;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
 
         [Test]
         public void MethodThatEnumeratesAnEnumerableClassThatImplementsIEnumerableAndAllComponentsArePureIsPure()
@@ -300,7 +348,7 @@ public class EnumeratorClass : IEnumerator
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 }
 
@@ -351,7 +399,7 @@ public class EnumeratorClass : IEnumerator
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 }
 
@@ -402,7 +450,7 @@ public class EnumeratorClass : IEnumerator
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 }
 
@@ -453,7 +501,7 @@ public class EnumeratorClass : IEnumerator
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 }
 
@@ -501,7 +549,7 @@ public class EnumeratorClass : IEnumerator, IDisposable
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 }
 
@@ -554,7 +602,60 @@ public class EnumeratorClass : IEnumerator, IDisposable
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        foreach (var item in new EnumerableClass())
+        {
+        }
+        
+        return 0;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void MethodThatEnumeratesAnEnumerableClassThatImplementsIEnumerableAndIDisposableExplicitlyAndTheDisposeMethodIsImpureIsImpure()
+        {
+            string code = @"
+using System;
+using System.Collections;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class EnumerableClass : IEnumerable
+{
+    public IEnumerator GetEnumerator() => new EnumeratorClass();
+}
+
+public class EnumeratorClass : IEnumerator, IDisposable
+{
+    public object Current => 1;
+
+    public bool MoveNext() => true;
+
+    static int state = 0;
+
+    void IDisposable.Dispose()
+    {
+        state++;
+    }
+
+    public void Reset()
+    {
+        
     }
 }
 
@@ -577,14 +678,13 @@ public static class Module1
         }
 
 
-
-
         [Test]
         public void MethodThatEnumeratesAnEnumerableClassThatImplementsGenericIEnumerableAndAllComponentsArePureIsPure()
         {
             string code = @"
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {
@@ -613,7 +713,7 @@ public class EnumeratorClass : IEnumerator<int>
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 
     object IEnumerator.Current => Current;
@@ -647,6 +747,7 @@ public static class Module1
             string code = @"
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {
@@ -677,7 +778,7 @@ public class EnumeratorClass : IEnumerator<int>
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 
     object IEnumerator.Current => Current;
@@ -711,6 +812,7 @@ public static class Module1
             string code = @"
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {
@@ -739,7 +841,7 @@ public class EnumeratorClass : IEnumerator<int>
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 
     object IEnumerator.Current => Current;
@@ -773,6 +875,7 @@ public static class Module1
             string code = @"
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {
@@ -801,7 +904,7 @@ public class EnumeratorClass : IEnumerator<int>
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 
     object IEnumerator.Current => Current;
@@ -835,6 +938,7 @@ public static class Module1
             string code = @"
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {
@@ -863,7 +967,7 @@ public class EnumeratorClass : IEnumerator<int>
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        
     }
 
     object IEnumerator.Current => Current;
