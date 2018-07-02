@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CustomEnumerableTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\IteratorTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingNewCompiledObjectTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingNewObjectTests.cs" />
