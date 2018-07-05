@@ -63,9 +63,9 @@ namespace PurityAnalyzer
 
             foreach (var subNode in allNodes)
             {
-                if (ContainsImpureCast(subNode))
+                if (ContainsImpureCast(subNode) is CastPurityResult.Impure impure)
                 {
-                    yield return new Impurity(subNode, "Cast is impure");
+                    yield return new Impurity(subNode, "Cast is impure" + Environment.NewLine + impure.Reason);
                 }
 
                 if (subNode is CastExpressionSyntax castExpression)
@@ -180,17 +180,17 @@ namespace PurityAnalyzer
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
                 semanticModel.GetTypeInfo(node.Expression).Type is ITypeSymbol sourceType)
             {
-                if (IsImpureCast(sourceType, destinationType))
+                if (IsImpureCast(sourceType, destinationType) is CastPurityResult.Impure impure)
                 {
-                    yield return new Impurity(node, "Cast is impure");
+                    yield return new Impurity(node, "Cast is impure" + Environment.NewLine + impure.Reason);
                 }
             }
         }
 
-        private bool IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
             if (sourceType.Equals(destinationType))
-                return false;
+                return new CastPurityResult.Pure();
 
             var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
@@ -199,39 +199,54 @@ namespace PurityAnalyzer
                 var methodsOfInterfacesImplementedByDestionationType = Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
                         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
                         .ToArray();
-
+                
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
                     allDestinationMethods
                         .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
                         .Where(method => IsMethodPure(method))
                         .ToArray();
 
-                var sourceMethodsDownUntilBeforeDestionation = Utils.GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
+                var sourceMethodsDownUntilBeforeDestionation =
+                    Utils.GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
 
-                var sourceMethodsThatOverrideSomePureDestionationBaseMethod = sourceMethodsDownUntilBeforeDestionation.Where(x =>
-                    x.IsOverride && x.OverriddenMethod != null && allPureOverridableMethodsOnDestionationOrItsBaseTypes.Contains(x.OverriddenMethod)).ToArray();
+                var sourceMethodsThatOverrideSomePureDestionationBaseMethod =
+                    sourceMethodsDownUntilBeforeDestionation.Where(x =>
+                            x.IsOverride && x.OverriddenMethod != null &&
+                            allPureOverridableMethodsOnDestionationOrItsBaseTypes.Contains(x.OverriddenMethod))
+                        .ToArray();
 
-                if (sourceMethodsThatOverrideSomePureDestionationBaseMethod.Any(x => !IsMethodPure(x)))
+                var impureOnes = sourceMethodsThatOverrideSomePureDestionationBaseMethod
+                    .Where(x => !IsMethodPure(x)).ToArray();
+
+                if (impureOnes.Any())
                 {
-                    return true;
+                    return new CastPurityResult.Impure(
+                        "These pure methods at target type have impure overrides on source type: " + Environment.NewLine +
+                        string.Join(Environment.NewLine, impureOnes.Select(x => x.Name)));
                 }
+            
 
                 var sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces =
                     methodsOfInterfacesImplementedByDestionationType.Select(sourceType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>();
 
-                if (sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces.Any(x => !IsMethodPure(x)))
-                    return true;
+                var impureOnes1 = sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces
+                    .Where(x => !IsMethodPure(x)).ToArray();
+
+                if (impureOnes1.Any())
+                    return new CastPurityResult.Impure(
+                        "These pure methods at target type have impure overrides on source type: " + Environment.NewLine +
+                        string.Join(Environment.NewLine, impureOnes1.Select(x => x.Name)));
             }
             else
             {
                 if (destinationType.TypeKind == TypeKind.Interface)
-                    return true;
+                    return new CastPurityResult.Impure("Upcasting to an interface type");
 
                 if (destinationType.GetMembers().OfType<IMethodSymbol>().Any(x => x.IsAbstract))
-                    return true;
+                    return new CastPurityResult.Impure("Upcasting to a type with abstract methods");
 
                 if (destinationType.IsSealed)
-                    return false;
+                    return new CastPurityResult.Pure();
 
                 var methodsOfInterfacesImplementedByDestionationType =
                     destinationType.AllInterfaces
@@ -245,20 +260,29 @@ namespace PurityAnalyzer
                         .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
-                if (interfaceMethodImplementations.Any(x => IsMethodPure(x) && !x.IsSealed))
-                    return true;
+                var pureNonSealedOnes = interfaceMethodImplementations.Where(x => IsMethodPure(x) && !x.IsSealed).ToArray();
+
+                if (pureNonSealedOnes.Any())
+                    return new CastPurityResult.Impure(
+                        "Upcasting to type implementing interface methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
+                        string.Join(Environment.NewLine, pureNonSealedOnes.Select(x => x.Name)));
 
                 var mostDerivedOverriddenMethods = Utils.RemoveOverriddenMethods(allDestinationMethods)
                     .Where(x => x.IsOverride || x.IsVirtual)
                     .ToArray();
 
-                if (mostDerivedOverriddenMethods.Any(x => IsMethodPure(x) && !x.IsSealed))
+                var pureNonSealedOnes1 = mostDerivedOverriddenMethods.Where(x => IsMethodPure(x) && !x.IsSealed).ToArray();
+
+                if (pureNonSealedOnes1.Any())
                 {
-                    return true;
+                    return new CastPurityResult.Impure(
+                        "Upcasting to type overriding some methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
+                        string.Join(Environment.NewLine, pureNonSealedOnes1.Select(x => x.Name)));
+
                 }
             }
 
-            return false;
+            return new CastPurityResult.Pure();
         }
 
         private IEnumerable<Impurity> GetImpurities(ObjectCreationExpressionSyntax node)
@@ -371,7 +395,7 @@ namespace PurityAnalyzer
             return false;
         }
 
-        private bool ContainsImpureCast(SyntaxNode node)
+        private CastPurityResult ContainsImpureCast(SyntaxNode node)
         {
             var typeInfo = semanticModel.GetTypeInfo(node);
 
@@ -381,13 +405,11 @@ namespace PurityAnalyzer
                 var sourceType = typeInfo.Type;
                 var destinationType = typeInfo.ConvertedType;
 
-                if (IsImpureCast(sourceType, destinationType))
-                {
-                    return true;
-                }
+                return IsImpureCast(sourceType, destinationType);
+
             }
 
-            return false;
+            return new CastPurityResult.Pure();
         }
 
         private IEnumerable<Impurity> GetImpurities(IdentifierNameSyntax node)
