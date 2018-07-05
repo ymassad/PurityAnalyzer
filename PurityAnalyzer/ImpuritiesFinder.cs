@@ -65,7 +65,7 @@ namespace PurityAnalyzer
             {
                 if (ContainsImpureCast(subNode))
                 {
-                    yield return new Impurity(node, "Cast is impure");
+                    yield return new Impurity(subNode, "Cast is impure");
                 }
 
                 if (subNode is CastExpressionSyntax castExpression)
