@@ -133,7 +133,10 @@ namespace PurityAnalyzer
 
                         if (node is BaseMethodDeclarationSyntax methodNode)
                         {
-                            if (ReturnsNewObject(methodNode, semanticModel, knownReturnsNewObjectMethods))
+                            if (ReturnsNewObject(
+                                methodNode,
+                                semanticModel.Compilation.GetSemanticModel(methodNode.SyntaxTree),
+                                knownReturnsNewObjectMethods))
                                 return true;
                         }
                     }

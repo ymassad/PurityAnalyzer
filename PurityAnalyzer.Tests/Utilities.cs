@@ -86,6 +86,13 @@ namespace PurityAnalyzer.Tests
                 throw new Exception("Error in compilation");
             }
 
+            var ad0001Results = results.Where(x => x.Descriptor.Id == "AD0001").ToArray();
+
+            if (ad0001Results.Any())
+            {
+                throw new Exception(ad0001Results.First().GetMessage());
+            }
+
             bool IsFromPurityAnalyzer(Diagnostic x)
             {
                 return x.Descriptor.Id == PurityAnalyzerAnalyzer.PurityDiagnosticId || x.Descriptor.Id == PurityAnalyzerAnalyzer.ReturnsNewObjectDiagnosticId;

@@ -1426,5 +1426,87 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewlyCreatedObjectViaAnotherMethodWhichIsDefinedInAnotherFileIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        Module2.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var codeInAnotherFile = @"
+public static class Module2
+{
+    public static Class1 Create() => new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, codeInAnotherFile);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewlyCreatedObjectInDirectlyViaTwoMethodsWhichAreDefinedInAnotherFileIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        Module2.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var codeInAnotherFile = @"
+public static class Module2
+{
+    public static Class1 Create() => Create2();
+
+    private static Class1 Create2() => new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, codeInAnotherFile);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
