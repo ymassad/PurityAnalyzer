@@ -51,14 +51,14 @@ namespace PurityAnalyzer
             return attributeName == "IsPureExceptReadLocally" || attributeName == "IsPureExceptReadLocally" + "Attribute";
         }
 
-        public static Impurity[] GetImpurities(SyntaxNode methodDeclaration,
+        public static IEnumerable<Impurity> GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             ImmutableHashSet<IMethodSymbol> methodsInStack, PurityType purityType = PurityType.Pure)
         {
             var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
 
-            return impuritiesFinder.GetImpurities(methodDeclaration, methodsInStack).ToArray();
+            return impuritiesFinder.GetImpurities(methodDeclaration, methodsInStack);
         }
 
         public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
