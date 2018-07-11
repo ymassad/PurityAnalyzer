@@ -302,6 +302,11 @@ namespace PurityAnalyzer
 
         private bool IsTypePureForConstruction(INamedTypeSymbol symbol, RecursiveState recursiveState)
         {
+            if (recursiveState.ConstructedTypesInStack.Contains(symbol))
+                return true;
+
+            var modifiedRecursiveState = recursiveState.AddConstructedType(symbol);
+
             if (Utils.SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
 
@@ -309,15 +314,15 @@ namespace PurityAnalyzer
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor)
-                    .All(method => IsMethodPure(method, recursiveState)))
+                    .All(method => IsMethodPure(method, modifiedRecursiveState)))
                 return false;
 
             if (symbol.IsInCode())
             {
-                if (AnyImpureFieldInitializer(symbol, recursiveState))
+                if (AnyImpureFieldInitializer(symbol, modifiedRecursiveState))
                     return false;
 
-                if (AnyImpurePropertyInitializer(symbol, recursiveState))
+                if (AnyImpurePropertyInitializer(symbol, modifiedRecursiveState))
                     return false;
             }
 
@@ -327,10 +332,10 @@ namespace PurityAnalyzer
             {
                 if (baseType.IsInCode())
                 {
-                    if (AnyImpureFieldInitializer(baseType, recursiveState))
+                    if (AnyImpureFieldInitializer(baseType, modifiedRecursiveState))
                         return false;
 
-                    if (AnyImpurePropertyInitializer(baseType, recursiveState))
+                    if (AnyImpurePropertyInitializer(baseType, modifiedRecursiveState))
                         return false;
                 }
 

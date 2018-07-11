@@ -384,16 +384,13 @@ public class Module1
         return new Module1();
     }
     
-    public static Module1 Instance {get; set;} = new Module1();
+    public static Module1 Instance {get;} = new Module1();
     
     public int Any() => 1;
 
     public int this[int i] => (Instance + 1).Any();
 
     public static int Prop1 => Instance[0];
-
-
-
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);

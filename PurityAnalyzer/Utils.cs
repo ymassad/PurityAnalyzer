@@ -81,7 +81,8 @@ namespace PurityAnalyzer
             return false;
         }
 
-        public static bool AnyImpureFieldInitializer(TypeDeclarationSyntax typeDeclaration,
+        public static bool AnyImpureFieldInitializer(
+            TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState,

@@ -5,15 +5,20 @@ namespace PurityAnalyzer
 {
     public sealed class RecursiveState
     {
-        public RecursiveState(ImmutableArray<IMethodSymbol> recursiveState)
+        public RecursiveState(ImmutableArray<IMethodSymbol> recursiveState, ImmutableArray<INamedTypeSymbol> constructedTypesInStack)
         {
             MethodsInStack = recursiveState;
+            ConstructedTypesInStack = constructedTypesInStack;
         }
 
         public ImmutableArray<IMethodSymbol> MethodsInStack { get; }
 
-        public RecursiveState AddMethod(IMethodSymbol method) => new RecursiveState(MethodsInStack.Add(method));
+        public ImmutableArray<INamedTypeSymbol> ConstructedTypesInStack { get; }
 
-        public static RecursiveState Empty { get; } = new RecursiveState(ImmutableArray<IMethodSymbol>.Empty);
+        public RecursiveState AddMethod(IMethodSymbol method) => new RecursiveState(MethodsInStack.Add(method), ConstructedTypesInStack);
+
+        public RecursiveState AddConstructedType(INamedTypeSymbol type) => new RecursiveState(MethodsInStack, ConstructedTypesInStack.Add(type));
+        
+        public static RecursiveState Empty { get; } = new RecursiveState(ImmutableArray<IMethodSymbol>.Empty, ImmutableArray<INamedTypeSymbol>.Empty);
     }
 }
