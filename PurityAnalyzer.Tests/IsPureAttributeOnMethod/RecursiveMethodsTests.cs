@@ -317,5 +317,139 @@ public static class Module2
 
         }
 
+        [Test]
+        public void TestPureMethodWithIsPureAttributeCallingAnotherPureMethodThatDoesNotHaveTheIsPureAttributeAndThatCreatesAnInstanceOfAClassThatHasAFieldInitializerThatCreatesAnInstanceOfTheSameClass()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return DoSomething2();
+    }
+
+    public static int DoSomething2()
+    {
+        var a = new Class1();
+        return 1;
+    }
+}
+public class Class1
+{
+    private Class1 instance = new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void TestPureMethodWithIsPureAttributeCallingAnotherPureMethodThatDoesNotHaveTheIsPureAttributeAndThatInvokesAPropertyThatInvokesAnIndexerThatInvokesAPlusOperatorThatThenCallsTheSameMethod()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return DoSomething2(1);
+    }
+
+    public static int DoSomething2(int param)
+    {
+        if(param < 0) return 1;
+
+        return Prop1;
+    }
+
+    public static Module1 operator+(Module1 c1, int c2)
+    {
+        int a = Module1.DoSomething2(c2);
+
+        return new Module1();
+    }
+    
+    public static Module1 Instance {get; set;} = new Module1();
+    
+    public int Any() => 1;
+
+    public int this[int i] => (Instance + 1).Any();
+
+    public static int Prop1 => Instance[0];
+
+
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void TestPureMethodWithIsPureAttributeCallingAnotherMethodThatDoesNotHaveTheIsPureAttributeAndThatInvokesAPropertyThatInvokesAnIndexerThatInvokesAnImpurePlusOperatorThatThenCallsTheSameMethod()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return DoSomething2(1);
+    }
+
+    public static int DoSomething2(int param)
+    {
+        if(param < 0) return 1;
+
+        return Prop1;
+    }
+
+    static int state = 0;
+
+    public static Module1 operator+(Module1 c1, int c2)
+    {
+        int a = Module1.DoSomething2(c2);
+        
+        state++;
+        
+        return new Module1();
+    }
+    
+    public static Module1 Instance {get;} = new Module1();
+    
+    public int Any() => 1;
+
+    public int this[int i] => (Instance + 1).Any();
+
+    public static int Prop1 => Instance[0];
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }

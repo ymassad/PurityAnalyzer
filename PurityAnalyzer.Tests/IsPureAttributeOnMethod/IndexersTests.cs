@@ -430,5 +430,36 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
+
+        [Test]
+        public void AccessingImpureExpressionBodiedIndexerGetMakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+   static int state = 0;
+   public int this[string s] => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(MyClass param)
+    {
+        return param[""str""];
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }
