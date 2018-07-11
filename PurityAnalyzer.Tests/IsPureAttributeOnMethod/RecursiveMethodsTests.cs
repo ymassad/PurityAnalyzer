@@ -226,7 +226,7 @@ public static class Module1
         return DoSomething2(1);
     }
 
-    static state = 0;
+    static int state = 0;
 
     public static int DoSomething2(int param)
     {
@@ -293,14 +293,14 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        return DoSomething2(1);
+        return Module2.DoSomething2(1);
     }
 }";
 
             var code2 = @"
 public static class Module2
 {
-    static state = 0;
+    static int state = 0;
 
     public static int DoSomething2(int param)
     {

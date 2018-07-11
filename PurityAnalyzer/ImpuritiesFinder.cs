@@ -57,56 +57,57 @@ namespace PurityAnalyzer
             knownPureTypes = GetKnownPureTypes();
         }
 
-        public IEnumerable<Impurity> GetImpurities(SyntaxNode node)
+        public IEnumerable<Impurity> GetImpurities(SyntaxNode node, ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var allNodes = node.DescendantNodesAndSelf();
 
             foreach (var subNode in allNodes)
             {
-                if (ContainsImpureCast(subNode) is CastPurityResult.Impure impure)
+                if (ContainsImpureCast(subNode, methodsInStack) is CastPurityResult.Impure impure)
                 {
                     yield return new Impurity(subNode, "Cast is impure" + Environment.NewLine + impure.Reason);
                 }
 
                 if (subNode is CastExpressionSyntax castExpression)
                 {
-                    foreach (var impurity in GetImpurities(castExpression))
+                    foreach (var impurity in GetImpurities1(castExpression, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is ObjectCreationExpressionSyntax objectCreation)
                 {
-                    foreach (var impurity in GetImpurities(objectCreation))
+                    foreach (var impurity in GetImpurities2(objectCreation, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is IdentifierNameSyntax identifierName)
                 {
-                    foreach (var impurity in GetImpurities(identifierName))
+                    foreach (var impurity in GetImpurities3(identifierName, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is BinaryExpressionSyntax binaryExpression)
                 {
-                    foreach (var impurity in GetImpurities(binaryExpression))
+                    foreach (var impurity in GetImpurities4(binaryExpression, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is AssignmentExpressionSyntax assignmentExpression)
                 {
-                    foreach (var impurity in GetImpurities(assignmentExpression))
+                    foreach (var impurity in GetImpurities5(assignmentExpression, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is ElementAccessExpressionSyntax elementAccessExpression)
                 {
-                    foreach (var impurity in GetImpurities(elementAccessExpression))
+                    foreach (var impurity in GetImpurities6(elementAccessExpression, methodsInStack))
                         yield return impurity;
                 }
                 else if (subNode is CommonForEachStatementSyntax forEachStatement)
                 {
-                    foreach (var impurity in GetImpurities(forEachStatement))
+                    foreach (var impurity in GetImpurities7(forEachStatement, methodsInStack))
                         yield return impurity;
                 }
             }
         }
 
-        public IEnumerable<Impurity> GetImpurities(CommonForEachStatementSyntax forEachStatement)
+        public IEnumerable<Impurity> GetImpurities7(CommonForEachStatementSyntax forEachStatement,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var expressionType = semanticModel.GetTypeInfo(forEachStatement.Expression);
 
@@ -128,7 +129,7 @@ namespace PurityAnalyzer
 
                 if (getEnumeratorMethod.HasValue)
                 {
-                    if(!IsMethodPure(getEnumeratorMethod.GetValue()))
+                    if(!IsMethodPure(getEnumeratorMethod.GetValue(), methodsInStack))
                         yield return new Impurity(forEachStatement, "GetEnumerator method is impure");
 
 
@@ -142,7 +143,7 @@ namespace PurityAnalyzer
 
                     if (currentPropertyGetter.HasValue)
                     {
-                        if (!IsMethodPure(currentPropertyGetter.GetValue()))
+                        if (!IsMethodPure(currentPropertyGetter.GetValue(), methodsInStack))
                             yield return new Impurity(forEachStatement, "Current property is impure");
                     }
 
@@ -156,7 +157,7 @@ namespace PurityAnalyzer
 
                     if (moveNextMethod.HasValue)
                     {
-                        if (!IsMethodPure(moveNextMethod.GetValue()))
+                        if (!IsMethodPure(moveNextMethod.GetValue(), methodsInStack))
                             yield return new Impurity(forEachStatement, "MoveNext method is impure");
                     }
 
@@ -167,7 +168,7 @@ namespace PurityAnalyzer
                                 .FindImplementationForInterfaceMember(
                                     idisposableType.GetMembers("Dispose").First()) is IMethodSymbol disposeMethod)
                         {
-                            if (!IsMethodPure(disposeMethod))
+                            if (!IsMethodPure(disposeMethod, methodsInStack))
                                 yield return new Impurity(forEachStatement, "Dispose method is impure");
                         }
                     }
@@ -175,19 +176,21 @@ namespace PurityAnalyzer
             }
         }
 
-        private IEnumerable<Impurity> GetImpurities(CastExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities1(CastExpressionSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
                 semanticModel.GetTypeInfo(node.Expression).Type is ITypeSymbol sourceType)
             {
-                if (IsImpureCast(sourceType, destinationType) is CastPurityResult.Impure impure)
+                if (IsImpureCast(sourceType, destinationType, methodsInStack) is CastPurityResult.Impure impure)
                 {
                     yield return new Impurity(node, "Cast is impure" + Environment.NewLine + impure.Reason);
                 }
             }
         }
 
-        private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             if (sourceType.Equals(destinationType))
                 return new CastPurityResult.Pure();
@@ -203,7 +206,7 @@ namespace PurityAnalyzer
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
                     allDestinationMethods
                         .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
-                        .Where(method => IsMethodPure(method))
+                        .Where(method => IsMethodPure(method, methodsInStack))
                         .ToArray();
 
                 var sourceMethodsDownUntilBeforeDestionation =
@@ -216,7 +219,7 @@ namespace PurityAnalyzer
                         .ToArray();
 
                 var impureOnes = sourceMethodsThatOverrideSomePureDestionationBaseMethod
-                    .Where(x => !IsMethodPure(x)).ToArray();
+                    .Where(x => !IsMethodPure(x, methodsInStack)).ToArray();
 
                 if (impureOnes.Any())
                 {
@@ -230,7 +233,7 @@ namespace PurityAnalyzer
                     methodsOfInterfacesImplementedByDestionationType.Select(sourceType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>();
 
                 var impureOnes1 = sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces
-                    .Where(x => !IsMethodPure(x)).ToArray();
+                    .Where(x => !IsMethodPure(x, methodsInStack)).ToArray();
 
                 if (impureOnes1.Any())
                     return new CastPurityResult.Impure(
@@ -260,7 +263,7 @@ namespace PurityAnalyzer
                         .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
-                var pureNonSealedOnes = interfaceMethodImplementations.Where(x => IsMethodPure(x) && !x.IsSealed).ToArray();
+                var pureNonSealedOnes = interfaceMethodImplementations.Where(x => IsMethodPure(x, methodsInStack) && !x.IsSealed).ToArray();
 
                 if (pureNonSealedOnes.Any())
                     return new CastPurityResult.Impure(
@@ -271,7 +274,7 @@ namespace PurityAnalyzer
                     .Where(x => x.IsOverride || x.IsVirtual)
                     .ToArray();
 
-                var pureNonSealedOnes1 = mostDerivedOverriddenMethods.Where(x => IsMethodPure(x) && !x.IsSealed).ToArray();
+                var pureNonSealedOnes1 = mostDerivedOverriddenMethods.Where(x => IsMethodPure(x, methodsInStack) && !x.IsSealed).ToArray();
 
                 if (pureNonSealedOnes1.Any())
                 {
@@ -285,18 +288,19 @@ namespace PurityAnalyzer
             return new CastPurityResult.Pure();
         }
 
-        private IEnumerable<Impurity> GetImpurities(ObjectCreationExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities2(ObjectCreationExpressionSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is INamedTypeSymbol symbol)
             {
-                if (!IsTypePureForConstruction(symbol))
+                if (!IsTypePureForConstruction(symbol, methodsInStack))
                 {
                     yield return new Impurity(node, "Constructed object is not pure");
                 }
             }
         }
 
-        private bool IsTypePureForConstruction(INamedTypeSymbol symbol)
+        private bool IsTypePureForConstruction(INamedTypeSymbol symbol, ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             if (Utils.SymbolHasAssumeIsPureAttribute(symbol))
                 return true;
@@ -305,15 +309,15 @@ namespace PurityAnalyzer
                     .Where(x =>
                         x.MethodKind == MethodKind.Constructor ||
                         x.MethodKind == MethodKind.StaticConstructor)
-                    .All(method => IsMethodPure(method)))
+                    .All(method => IsMethodPure(method, methodsInStack)))
                 return false;
 
             if (symbol.IsInCode())
             {
-                if (AnyImpureFieldInitializer(symbol))
+                if (AnyImpureFieldInitializer(symbol, methodsInStack))
                     return false;
 
-                if (AnyImpurePropertyInitializer(symbol))
+                if (AnyImpurePropertyInitializer(symbol, methodsInStack))
                     return false;
             }
 
@@ -323,10 +327,10 @@ namespace PurityAnalyzer
             {
                 if (baseType.IsInCode())
                 {
-                    if (AnyImpureFieldInitializer(baseType))
+                    if (AnyImpureFieldInitializer(baseType, methodsInStack))
                         return false;
 
-                    if (AnyImpurePropertyInitializer(baseType))
+                    if (AnyImpurePropertyInitializer(baseType, methodsInStack))
                         return false;
                 }
 
@@ -336,21 +340,22 @@ namespace PurityAnalyzer
             return true;
         }
 
-        private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol)
+        private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             return
                 symbol.Locations
                     .Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel, knownReturnsNewObjectMethods));
+                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel, knownReturnsNewObjectMethods, methodsInStack));
         }
 
-        private bool AnyImpureFieldInitializer(INamedTypeSymbol symbol)
+        private bool AnyImpureFieldInitializer(INamedTypeSymbol symbol, ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             return
                 symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods));
+                    .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods, methodsInStack));
         }
 
         private bool IsParameter(ExpressionSyntax node)
@@ -395,7 +400,7 @@ namespace PurityAnalyzer
             return false;
         }
 
-        private CastPurityResult ContainsImpureCast(SyntaxNode node)
+        private CastPurityResult ContainsImpureCast(SyntaxNode node, ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var typeInfo = semanticModel.GetTypeInfo(node);
 
@@ -405,14 +410,15 @@ namespace PurityAnalyzer
                 var sourceType = typeInfo.Type;
                 var destinationType = typeInfo.ConvertedType;
 
-                return IsImpureCast(sourceType, destinationType);
+                return IsImpureCast(sourceType, destinationType, methodsInStack);
 
             }
 
             return new CastPurityResult.Pure();
         }
 
-        private IEnumerable<Impurity> GetImpurities(IdentifierNameSyntax node)
+        private IEnumerable<Impurity> GetImpurities3(IdentifierNameSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
 
@@ -423,12 +429,12 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IPropertySymbol property)
             {
-                return GetImpuritiesForPropertyAccess(node, property);
+                return GetImpuritiesForPropertyAccess(node, property, methodsInStack);
             }
 
             if (symbol.Symbol is IMethodSymbol method)
             {
-                return GetImpuritiesForMethodAccess(node, method);
+                return GetImpuritiesForMethodAccess(node, method, methodsInStack);
             }
 
             if (symbol.Symbol is IEventSymbol)
@@ -516,7 +522,8 @@ namespace PurityAnalyzer
             }
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(ExpressionSyntax node, IPropertySymbol propertySymbol)
+        private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(ExpressionSyntax node,
+            IPropertySymbol propertySymbol, ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var usage = Utils.GetUsage(node);
 
@@ -524,13 +531,14 @@ namespace PurityAnalyzer
 
             if (method != null)
             {
-                return GetImpuritiesForMethodAccess(node, method);
+                return GetImpuritiesForMethodAccess(node, method, methodsInStack);
             }
 
             return Enumerable.Empty<Impurity>();
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(ExpressionSyntax node, IMethodSymbol method)
+        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(ExpressionSyntax node, IMethodSymbol method,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             PurityType acceptedPurityType = PurityType.Pure;
 
@@ -585,24 +593,26 @@ namespace PurityAnalyzer
                 }
             }
 
-            if (!IsMethodPure(method, acceptedPurityType))
+            if (!IsMethodPure(method, methodsInStack, acceptedPurityType))
             {
                 yield return new Impurity(node, "Method is impure");
             }
         }
 
-        private IEnumerable<Impurity> GetImpurities(BinaryExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities4(BinaryExpressionSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method))
+                if (!IsMethodPure(method, methodsInStack))
                 {
                     yield return new Impurity(node, "Operator is impure");
                 }
             }
         }
 
-        private IEnumerable<Impurity> GetImpurities(AssignmentExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities5(AssignmentExpressionSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var kind = node.Kind();
 
@@ -619,7 +629,7 @@ namespace PurityAnalyzer
             {
                 if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
                 {
-                    if (!IsMethodPure(method))
+                    if (!IsMethodPure(method, methodsInStack))
                     {
                         yield return new Impurity(node, "Operator is impure");
                     }
@@ -627,7 +637,8 @@ namespace PurityAnalyzer
             }
         }
 
-        private IEnumerable<Impurity> GetImpurities(ElementAccessExpressionSyntax node)
+        private IEnumerable<Impurity> GetImpurities6(ElementAccessExpressionSyntax node,
+            ImmutableHashSet<IMethodSymbol> methodsInStack)
         {
             var type = semanticModel.GetTypeInfo(node.Expression).Type;
 
@@ -636,7 +647,7 @@ namespace PurityAnalyzer
                 //Arrays element access in .NET is not a property or a method. Here I assume that
                 //The explicit property IList.Item is being accessed.
                 //This allows me to delegate to the code that handles properties
-                foreach (var imp in GetImpuritiesForPropertyAccess(node, arrayIListItemProperty))
+                foreach (var imp in GetImpuritiesForPropertyAccess(node, arrayIListItemProperty, methodsInStack))
                     yield return imp;
             }
             else
@@ -645,14 +656,20 @@ namespace PurityAnalyzer
 
                 if (symbol is IPropertySymbol propertySymbol)
                 {
-                    foreach (var imp in GetImpuritiesForPropertyAccess(node, propertySymbol))
+                    foreach (var imp in GetImpuritiesForPropertyAccess(node, propertySymbol, methodsInStack))
                         yield return imp;
                 }
             }
         }
 
-        private bool IsMethodPure(IMethodSymbol method, PurityType purityType = PurityType.Pure)
+        private bool IsMethodPure(
+            IMethodSymbol method,
+            ImmutableHashSet<IMethodSymbol> methodsInStack,
+            PurityType purityType = PurityType.Pure)
         {
+            if (methodsInStack.Contains(method))
+                return true;
+
             if (method.IsAbstract)
                 return true;
 
@@ -715,6 +732,7 @@ namespace PurityAnalyzer
                     methodNode,
                     semanticModel.Compilation.GetSemanticModel(locationSourceTree),
                     knownReturnsNewObjectMethods,
+                    methodsInStack.Add(method),
                     purityType);
 
                 if (imp.Any()) return false;

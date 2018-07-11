@@ -54,17 +54,17 @@ namespace PurityAnalyzer
         public static Impurity[] GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            PurityType purityType = PurityType.Pure)
+            ImmutableHashSet<IMethodSymbol> methodsInStack, PurityType purityType = PurityType.Pure)
         {
             var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
 
-            return impuritiesFinder.GetImpurities(methodDeclaration).ToArray();
+            return impuritiesFinder.GetImpurities(methodDeclaration, methodsInStack).ToArray();
         }
 
-        public static bool AnyImpurePropertyInitializer(
-            TypeDeclarationSyntax typeDeclaration,
+        public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            ImmutableHashSet<IMethodSymbol> methodsInStack,
             bool onlyStaticFields = false)
         {
             var props = typeDeclaration
@@ -75,16 +75,16 @@ namespace PurityAnalyzer
 
             foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, methodsInStack).Any()) return true;
             }
 
             return false;
         }
 
-        public static bool AnyImpureFieldInitializer(
-            TypeDeclarationSyntax typeDeclaration,
+        public static bool AnyImpureFieldInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            ImmutableHashSet<IMethodSymbol> methodsInStack,
             bool onlyStaticFields = false)
         {
             var fields =
@@ -95,7 +95,7 @@ namespace PurityAnalyzer
 
             foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, methodsInStack).Any()) return true;
             }
 
             return false;
