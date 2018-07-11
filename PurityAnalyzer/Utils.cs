@@ -54,17 +54,17 @@ namespace PurityAnalyzer
         public static IEnumerable<Impurity> GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            ImmutableHashSet<IMethodSymbol> methodsInStack, PurityType purityType = PurityType.Pure)
+            RecursiveState recursiveState, PurityType purityType = PurityType.Pure)
         {
             var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
 
-            return impuritiesFinder.GetImpurities(methodDeclaration, methodsInStack);
+            return impuritiesFinder.GetImpurities(methodDeclaration, recursiveState);
         }
 
         public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            ImmutableHashSet<IMethodSymbol> methodsInStack,
+            RecursiveState recursiveState,
             bool onlyStaticFields = false)
         {
             var props = typeDeclaration
@@ -75,7 +75,7 @@ namespace PurityAnalyzer
 
             foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, methodsInStack).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, recursiveState).Any()) return true;
             }
 
             return false;
@@ -84,7 +84,7 @@ namespace PurityAnalyzer
         public static bool AnyImpureFieldInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
-            ImmutableHashSet<IMethodSymbol> methodsInStack,
+            RecursiveState recursiveState,
             bool onlyStaticFields = false)
         {
             var fields =
@@ -95,7 +95,7 @@ namespace PurityAnalyzer
 
             foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, methodsInStack).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, recursiveState).Any()) return true;
             }
 
             return false;

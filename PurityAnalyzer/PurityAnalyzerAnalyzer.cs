@@ -298,7 +298,7 @@ namespace PurityAnalyzer
                     GetBodyIfDeclaration(methodLikeNode),
                     context.SemanticModel,
                     knownReturnsNewObjectMethods,
-                    ImmutableHashSet<IMethodSymbol>.Empty,
+                    RecursiveState.Empty,
                     purityType)
                     .ToList();
 
@@ -306,10 +306,10 @@ namespace PurityAnalyzer
             {
                 var containingType = constructor.FirstAncestorOrSelf<TypeDeclarationSyntax>();
 
-                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, ImmutableHashSet<IMethodSymbol>.Empty, constructor.IsStatic()))
+                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, RecursiveState.Empty, constructor.IsStatic()))
                     impurities.Add(new Impurity(methodLikeNode, "There are impure field initializers"));
 
-                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, ImmutableHashSet<IMethodSymbol>.Empty, constructor.IsStatic()))
+                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, RecursiveState.Empty, constructor.IsStatic()))
                     impurities.Add(new Impurity(methodLikeNode, "There are impure property initializers"));
             }
 
