@@ -448,5 +448,52 @@ public class Module1
 
         }
 
+        [Test]
+        public void TestMethodWithIsPureAttributeCallingAnotherMethodThatDoesNotHaveTheIsPureAttributeAndThatCreatesAnInstanceOfAClassAndInvokesAMethodOnThatClassThatModifiesLocalStateButThatAlsoInvokesTheSameMethodOnAnInstanceStoredInAReadonlyStateField_MethodShouldBeImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return DoSomething2();
+    }
+
+    public static int DoSomething2()
+    {
+        var a = new Class1();
+        
+        return a.Method1();
+
+        return 1;
+    }
+}
+public class Class1
+{
+    public int state = 0;
+
+    public static readonly Class1 instance = new Class1();
+
+    public int Method1()
+    {
+        state++;
+        
+        return instance.Method1();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }

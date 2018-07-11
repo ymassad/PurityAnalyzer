@@ -672,7 +672,7 @@ namespace PurityAnalyzer
             RecursiveState recursiveState,
             PurityType purityType = PurityType.Pure)
         {
-            if (recursiveState.MethodsInStack.Contains(method))
+            if (recursiveState.MethodsInStack.Contains((method, purityType)))
                 return true;
 
             if (method.IsAbstract)
@@ -737,7 +737,7 @@ namespace PurityAnalyzer
                     methodNode,
                     semanticModel.Compilation.GetSemanticModel(locationSourceTree),
                     knownReturnsNewObjectMethods,
-                    recursiveState.AddMethod(method),
+                    recursiveState.AddMethod(method, purityType),
                     purityType);
 
                 if (imp.Any()) return false;
