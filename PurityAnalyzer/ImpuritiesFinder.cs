@@ -319,10 +319,19 @@ namespace PurityAnalyzer
 
             if (symbol.IsInCode())
             {
-                if (AnyImpureFieldInitializer(symbol, modifiedRecursiveState))
+                var semanticModelForType =
+                    semanticModel.Compilation.GetSemanticModel(symbol.Locations.First().SourceTree);
+
+                if (AnyImpureFieldInitializer(
+                    symbol,
+                    semanticModelForType,
+                    modifiedRecursiveState))
                     return false;
 
-                if (AnyImpurePropertyInitializer(symbol, modifiedRecursiveState))
+                if (AnyImpurePropertyInitializer(
+                    symbol,
+                    semanticModelForType,
+                    modifiedRecursiveState))
                     return false;
             }
 
@@ -332,10 +341,19 @@ namespace PurityAnalyzer
             {
                 if (baseType.IsInCode())
                 {
-                    if (AnyImpureFieldInitializer(baseType, modifiedRecursiveState))
+                    var semanticModelForType =
+                        semanticModel.Compilation.GetSemanticModel(baseType.Locations.First().SourceTree);
+
+                    if (AnyImpureFieldInitializer(
+                        baseType,
+                        semanticModelForType,
+                        modifiedRecursiveState))
                         return false;
 
-                    if (AnyImpurePropertyInitializer(baseType, modifiedRecursiveState))
+                    if (AnyImpurePropertyInitializer(
+                        baseType,
+                        semanticModelForType,
+                        modifiedRecursiveState))
                         return false;
                 }
 
@@ -346,6 +364,7 @@ namespace PurityAnalyzer
         }
 
         private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol,
+            SemanticModel semanticModel,
             RecursiveState recursiveState)
         {
             return
@@ -355,7 +374,10 @@ namespace PurityAnalyzer
                     .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel, knownReturnsNewObjectMethods, recursiveState));
         }
 
-        private bool AnyImpureFieldInitializer(INamedTypeSymbol symbol, RecursiveState recursiveState)
+        private bool AnyImpureFieldInitializer(
+            INamedTypeSymbol symbol,
+            SemanticModel semanticModel,
+            RecursiveState recursiveState)
         {
             return
                 symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
