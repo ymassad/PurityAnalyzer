@@ -1553,5 +1553,50 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnANonNewObjectCreatedByInvokingAMethodOnAnNewObjectReturnedByCallingAMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public class Class2
+{
+    public readonly static Class1 instance = new Class1();
+
+    public Class1 Get() => instance;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var instance = CreateInstance().Get();
+
+        instance.Increment();
+
+        return 1;
+    }
+
+    public static Class2 CreateInstance() => new Class2();
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
