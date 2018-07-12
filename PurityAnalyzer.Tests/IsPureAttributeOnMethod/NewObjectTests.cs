@@ -1009,5 +1009,32 @@ public class Base
 
         }
 
+        [Test]
+        public void CreatingAnInstanceOfTheObjectTypeKeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var obj = new object();
+
+        return """";
+    }
+}";
+
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

@@ -337,27 +337,30 @@ namespace PurityAnalyzer
 
             var baseType = symbol.BaseType;
 
-            while (!baseType.Equals(objectType))
+            if (baseType != null)
             {
-                if (baseType.IsInCode())
+                while (!baseType.Equals(objectType))
                 {
-                    var semanticModelForType =
-                        semanticModel.Compilation.GetSemanticModel(baseType.Locations.First().SourceTree);
+                    if (baseType.IsInCode())
+                    {
+                        var semanticModelForType =
+                            semanticModel.Compilation.GetSemanticModel(baseType.Locations.First().SourceTree);
 
-                    if (AnyImpureFieldInitializer(
-                        baseType,
-                        semanticModelForType,
-                        modifiedRecursiveState))
-                        return false;
+                        if (AnyImpureFieldInitializer(
+                            baseType,
+                            semanticModelForType,
+                            modifiedRecursiveState))
+                            return false;
 
-                    if (AnyImpurePropertyInitializer(
-                        baseType,
-                        semanticModelForType,
-                        modifiedRecursiveState))
-                        return false;
+                        if (AnyImpurePropertyInitializer(
+                            baseType,
+                            semanticModelForType,
+                            modifiedRecursiveState))
+                            return false;
+                    }
+
+                    baseType = baseType.BaseType;
                 }
-
-                baseType = baseType.BaseType;
             }
 
             return true;
