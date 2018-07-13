@@ -85,5 +85,77 @@ public static class Module1
 
         }
 
+        [Test]
+        public void DownCastingIsNotAllowedWhereTargetMethodIsPureAndSourceMethodIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    int state = 0;
+    public virtual int Method() => state++;
+}
+
+public class Derived : Base
+{
+    public override int Method() => 1;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = (Derived) new Base();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void DownCastingIsAllowedWhereTargetMethodIsPureExceptLocallyAndSourceMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = (Derived) new Base();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
     }
 }
