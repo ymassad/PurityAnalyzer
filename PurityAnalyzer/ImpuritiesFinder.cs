@@ -206,7 +206,9 @@ namespace PurityAnalyzer
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
                     allDestinationMethods
                         .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
-                        .Where(method => IsMethodPure(method, recursiveState))
+                        .Select(method => new {Method = method, PurityType = GetMethodPurityType (method,recursiveState)})
+                        .Where(x => x.PurityType.HasValue)
+                        .Select(x => new {x.Method, PurityType = x.PurityType.GetValue()})
                         .ToArray();
 
                 var sourceMethodsDownUntilBeforeDestionation =
@@ -214,18 +216,28 @@ namespace PurityAnalyzer
 
                 var sourceMethodsThatOverrideSomePureDestionationBaseMethod =
                     sourceMethodsDownUntilBeforeDestionation.Where(x =>
-                            x.IsOverride && x.OverriddenMethod != null &&
-                            allPureOverridableMethodsOnDestionationOrItsBaseTypes.Contains(x.OverriddenMethod))
+                            x.IsOverride && x.OverriddenMethod != null)
+                        .Select(x =>
+                            new
+                            {
+                                Method = x,
+                                CorrespondingMethod =
+                                    allPureOverridableMethodsOnDestionationOrItsBaseTypes
+                                        .FirstOrNoValue(z => z.Method.Equals(x.OverriddenMethod))
+                            })
+                        .Where(x =>
+                            x.CorrespondingMethod.HasValue)
+                        .Select(x => new {Method = x.Method, CorrespondingMethod  = x.CorrespondingMethod.GetValue()})
                         .ToArray();
 
                 var impureOnes = sourceMethodsThatOverrideSomePureDestionationBaseMethod
-                    .Where(x => !IsMethodPure(x, recursiveState)).ToArray();
+                    .Where(x => GetMethodPurityType(x.Method, recursiveState).HasNoValueOr(purity => !IsGreaterOrEqaulPurity(purity, x.CorrespondingMethod.PurityType))).ToArray();
 
                 if (impureOnes.Any())
                 {
                     return new CastPurityResult.Impure(
                         "These pure methods at target type have impure overrides on source type: " + Environment.NewLine +
-                        string.Join(Environment.NewLine, impureOnes.Select(x => x.Name)));
+                        string.Join(Environment.NewLine, impureOnes.Select(x => x.Method.Name)));
                 }
             
 
@@ -263,18 +275,26 @@ namespace PurityAnalyzer
                         .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
-                var pureNonSealedOnes = interfaceMethodImplementations.Where(x => IsMethodPure(x, recursiveState) && !x.IsSealed).ToArray();
+                var pureNonSealedOnes = interfaceMethodImplementations
+                    .Where(x => !x.IsSealed)
+                    .Where(x => IsMethodPure(x, recursiveState))
+                    .ToArray();
 
                 if (pureNonSealedOnes.Any())
                     return new CastPurityResult.Impure(
                         "Upcasting to type implementing interface methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
                         string.Join(Environment.NewLine, pureNonSealedOnes.Select(x => x.Name)));
 
-                var mostDerivedOverriddenMethods = Utils.RemoveOverriddenMethods(allDestinationMethods)
-                    .Where(x => x.IsOverride || x.IsVirtual)
-                    .ToArray();
+                var mostDerivedOverriddenMethods =
+                    Utils.RemoveOverriddenMethods(allDestinationMethods)
+                        .Where(x => x.IsOverride || x.IsVirtual)
+                        .ToArray();
 
-                var pureNonSealedOnes1 = mostDerivedOverriddenMethods.Where(x => IsMethodPure(x, recursiveState) && !x.IsSealed).ToArray();
+                var pureNonSealedOnes1 =
+                    mostDerivedOverriddenMethods
+                        .Where(x => !x.IsSealed)
+                        .Where(x => IsMethodPure(x, recursiveState))
+                        .ToArray();
 
                 if (pureNonSealedOnes1.Any())
                 {
@@ -286,6 +306,17 @@ namespace PurityAnalyzer
             }
 
             return new CastPurityResult.Pure();
+        }
+
+        public static bool IsGreaterOrEqaulPurity(PurityType type, PurityType than)
+        {
+            if (type == PurityType.Pure)
+                return true;
+
+            if (type == PurityType.PureExceptReadLocally)
+                return than == PurityType.PureExceptReadLocally || than == PurityType.PureExceptLocally;
+
+            return than == PurityType.PureExceptLocally;
         }
 
         private IEnumerable<Impurity> GetImpurities2(ObjectCreationExpressionSyntax node,
@@ -691,6 +722,23 @@ namespace PurityAnalyzer
                 }
             }
         }
+
+        private Maybe<PurityType> GetMethodPurityType(
+            IMethodSymbol method,
+            RecursiveState recursiveState)
+        {
+            if (IsMethodPure(method, recursiveState, PurityType.Pure))
+                return PurityType.Pure;
+
+            if (IsMethodPure(method, recursiveState, PurityType.PureExceptReadLocally))
+                return PurityType.PureExceptReadLocally;
+
+            if (IsMethodPure(method, recursiveState, PurityType.PureExceptLocally))
+                return PurityType.PureExceptLocally;
+
+            return Maybe.NoValue;
+        }
+
 
         private bool IsMethodPure(
             IMethodSymbol method,

@@ -181,5 +181,21 @@ namespace PurityAnalyzer
             if (maybe.HasValue)
                 action(maybe.GetValue());
         }
+
+        public static bool HasValueAnd<T>(this Maybe<T> maybe, Func<T, bool> condition)
+        {
+            if (maybe.HasNoValue)
+                return false;
+
+            return condition(maybe.GetValue());
+        }
+
+        public static bool HasNoValueOr<T>(this Maybe<T> maybe, Func<T, bool> condition)
+        {
+            if (maybe.HasNoValue)
+                return true;
+
+            return condition(maybe.GetValue());
+        }
     }
 }
