@@ -181,11 +181,11 @@
     <Compile Include="IsPureAttributeOnMethod\IsPureAttributeOnConstructor.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingAndMethodsHaveDifferentPurityTypes.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByReturning.cs" />
-    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_AbstractMethod_AndInterfaceImplementationTests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_InterfaceMethodTests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_AbstractMethodTests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_VirtualMethod_AndInterfaceImplementationTests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\UpCasting_VirtualMethodTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_AbstractMethod_AndInterfaceImplementationTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_InterfaceMethodTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_AbstractMethodTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_VirtualMethod_AndInterfaceImplementationTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_VirtualMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingExplicitlyTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByAssignmentsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByCallingMethodTests.cs" />
