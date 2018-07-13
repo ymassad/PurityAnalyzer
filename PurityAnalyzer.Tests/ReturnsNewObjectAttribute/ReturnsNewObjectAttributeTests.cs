@@ -303,5 +303,53 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void ReturnNewObjectAttributeCanBeAppliedOnInterfaceMethods()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+}
+
+public interface IInterface
+{
+    [ReturnsNewObject]
+    Class1 DoSomething(Class1 class1);
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void ReturnNewObjectAttributeCanBeAppliedOnAbstractMethods()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+}
+
+public abstract class AbstractClass
+{
+    [ReturnsNewObject]
+    public abstract Class1 DoSomething(Class1 class1);
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }

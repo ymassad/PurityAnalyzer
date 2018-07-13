@@ -124,7 +124,7 @@ namespace PurityAnalyzer
             {
                 if (semanticModel.GetSymbolInfo(invocationExpression.Expression).Symbol is IMethodSymbol invokedMethod)
                 {
-                    if (invokedMethod.IsInCode())
+                    if (invokedMethod.IsInCode() && !invokedMethod.IsAbstract)
                     {
                         var location = invokedMethod.Locations.First();
 

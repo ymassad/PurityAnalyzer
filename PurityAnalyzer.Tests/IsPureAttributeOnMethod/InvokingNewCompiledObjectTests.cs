@@ -904,5 +904,63 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
             dignostics.Length.Should().Be(0);
         }
+
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnCompiledObjectObtainedByInvokingACompiledInterfaceMethodMarkedWithReturnsNewObjectAttributeIsPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(IFactoryThatReturnsNewObject factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnCompiledObjectObtainedByInvokingACompiledInterfaceMethodNotMarkedWithReturnsNewObjectAttributeIsImpure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(IFactoryThatDoesNotReturnNewObject factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().BePositive();
+        }
+
+
+
     }
 }

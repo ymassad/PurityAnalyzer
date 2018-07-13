@@ -140,6 +140,14 @@ namespace PurityAnalyzer
             BaseMethodDeclarationSyntax methodDeclaration,
             Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
         {
+            var symbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
+
+            if (symbol == null)
+                return;
+
+            if (symbol.IsAbstract)
+                return;
+
             foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel, knownReturnsNewObjectMethods))
             {
                 var diagnostic = Diagnostic.Create(

@@ -1598,5 +1598,167 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnObjectObtainedByInvokingAnInterfaceMethodMarkedWithReturnsNewObjectAttributeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public interface IFactory
+{
+    [ReturnsNewObject]
+    Class1 Create();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(IFactory factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnObjectObtainedByInvokingAnInterfaceMethodNotMarkedWithReturnsNewObjectAttributeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public interface IFactory
+{
+    Class1 Create();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(IFactory factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnObjectObtainedByInvokingAnAbstractMethodMarkedWithReturnsNewObjectAttributeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public abstract class Factory
+{
+    [ReturnsNewObject]
+    public abstract Class1 Create();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(Factory factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnObjectObtainedByInvokingAnAbstractMethodNotMarkedWithReturnsNewObjectAttributeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public abstract class Factory
+{
+    public abstract Class1 Create();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(Factory factory)
+    {
+        factory.Create().Increment();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

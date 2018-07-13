@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IFactoryThatDoesNotReturnNewObject.cs" />
+    <Compile Include="IFactoryThatReturnsNewObject.cs" />
     <Compile Include="ImmutableDto1WithIsPureAttributeOnClass.cs" />
     <Compile Include="IsPureExceptLocallyAttribute.cs" />
     <Compile Include="MutableClassWithPureMethodsExceptLocally.cs" />
