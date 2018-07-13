@@ -199,16 +199,25 @@ namespace PurityAnalyzer
 
             if (Utils.IsUpCast(sourceType, destinationType))
             {
-                var methodsOfInterfacesImplementedByDestionationType = Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
+                var methodsOfInterfacesImplementedByDestionationType =
+                    Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
                         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
                         .ToArray();
                 
                 var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
                     allDestinationMethods
                         .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
-                        .Select(method => new {Method = method, PurityType = GetMethodPurityType (method,recursiveState)})
+                        .Select(method => new
+                        {
+                            Method = method,
+                            PurityType = GetMethodPurityType (method,recursiveState)
+                        })
                         .Where(x => x.PurityType.HasValue)
-                        .Select(x => new {x.Method, PurityType = x.PurityType.GetValue()})
+                        .Select(x => new
+                        {
+                            x.Method,
+                            PurityType = x.PurityType.GetValue()
+                        })
                         .ToArray();
 
                 var sourceMethodsUpUntilBeforeDestionation =
@@ -227,11 +236,17 @@ namespace PurityAnalyzer
                             })
                         .Where(x =>
                             x.CorrespondingMethod.HasValue)
-                        .Select(x => new {Method = x.Method, CorrespondingMethod  = x.CorrespondingMethod.GetValue()})
+                        .Select(x => new
+                        {
+                            x.Method,
+                            CorrespondingMethod  = x.CorrespondingMethod.GetValue()
+                        })
                         .ToArray();
 
                 var impureOnes = sourceMethodsThatOverrideSomePureDestionationBaseMethod
-                    .Where(x => GetMethodPurityType(x.Method, recursiveState).HasNoValueOr(purity => !IsGreaterOrEqaulPurity(purity, x.CorrespondingMethod.PurityType))).ToArray();
+                    .Where(x => GetMethodPurityType(x.Method, recursiveState)
+                        .HasNoValueOr(purity => !IsGreaterOrEqaulPurity(purity, x.CorrespondingMethod.PurityType)))
+                    .ToArray();
 
                 if (impureOnes.Any())
                 {
