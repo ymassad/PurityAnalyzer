@@ -197,7 +197,7 @@ namespace PurityAnalyzer
 
             var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
-            if (Utils.IsDownCast(sourceType, destinationType))
+            if (Utils.IsUpCast(sourceType, destinationType))
             {
                 var methodsOfInterfacesImplementedByDestionationType = Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
                         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -211,11 +211,11 @@ namespace PurityAnalyzer
                         .Select(x => new {x.Method, PurityType = x.PurityType.GetValue()})
                         .ToArray();
 
-                var sourceMethodsDownUntilBeforeDestionation =
+                var sourceMethodsUpUntilBeforeDestionation =
                     Utils.GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
 
                 var sourceMethodsThatOverrideSomePureDestionationBaseMethod =
-                    sourceMethodsDownUntilBeforeDestionation.Where(x =>
+                    sourceMethodsUpUntilBeforeDestionation.Where(x =>
                             x.IsOverride && x.OverriddenMethod != null)
                         .Select(x =>
                             new
@@ -242,10 +242,13 @@ namespace PurityAnalyzer
             
 
                 var sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces =
-                    methodsOfInterfacesImplementedByDestionationType.Select(sourceType.FindImplementationForInterfaceMember).OfType<IMethodSymbol>();
+                    methodsOfInterfacesImplementedByDestionationType
+                        .Select(sourceType.FindImplementationForInterfaceMember)
+                        .OfType<IMethodSymbol>();
 
                 var impureOnes1 = sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces
-                    .Where(x => !IsMethodPure(x, recursiveState)).ToArray();
+                    .Where(x => !IsMethodPure(x, recursiveState))
+                    .ToArray();
 
                 if (impureOnes1.Any())
                     return new CastPurityResult.Impure(
@@ -255,10 +258,10 @@ namespace PurityAnalyzer
             else
             {
                 if (destinationType.TypeKind == TypeKind.Interface)
-                    return new CastPurityResult.Impure("Upcasting to an interface type");
+                    return new CastPurityResult.Impure("Downcasting to an interface type");
 
                 if (destinationType.GetMembers().OfType<IMethodSymbol>().Any(x => x.IsAbstract))
-                    return new CastPurityResult.Impure("Upcasting to a type with abstract methods");
+                    return new CastPurityResult.Impure("Downcasting to a type with abstract methods");
 
                 if (destinationType.IsSealed)
                     return new CastPurityResult.Pure();
@@ -282,7 +285,7 @@ namespace PurityAnalyzer
 
                 if (pureNonSealedOnes.Any())
                     return new CastPurityResult.Impure(
-                        "Upcasting to type implementing interface methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
+                        "Downcasting to type implementing interface methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
                         string.Join(Environment.NewLine, pureNonSealedOnes.Select(x => x.Name)));
 
                 var mostDerivedOverriddenMethods =
@@ -299,7 +302,7 @@ namespace PurityAnalyzer
                 if (pureNonSealedOnes1.Any())
                 {
                     return new CastPurityResult.Impure(
-                        "Upcasting to type overriding some methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
+                        "Downcasting to type overriding some methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
                         string.Join(Environment.NewLine, pureNonSealedOnes1.Select(x => x.Name)));
 
                 }

@@ -351,7 +351,7 @@ namespace PurityAnalyzer
 
         public static IEnumerable<IMethodSymbol> GetAllMethods(
             ITypeSymbol typeSymbol,
-            Maybe<ITypeSymbol> downUntilBefore = default)
+            Maybe<ITypeSymbol> upUntilBefore = default)
         {
 
             var myMethods = GetMethods(typeSymbol);
@@ -363,8 +363,8 @@ namespace PurityAnalyzer
 
             while (current != null)
             {
-                if (downUntilBefore.HasValue)
-                    if (current.Equals(downUntilBefore.GetValue()))
+                if (upUntilBefore.HasValue)
+                    if (current.Equals(upUntilBefore.GetValue()))
                         break;
 
                 foreach (var method in GetAllMethods(current))
@@ -392,7 +392,7 @@ namespace PurityAnalyzer
             return typeSymbol.GetMembers().OfType<IMethodSymbol>();
         }
 
-        public static bool IsDownCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
+        public static bool IsUpCast(ITypeSymbol sourceType, ITypeSymbol destinationType)
         {
             if (destinationType.TypeKind == TypeKind.Interface)
             {
