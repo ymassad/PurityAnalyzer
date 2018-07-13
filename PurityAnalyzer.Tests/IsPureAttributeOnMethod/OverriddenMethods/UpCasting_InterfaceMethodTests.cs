@@ -9,10 +9,10 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.OverriddenMethods
 {
     [TestFixture]
-    public class UpCasting_InterfaceMethodTests
+    public class DownCasting_InterfaceMethodTests
     {
         [Test]
-        public void UpCastingFromObjectToInterfaceMakesMethodImpure()
+        public void DownCastingFromObjectToInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -43,7 +43,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -80,7 +80,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -118,7 +118,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -154,7 +154,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -191,7 +191,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatImplementsAnInterfaceMethodWithAMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatImplementsAnInterfaceMethodWithAMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -227,7 +227,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -263,7 +263,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -304,7 +304,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -346,7 +346,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -386,7 +386,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeExplicitlyImplementsAnInterfaceMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;

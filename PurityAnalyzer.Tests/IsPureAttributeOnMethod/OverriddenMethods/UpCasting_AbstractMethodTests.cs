@@ -9,10 +9,10 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.OverriddenMethods
 {
     [TestFixture]
-    public class UpCasting_AbstractMethodTests
+    public class DownCasting_AbstractMethodTests
     {
         [Test]
-        public void UpCastingFromObjectToTypeWithAbstractMethodMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWithAbstractMethodMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -43,7 +43,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -80,7 +80,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -116,7 +116,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -152,7 +152,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -188,7 +188,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -230,7 +230,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -272,7 +272,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -312,7 +312,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -352,7 +352,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;

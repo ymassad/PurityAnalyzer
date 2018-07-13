@@ -14,5 +14,5 @@ As long as the constructor (instance and static) of the class is pure, then the 
 To solve the problem described above, I consider some cast operations to be impure.
 
 1.	For a method M that returns type A to be pure: if A has pure abstract methods, then M must return an object that has these methods also pure (if it overrides these methods).
-2.	A cast to an abstract type with pure abstract method is pure only if the object casted from has these methods also pure (overrided).
-3.	An upcast to an abstract type with pure abstract methods is only legal if we can know for sure that the source object has these methods pure (only if the target type/methods sealed?)
+2.	An upcast cast to an abstract type with pure abstract method is pure only if the object casted from has these methods also pure (overrided).
+3.	A downcast to a type with pure abstract methods is only legal if we can know for sure that the source object has these methods pure (only if the target type/methods sealed?)

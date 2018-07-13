@@ -9,10 +9,10 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.OverriddenMethods
 {
     [TestFixture]
-    public class UpCasting_AbstractMethod_AndInterfaceImplementationTests
+    public class DownCasting_AbstractMethod_AndInterfaceImplementationTests
     {
         [Test]
-        public void UpCastingFromObjectToTypeWithAbstractMethodThatImplementsAnInterfaceMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWithAbstractMethodThatImplementsAnInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -48,7 +48,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -91,7 +91,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -133,7 +133,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -174,7 +174,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -218,7 +218,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -260,7 +260,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -303,7 +303,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -344,7 +344,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -387,7 +387,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -430,7 +430,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -475,7 +475,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -522,7 +522,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -569,7 +569,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureAndTypeImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsImpureAndTypeImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -617,7 +617,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -662,7 +662,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureAndThatImplementsAnInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -707,7 +707,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureAndTypeImplementsAnInterfaceMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithAMethodThatIsPureAndTypeImplementsAnInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -753,7 +753,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -798,7 +798,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -843,7 +843,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureAndTypeImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsPureAndTypeImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -889,7 +889,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodThatImplementsAnInterfaceWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -935,7 +935,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndThatImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -981,7 +981,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndTypeImplementsAnInterfaceKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnAbstractMethodWithASealedMethodThatIsImpureAndTypeImplementsAnInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;

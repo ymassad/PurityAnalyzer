@@ -9,10 +9,10 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.OverriddenMethods
 {
     [TestFixture]
-    public class UpCasting_VirtualMethodTests
+    public class DownCasting_VirtualMethodTests
     {
         [Test]
-        public void UpCastingFromObjectToTypeWithVirtualPureMethodMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWithVirtualPureMethodMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -43,7 +43,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWithVirtualImpureMethodKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWithVirtualImpureMethodKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -75,7 +75,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -112,7 +112,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -148,7 +148,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnImpureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeThatOverridesAnImpureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -185,7 +185,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToSealedTypeThatOverridesAPureVirtualMethodWithAMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToSealedTypeThatOverridesAPureVirtualMethodWithAMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -221,7 +221,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -257,7 +257,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAPureVirtualMethodWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -295,7 +295,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeThatOverridesAnImpureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeThatOverridesAnImpureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -334,7 +334,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -376,7 +376,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -416,7 +416,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithAMethodThatIsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -457,7 +457,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -497,7 +497,7 @@ public static class Module1
         }
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsImpureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAPureVirtualMethodWithASealedMethodThatIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -539,7 +539,7 @@ public static class Module1
 
 
         [Test]
-        public void UpCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
+        public void DownCastingFromObjectToTypeWhoseSubTypeOverridesAnImpureVirtualMethodWithASealedMethodThatIsPureKeepsMethodPure()
         {
             string code = @"
 using System;
