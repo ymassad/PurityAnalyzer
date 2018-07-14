@@ -189,19 +189,15 @@ namespace PurityAnalyzer
             }
         }
 
-
-
         private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
             RecursiveState recursiveState)
         {
             if (sourceType.Equals(destinationType))
                 return new CastPurityResult.Pure();
 
-
             var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
-
-            var destMethodsToCheck =
+            var nonInterfaceMethodsToCheck =
                 Utils.RemoveOverriddenMethods(allDestinationMethods)
                     .Where(x => x.IsAbstract || x.IsVirtual || x.IsOverride);
 
@@ -215,7 +211,7 @@ namespace PurityAnalyzer
                         .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
-            var methodsToCheck = destMethodsToCheck.Union(destInterfaceBasedMethods).ToArray();
+            var methodsToCheck = nonInterfaceMethodsToCheck.Union(destInterfaceBasedMethods).ToArray();
 
             List<IMethodSymbol> problems = new List<IMethodSymbol>();
             
