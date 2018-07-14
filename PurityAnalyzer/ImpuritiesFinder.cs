@@ -189,141 +189,117 @@ namespace PurityAnalyzer
             }
         }
 
+
+
         private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
             RecursiveState recursiveState)
         {
             if (sourceType.Equals(destinationType))
                 return new CastPurityResult.Pure();
 
+
             var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
 
-            if (Utils.IsUpCast(sourceType, destinationType))
-            {
-                var methodsOfInterfacesImplementedByDestionationType =
+
+            var destMethodsToCheck =
+                Utils.RemoveOverriddenMethods(allDestinationMethods)
+                    .Where(x => x.IsAbstract || x.IsVirtual || x.IsOverride);
+
+            var destInterfaceBasedMethods = 
                     Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
-                        .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
-                        .ToArray();
-                
-                var allPureOverridableMethodsOnDestionationOrItsBaseTypes =
-                    allDestinationMethods
-                        .Where(x => x.IsAbstract || (x.IsVirtual && !x.IsOverride))
-                        .Select(method => new
-                        {
-                            Method = method,
-                            PurityType = GetMethodPurityType (method,recursiveState)
-                        })
-                        .Where(x => x.PurityType.HasValue)
-                        .Select(x => new
-                        {
-                            x.Method,
-                            PurityType = x.PurityType.GetValue()
-                        })
-                        .ToArray();
-
-                var sourceMethodsUpUntilBeforeDestionation =
-                    Utils.GetAllMethods(sourceType, Maybe<ITypeSymbol>.OfValue(destinationType));
-
-                var sourceMethodsThatOverrideSomePureDestionationBaseMethod =
-                    sourceMethodsUpUntilBeforeDestionation.Where(x =>
-                            x.IsOverride && x.OverriddenMethod != null)
-                        .Select(x =>
-                            new
-                            {
-                                Method = x,
-                                CorrespondingMethod =
-                                    allPureOverridableMethodsOnDestionationOrItsBaseTypes
-                                        .FirstOrNoValue(z => z.Method.Equals(x.OverriddenMethod))
-                            })
-                        .Where(x =>
-                            x.CorrespondingMethod.HasValue)
-                        .Select(x => new
-                        {
-                            x.Method,
-                            CorrespondingMethod  = x.CorrespondingMethod.GetValue()
-                        })
-                        .ToArray();
-
-                var impureOnes = sourceMethodsThatOverrideSomePureDestionationBaseMethod
-                    .Where(x => GetMethodPurityType(x.Method, recursiveState)
-                        .HasNoValueOr(purity => !IsGreaterOrEqaulPurity(purity, x.CorrespondingMethod.PurityType)))
-                    .ToArray();
-
-                if (impureOnes.Any())
-                {
-                    return new CastPurityResult.Impure(
-                        "These pure methods at target type have impure overrides on source type: " + Environment.NewLine +
-                        string.Join(Environment.NewLine, impureOnes.Select(x => x.Method.Name)));
-                }
-            
-
-                var sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces =
-                    methodsOfInterfacesImplementedByDestionationType
-                        .Select(sourceType.FindImplementationForInterfaceMember)
-                        .OfType<IMethodSymbol>();
-
-                var impureOnes1 = sourceTypeMethodsImplementingMethodsDefinedInDestionationInterfaces
-                    .Where(x => !IsMethodPure(x, recursiveState))
-                    .ToArray();
-
-                if (impureOnes1.Any())
-                    return new CastPurityResult.Impure(
-                        "These pure methods at target type have impure overrides on source type: " + Environment.NewLine +
-                        string.Join(Environment.NewLine, impureOnes1.Select(x => x.Name)));
-            }
-            else
-            {
-                if (destinationType.TypeKind == TypeKind.Interface)
-                    return new CastPurityResult.Impure("Downcasting to an interface type");
-
-                if (destinationType.GetMembers().OfType<IMethodSymbol>().Any(x => x.IsAbstract))
-                    return new CastPurityResult.Impure("Downcasting to a type with abstract methods");
-
-                if (destinationType.IsSealed)
-                    return new CastPurityResult.Pure();
-
-                var methodsOfInterfacesImplementedByDestionationType =
-                    destinationType.AllInterfaces
-                        .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
-                        .ToArray();
-
-                var interfaceMethodImplementations =
-                    methodsOfInterfacesImplementedByDestionationType
-                        .Select(destinationType.FindImplementationForInterfaceMember)
+                        .SelectMany(x => x.GetMembers()
+                        .OfType<IMethodSymbol>())
+                        .Select(x => destinationType.TypeKind == TypeKind.Interface ? x : destinationType.FindImplementationForInterfaceMember(x))
+                        .Where(x => x != null)
                         .OfType<IMethodSymbol>()
                         .Select(x => Utils.FindMostDerivedMethod(allDestinationMethods, x))
                         .ToArray();
 
-                var pureNonSealedOnes = interfaceMethodImplementations
-                    .Where(x => !x.IsSealed)
-                    .Where(x => IsMethodPure(x, recursiveState))
-                    .ToArray();
+            var methodsToCheck = destMethodsToCheck.Union(destInterfaceBasedMethods).ToArray();
 
-                if (pureNonSealedOnes.Any())
-                    return new CastPurityResult.Impure(
-                        "Downcasting to type implementing interface methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
-                        string.Join(Environment.NewLine, pureNonSealedOnes.Select(x => x.Name)));
+            List<IMethodSymbol> problems = new List<IMethodSymbol>();
+            
+            foreach (var destMethod in methodsToCheck)
+            {
+                var matchingMethodInSourceType = GetMatchingMethod(destMethod, sourceType);
 
-                var mostDerivedOverriddenMethods =
-                    Utils.RemoveOverriddenMethods(allDestinationMethods)
-                        .Where(x => x.IsOverride || x.IsVirtual)
-                        .ToArray();
-
-                var pureNonSealedOnes1 =
-                    mostDerivedOverriddenMethods
-                        .Where(x => !x.IsSealed)
-                        .Where(x => IsMethodPure(x, recursiveState))
-                        .ToArray();
-
-                if (pureNonSealedOnes1.Any())
+                if (matchingMethodInSourceType.HasNoValue)
                 {
-                    return new CastPurityResult.Impure(
-                        "Downcasting to type overriding some methods via methods that are pure and non-sealed. Methods: " + Environment.NewLine +
-                        string.Join(Environment.NewLine, pureNonSealedOnes1.Select(x => x.Name)));
+                    if (!destMethod.IsSealed && !destinationType.IsSealed)
+                    {
+                        if (IsAnyKindOfPure(destMethod, recursiveState))
+                        {
+                            problems.Add(destMethod);
+                        }
+                    }
+                }
+                else
+                {
+                    var srcPurity = GetMethodPurityType(matchingMethodInSourceType.GetValue(), recursiveState);
+                    var destPurity = GetMethodPurityType(destMethod, recursiveState);
 
+                    if (!IsGreaterOrEqaulPurity(
+                        srcPurity,
+                        destPurity))
+                    {
+                        problems.Add(destMethod);
+                    }
                 }
             }
 
+            if (problems.Any())
+                return new CastPurityResult.Impure(
+                    "Error casting. Relevent methods: " + Environment.NewLine +
+                    string.Join(Environment.NewLine, problems.Select(x => x.Name)));
+
             return new CastPurityResult.Pure();
+
+            Maybe<IMethodSymbol> GetMatchingMethod(IMethodSymbol method, ITypeSymbol type)
+            {
+                if (method.ContainingType.TypeKind == TypeKind.Interface)
+                {
+                    return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();
+                }
+
+                var typeMostDerivedMethods = Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type).ToArray());
+
+                foreach (var typeMethod in typeMostDerivedMethods)
+                {
+                    if (typeMethod.Equals(method))
+                        return typeMethod.ToMaybe();
+
+                    if (UltimatlyOverrides(typeMethod, method))
+                        return typeMethod.ToMaybe();
+
+                    if (UltimatlyOverrides(method, typeMethod))
+                        return typeMethod.ToMaybe();
+                }
+
+                return Maybe.NoValue;
+            }
+
+            bool UltimatlyOverrides(IMethodSymbol method, IMethodSymbol overridden)
+            {
+                if (method.OverriddenMethod == null)
+                    return false;
+
+                return method.OverriddenMethod.Equals(overridden) ||
+                       UltimatlyOverrides(method.OverriddenMethod, overridden);
+            }
+        }
+
+        public static bool IsGreaterOrEqaulPurity(Maybe<PurityType> type, Maybe<PurityType> than)
+        {
+            if (type.HasNoValue && than.HasNoValue)
+                return true;
+
+            if (type.HasValue && than.HasNoValue)
+                return true;
+
+            if (type.HasNoValue && than.HasValue)
+                return false;
+
+            return IsGreaterOrEqaulPurity(type.GetValue(), than.GetValue());
         }
 
         public static bool IsGreaterOrEqaulPurity(PurityType type, PurityType than)
@@ -757,6 +733,11 @@ namespace PurityAnalyzer
             return Maybe.NoValue;
         }
 
+        private bool IsAnyKindOfPure(IMethodSymbol method,
+            RecursiveState recursiveState)
+        {
+            return IsMethodPure(method, recursiveState, PurityType.PureExceptLocally);
+        }
 
         private bool IsMethodPure(
             IMethodSymbol method,
