@@ -1650,5 +1650,71 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyPropertySetterOnAnObjectOfADifferentTypeStoredInAFieldAccessedOnParameterOfTheSameTypeIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => localState = value;}
+
+    int localState = 0;
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething(Class1 param)
+    {
+        param.instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class2 instance = new Class2();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatSetsFieldOnAnObjectOfADifferentTypeStoredInAFieldAccessedOnParameterOfTheSameTypeIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int localState = 0;
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething(Class1 param)
+    {
+        param.instance.localState = 1;
+        return 1;
+    }
+
+    public Class2 instance = new Class2();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
