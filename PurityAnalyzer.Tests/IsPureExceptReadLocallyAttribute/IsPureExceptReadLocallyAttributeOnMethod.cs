@@ -630,5 +630,35 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInInstanceMutableFieldIsPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureProperty {get; set;}
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return instance.PureProperty;
+    }
+
+    public Class2 instance = new Class2();
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
     }
 }
