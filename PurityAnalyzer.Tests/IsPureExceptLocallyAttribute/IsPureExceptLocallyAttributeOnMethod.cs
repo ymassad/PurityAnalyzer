@@ -1359,5 +1359,296 @@ public class Class1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
         }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyPropertySetterOnAnObjectOfADifferentTypeStoredInAFieldIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => localState = value;}
+
+    int localState = 0;
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class2 instance = new Class2();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyPropertySetterOnAnObjectOfADifferentTypeStoredInAReadOnlyFieldIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => localState = value;}
+
+    int localState = 0;
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public readonly Class2 instance = new Class2();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyPropertySetterOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => localState = value;}
+
+    int localState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        instance.instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAnImpurePropertySetterOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => staticState = value;}
+
+    static int staticState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        instance.instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyPropertySetterOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsPureExceptLocally_FieldIsAccessedViaThis()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => localState = value;}
+
+    int localState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        this.instance.instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsAnImpurePropertySetterOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsImpure_FieldIsAccessedViaThis()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureExceptLocally {set => staticState = value;}
+
+    static int staticState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        this.instance.instance.PureExceptLocally = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatModifiesFieldOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int localState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        instance.instance.localState = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatModifiesFieldOnAnObjectOfADifferentTypeStoredInAFieldInAnObjectThatIsStoredInAFieldIsPureExceptLocally_FieldIsAccessedViaThis()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int localState = 0;
+}
+
+public class Class3
+{
+    public Class2 instance = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        this.instance.instance.localState = 1;
+        return 1;
+    }
+
+    public Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }

@@ -526,29 +526,12 @@ namespace PurityAnalyzer
 
                     if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
                     {
-                        var methodOrPropertyOrIndexerWhereIdentifierIsUsed =
-                            node.Ancestors()
-                                .OfType<MethodDeclarationSyntax>()
-                                .Cast<MemberDeclarationSyntax>()
-                                .Concat(node.Ancestors()
-                                    .OfType<PropertyDeclarationSyntax>())
-                                .Concat(node.Ancestors()
-                                    .OfType<IndexerDeclarationSyntax>())
-                                .FirstOrNoValue();
-
-                        bool IsAccessingLocalField(MemberDeclarationSyntax member)
-                        {
-                            var memberSymbol = semanticModel.GetDeclaredSymbol(member);
-
-                            var currentType = memberSymbol.ContainingType;
-
-                            return fieldSymbol.ContainingType == currentType && !fieldSymbol.IsStatic;
-                        }
+                        var isAccessingLocalData =
+                            IsDirectAccessToInstanceFieldOrAccessOfThisOrASeriesOfFieldAccesses(
+                                node, fieldSymbol);
 
                         accessingLocalFieldLegally =
-                            methodOrPropertyOrIndexerWhereIdentifierIsUsed
-                                .ChainValue(IsAccessingLocalField)
-                                .ValueOr(false)
+                            isAccessingLocalData
                             && (purityType == PurityType.PureExceptLocally || !Utils.GetUsage(node).IsWrite());
                     }
 
@@ -573,6 +556,20 @@ namespace PurityAnalyzer
             }
         }
 
+        private bool IsAccessingLocalField(IFieldSymbol fieldSymbol, MemberDeclarationSyntax memberThatIsTryingToAccessField)
+        {
+            var memberSymbol = semanticModel.GetDeclaredSymbol(memberThatIsTryingToAccessField);
+
+            return IsAccessingLocalField(fieldSymbol, memberSymbol);
+        }
+
+        private static bool IsAccessingLocalField(IFieldSymbol fieldSymbol, ISymbol memberThatIsTryingToAccessField)
+        {
+            var currentType = memberThatIsTryingToAccessField.ContainingType;
+
+            return fieldSymbol.ContainingType == currentType && !fieldSymbol.IsStatic;
+        }
+
         private IEnumerable<Impurity> GetImpuritiesForPropertyAccess(ExpressionSyntax node,
             IPropertySymbol propertySymbol, RecursiveState recursiveState)
         {
@@ -591,46 +588,41 @@ namespace PurityAnalyzer
         private IEnumerable<Impurity> GetImpuritiesForMethodAccess(ExpressionSyntax node, IMethodSymbol method,
             RecursiveState recursiveState)
         {
-            PurityType acceptedPurityType = PurityType.Pure;
-
-            if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
+            bool IsAccessingLocalMethod(ExpressionSyntax node1)
             {
-                if (node.Parent is InvocationExpressionSyntax)
+                if (node1.Parent is InvocationExpressionSyntax) //local method
                 {
-                    acceptedPurityType = purityType;
+                    return true;
                 }
-                else if (node.Parent is MemberAccessExpressionSyntax memberAccess &&
-                         memberAccess.Expression.Kind() == SyntaxKind.ThisExpression)
-                {
-                    if (memberAccess.Parent is InvocationExpressionSyntax)
-                    {
-                        acceptedPurityType = purityType;
-                    }
-                    else
-                    {
-                        var operation = semanticModel.GetOperation(memberAccess);
 
-                        if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
-                            propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
-                        {
-                            acceptedPurityType = purityType;
-                        }
-                    }
-                }
-                else if (node is ElementAccessExpressionSyntax)
+                if (node1.Parent is MemberAccessExpressionSyntax memberAccess)
                 {
-                    acceptedPurityType = purityType;
+                    return this.IsThisExpressionOrASeriesOfFieldAccesses(memberAccess.Expression);
+                }
+                else if (node1 is ElementAccessExpressionSyntax)
+                {
+                    return true;
                 }
                 else
                 {
-                    var operation = semanticModel.GetOperation(node);
+                    var operation = semanticModel.GetOperation(node1);
 
                     if (operation is IPropertyReferenceOperation propertyReferenceOperation &&
                         propertyReferenceOperation.Instance.Kind == OperationKind.InstanceReference)
                     {
-                        acceptedPurityType = purityType;
+                        return true;
                     }
                 }
+
+                return false;
+            }
+
+            PurityType acceptedPurityType = PurityType.Pure;
+
+            if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
+            {
+                if (IsAccessingLocalMethod(node))
+                    acceptedPurityType = purityType;
             }
             else
             {
@@ -648,6 +640,41 @@ namespace PurityAnalyzer
             {
                 yield return new Impurity(node, "Method is impure");
             }
+        }
+
+        private bool IsDirectAccessToInstanceFieldOrAccessOfThisOrASeriesOfFieldAccesses(IdentifierNameSyntax node1, IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.IsStatic)
+                return false;
+
+            if (!(node1.Parent is MemberAccessExpressionSyntax memberAccess))
+            {
+                return true;
+            }
+
+            return IsThisExpressionOrASeriesOfFieldAccesses(memberAccess.Expression);
+        }
+
+        private bool IsThisExpressionOrASeriesOfFieldAccesses(ExpressionSyntax node1)
+        {
+
+            if (node1.Kind() == SyntaxKind.ThisExpression)
+            {
+                return true;
+            }
+
+            if (node1 is IdentifierNameSyntax identifier)
+            {
+                return semanticModel.GetSymbolInfo(identifier).Symbol is IFieldSymbol field1 && !field1.IsStatic;
+            }
+
+            if (node1 is MemberAccessExpressionSyntax memberAccess)
+            {
+                return semanticModel.GetSymbolInfo(memberAccess.Name).Symbol is IFieldSymbol field && !field.IsStatic &&
+                       IsThisExpressionOrASeriesOfFieldAccesses(memberAccess.Expression);
+            }
+
+            return false;
         }
 
         private IEnumerable<Impurity> GetImpurities4(BinaryExpressionSyntax node,
