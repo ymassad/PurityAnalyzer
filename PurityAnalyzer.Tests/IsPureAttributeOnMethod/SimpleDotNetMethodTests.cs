@@ -50,6 +50,8 @@ public static class Module1
             yield return @"""1"".Equals(""2"", StringComparison.Ordinal)";
             yield return @"String.Equals(""1"", ""2"", StringComparison.OrdinalIgnoreCase)";
             yield return @"""1"".Equals(""2"", StringComparison.OrdinalIgnoreCase)";
+            yield return "var a = ((int?)1).HasValue";
+            yield return "var a = ((int?)1).Value";
         }
     }
 }
