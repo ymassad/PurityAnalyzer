@@ -37,10 +37,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -74,10 +76,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -111,10 +115,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -147,10 +153,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -185,10 +193,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -223,10 +233,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -261,10 +273,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -298,10 +312,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -335,10 +351,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -372,10 +390,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Base x = new Derived();
+        Base x = source;
 
         return 1;
     }
+
+    public static readonly Derived source = new Derived();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -409,10 +429,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -445,10 +467,12 @@ public static class Module1
     [IsPure]
     public static int DoSomething()
     {
-        Derived x = (Derived) new Base();
+        Derived x = (Derived) source;
 
         return 1;
     }
+
+    public static readonly Base source = new Base();
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
