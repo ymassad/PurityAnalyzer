@@ -6,6 +6,5 @@ System.String, Join
 System.String, Equals
 System.Text.StringBuilder, .ctor
 System.Xml.XmlDocument, .ctor
-System.Int32, ToString(System.IFormatProvider)
 System.Globalization.NumberFormatInfo, get_InvariantInfo
 System.Globalization.NumberFormatInfo, GetFormat(System.Type)

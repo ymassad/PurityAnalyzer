@@ -74,13 +74,11 @@ public static class Module1
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
             yield return @"var a = string.Empty";
-            yield return @"1.ToString(System.Globalization.NumberFormatInfo.InvariantInfo)";
         }
 
         public static IEnumerable<string> GetImpureCases()
         {
             yield return @"1.ToString()";
-            
         }
     }
 }
