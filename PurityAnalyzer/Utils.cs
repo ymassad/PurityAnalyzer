@@ -342,6 +342,19 @@ namespace PurityAnalyzer
                 {
                     return IdentifierUsage.ReadFromAndWrittenTo();
                 }
+                else if (operationNode is ArgumentSyntax argument)
+                {
+                    var kind = argument.RefKindKeyword.Kind();
+
+                    if (kind == SyntaxKind.RefKeyword)
+                    {
+                        return IdentifierUsage.ReadFromAndWrittenTo();
+                    }
+                    if (kind == SyntaxKind.OutKeyword)
+                    {
+                        return IdentifierUsage.WrittenTo();
+                    }
+                }
 
                 return IdentifierUsage.ReadFrom();
             }
