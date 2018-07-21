@@ -53,7 +53,7 @@ namespace PurityAnalyzer
 
         public static IEnumerable<Impurity> GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState, PurityType purityType = PurityType.Pure)
         {
             var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
@@ -63,7 +63,7 @@ namespace PurityAnalyzer
 
         public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState,
             bool onlyStaticFields = false)
         {
@@ -84,7 +84,7 @@ namespace PurityAnalyzer
         public static bool AnyImpureFieldInitializer(
             TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState,
             bool onlyStaticFields = false)
         {
@@ -105,7 +105,7 @@ namespace PurityAnalyzer
         public static bool IsNewlyCreatedObject(
             SemanticModel semanticModel,
             ExpressionSyntax expression,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             if (expression is ObjectCreationExpressionSyntax)
                 return true;
@@ -151,7 +151,7 @@ namespace PurityAnalyzer
 
                         if (knownReturnsNewObjectMethods.TryGetValue(
                                 Utils.GetFullMetaDataName(invokedMethod.ContainingType), out var methods) &&
-                            methods.Contains(invokedMethod.Name))
+                            methods.AnyMatches(invokedMethod))
                         {
                             return true;
                         }
@@ -214,7 +214,7 @@ namespace PurityAnalyzer
             return list;
         }
 
-        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownReturnsNewObjectMethods).Any();
         }
@@ -222,7 +222,7 @@ namespace PurityAnalyzer
         public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForMethod(
             BaseMethodDeclarationSyntax methodDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             var returnExpressions =
                 methodDeclaration.Body != null
@@ -263,7 +263,7 @@ namespace PurityAnalyzer
 
             return attributes.ToArray();
         }
-        public static Dictionary<string, HashSet<string>> GetKnownReturnsNewObjectMethods(SemanticModel semanticModel)
+        public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownReturnsNewObjectMethods(SemanticModel semanticModel)
         {
             var returnsNewObjectMethodsFileContents =
                 Resources.ReturnsNewObjectMethods
@@ -273,13 +273,11 @@ namespace PurityAnalyzer
                         .ValueOr("");
 
             return returnsNewObjectMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split(','))
-                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid returns-new-object method line"))
-                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .Select(ParseMethodDescriptorLine)
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
                     x => x.Key,
-                    x => new HashSet<string>(x));
+                    x => new HashSet<MethodDescriptor>(x));
         }
 
         public static string GetFullMetaDataName(INamedTypeSymbol typeSymbol)
@@ -485,7 +483,7 @@ namespace PurityAnalyzer
         }
 
         public static bool IsAccessOnNewlyCreatedObject(
-            Dictionary<string, HashSet<string>> dictionary,
+            Dictionary<string, HashSet<MethodDescriptor>> dictionary,
             SemanticModel semanticModel,
             ExpressionSyntax node)
         {
@@ -513,6 +511,34 @@ namespace PurityAnalyzer
             }
 
             return false;
+        }
+
+        public static (string Type, MethodDescriptor Method) ParseMethodDescriptorLine(string line)
+        {
+            var partsSeparatedByComma = line.Split(new []{','}, 2);
+
+            if (partsSeparatedByComma.Length != 2)
+                throw new Exception("Invalid method description line");
+
+            MethodDescriptor ParseMethodDescriptor(string str)
+            {
+                if(!str.Contains("("))
+                    return new MethodDescriptor.ByName(str.Trim());
+
+                if(!str.Contains(")"))
+                    throw new Exception("Invalid method description line");
+
+                var paramList = str.Substring(str.IndexOf('(') + 1);
+
+                paramList = paramList.Substring(0, paramList.IndexOf(')'));
+
+
+                return new MethodDescriptor.ByNameAndParameterTypes(
+                    str.Substring(0, str.IndexOf('(')).Trim(),
+                    paramList.Split(new []{','}).Select(x => x.Trim()).ToImmutableArray());
+            }
+
+            return (partsSeparatedByComma[0], ParseMethodDescriptor(partsSeparatedByComma[1]));
         }
     }
 }

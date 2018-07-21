@@ -58,7 +58,7 @@ namespace PurityAnalyzer
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
         {
 
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods =
                 Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
 
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
@@ -138,7 +138,7 @@ namespace PurityAnalyzer
         private void ProcessNonNewObjectReturnsForMethod(
             SyntaxNodeAnalysisContext context,
             BaseMethodDeclarationSyntax methodDeclaration,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             var symbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
 
@@ -168,7 +168,7 @@ namespace PurityAnalyzer
 
         private void AnalyzeClassSyntaxNode(SyntaxNodeAnalysisContext context)
         {
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods =
                 Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
 
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
@@ -208,7 +208,7 @@ namespace PurityAnalyzer
         private void AnalyzePropertySyntaxNode(
             SyntaxNodeAnalysisContext context)
         {
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods =
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods =
                 Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel);
 
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
@@ -266,7 +266,7 @@ namespace PurityAnalyzer
         private static void ProcessImpuritiesForProperty(
             SyntaxNodeAnalysisContext context,
             PropertyDeclarationSyntax propertyDeclarationSyntax,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             PurityType purityType = PurityType.Pure)
         {
             if (propertyDeclarationSyntax.AccessorList != null)
@@ -298,7 +298,7 @@ namespace PurityAnalyzer
 
         private static void ProcessImpuritiesForMethod(SyntaxNodeAnalysisContext context,
             SyntaxNode methodLikeNode,
-            Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             PurityType purityType = PurityType.Pure)
         {
             var impurities =

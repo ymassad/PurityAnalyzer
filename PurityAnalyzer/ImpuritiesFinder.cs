@@ -20,10 +20,10 @@ namespace PurityAnalyzer
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private readonly Dictionary<string, HashSet<string>> knownPureMethods;
-        private readonly Dictionary<string, HashSet<string>> knownPureExceptLocallyMethods;
-        private readonly Dictionary<string, HashSet<string>> knownPureExceptReadLocallyMethods;
-        private readonly Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods;
+        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureMethods;
+        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptLocallyMethods;
+        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods;
+        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods;
         private readonly HashSet<INamedTypeSymbol> knownPureTypes;
         private readonly IPropertySymbol arrayIListItemProperty;
         private readonly INamedTypeSymbol genericIenumeratorType;
@@ -31,7 +31,7 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol boolType;
         private readonly INamedTypeSymbol idisposableType;
 
-        public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<string>> knownReturnsNewObjectMethods)
+        public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             this.semanticModel = semanticModel;
             this.purityType = purityType;
@@ -845,7 +845,7 @@ namespace PurityAnalyzer
             return true;
         }
 
-        private Dictionary<string, HashSet<string>> GetKnownPureMethods()
+        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
         {
             var pureMethodsFileContents =
                 Resources.PureMethods
@@ -855,16 +855,14 @@ namespace PurityAnalyzer
                   .ValueOr("");
 
             return pureMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split(','))
-                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure method line"))
-                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .Select(Utils.ParseMethodDescriptorLine)
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
                     x => x.Key,
-                    x => new HashSet<string>(x));
+                    x => new HashSet<MethodDescriptor>(x));
         }
 
-        private Dictionary<string, HashSet<string>> GetKnownPureExceptLocallyMethods()
+        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptLocallyMethods
@@ -874,16 +872,14 @@ namespace PurityAnalyzer
                         .ValueOr("");
 
             return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split(','))
-                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure-except-locally method line"))
-                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .Select(Utils.ParseMethodDescriptorLine)
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
                     x => x.Key,
-                    x => new HashSet<string>(x));
+                    x => new HashSet<MethodDescriptor>(x));
         }
 
-        private Dictionary<string, HashSet<string>> GetKnownPureExceptReadLocallyMethods()
+        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptReadLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptReadLocallyMethods
@@ -893,13 +889,11 @@ namespace PurityAnalyzer
                         .ValueOr("");
 
             return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split(','))
-                .Select(x => x.ThrowIf(v => v.Length != 2, "Invalid pure-except-read-locally method line"))
-                .Select(x => new { Type = x[0], Method = x[1].Trim() })
+                .Select(Utils.ParseMethodDescriptorLine)
                 .GroupBy(x => x.Type, x => x.Method)
                 .ToDictionary(
                     x => x.Key,
-                    x => new HashSet<string>(x));
+                    x => new HashSet<MethodDescriptor>(x));
         }
 
         private HashSet<INamedTypeSymbol> GetKnownPureTypes()
@@ -935,7 +929,7 @@ namespace PurityAnalyzer
 
 
             if (knownPureMethods.TryGetValue(Utils.GetFullMetaDataName(method.ContainingType), out var pureMethods) &&
-                pureMethods.Contains(method.Name))
+                pureMethods.AnyMatches(method))
             {
                 return true;
             }
@@ -945,7 +939,7 @@ namespace PurityAnalyzer
                 if (knownPureExceptReadLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
                         out var pureExceptReadLocallyMethods) &&
-                    pureExceptReadLocallyMethods.Contains(method.Name))
+                    pureExceptReadLocallyMethods.AnyMatches(method))
                 {
                     return true;
                 }
@@ -956,7 +950,7 @@ namespace PurityAnalyzer
                 if (knownPureExceptLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
                         out var pureExceptLocallyMethods) &&
-                    pureExceptLocallyMethods.Contains(method.Name))
+                    pureExceptLocallyMethods.AnyMatches(method))
                 {
                     return true;
                 }
