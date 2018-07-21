@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,6 +35,30 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [TestCaseSource(nameof(GetImpureCases))]
+        public void TestImpureInvocation(string invocation)
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute
+{{
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static void DoSomething()
+    {{
+        {invocation};
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
         public static IEnumerable<string> GetPureCases()
         {
             yield return "true.ToString()";
@@ -46,9 +71,16 @@ public static class Module1
             yield return @"""1"".Equals(""2"", StringComparison.Ordinal)";
             yield return @"String.Equals(""1"", ""2"", StringComparison.OrdinalIgnoreCase)";
             yield return @"""1"".Equals(""2"", StringComparison.OrdinalIgnoreCase)";
-            yield return "var a = ((int?)1).HasValue";
-            yield return "var a = ((int?)1).Value";
-            yield return "var a = string.Empty";
+            yield return @"var a = ((int?)1).HasValue";
+            yield return @"var a = ((int?)1).Value";
+            yield return @"var a = string.Empty";
+            yield return @"1.ToString(System.Globalization.NumberFormatInfo.InvariantInfo)";
+        }
+
+        public static IEnumerable<string> GetImpureCases()
+        {
+            yield return @"1.ToString()";
+            
         }
     }
 }

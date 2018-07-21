@@ -39,7 +39,7 @@ namespace PurityAnalyzer
                 byNameCase: x => methodSymbol.Name.Equals(x.Name),
                 byNameAndParameterTypesCase: x =>
                     methodSymbol.Name.Equals(x.Name) &&
-                    methodSymbol.Parameters.Select(p => p.Name).SequenceEqual(x.ParameterTypeNames));
+                    methodSymbol.Parameters.Select(p => Utils.GetFullMetaDataName(p.Type)).SequenceEqual(x.ParameterTypeNames));
         }
 
         public static bool AnyMatches(this IEnumerable<MethodDescriptor> methods, IMethodSymbol method)

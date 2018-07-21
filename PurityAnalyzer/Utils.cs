@@ -280,7 +280,7 @@ namespace PurityAnalyzer
                     x => new HashSet<MethodDescriptor>(x));
         }
 
-        public static string GetFullMetaDataName(INamedTypeSymbol typeSymbol)
+        public static string GetFullMetaDataName(ITypeSymbol typeSymbol)
         {
             string name = typeSymbol.MetadataName;
 
