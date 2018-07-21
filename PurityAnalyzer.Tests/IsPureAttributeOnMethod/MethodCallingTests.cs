@@ -141,14 +141,14 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething()
+    public static int DoSomething()
     {
         int localstate = 0;
 
-        string DoSomethingElseImpure()
+        int DoSomethingElseImpure()
         {   
             localstate++;
-            return localstate.ToString();
+            return localstate;
         }
 
         return DoSomethingElseImpure();

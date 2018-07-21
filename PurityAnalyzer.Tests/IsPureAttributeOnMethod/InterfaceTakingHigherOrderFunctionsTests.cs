@@ -47,27 +47,27 @@ public class IsPureAttribute : Attribute
 
 public interface IInterface
 {
-    string Call(int input);
+    int Call(int input);
 }
 
 public class PureClass : IInterface
 {
-    public string Call(int input)
+    public int Call(int input)
     {
-        return input.ToString();
+        return input;
     }
 }
 
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething()
+    public static int DoSomething()
     {
         return HigherOrderFunction(new PureClass());
     }
 
     [IsPure]
-    public static string HigherOrderFunction(IInterface function)
+    public static int HigherOrderFunction(IInterface function)
     {
         return function.Call(1);
     }

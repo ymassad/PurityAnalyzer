@@ -68,13 +68,13 @@ public static class Module1
 {
 
     [IsPure]
-    public static string DoSomething()
+    public static int DoSomething()
     {
-        return HigherOrderFunction(x => x.ToString());
+        return HigherOrderFunction(x => x);
     }
 
     [IsPure]
-    public static string HigherOrderFunction(Func<int,string> function)
+    public static int HigherOrderFunction(Func<int,int> function)
     {
         return function.Invoke(1);
     }

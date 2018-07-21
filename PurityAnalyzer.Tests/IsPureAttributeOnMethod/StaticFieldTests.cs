@@ -227,10 +227,10 @@ public static class Module1
 {
     public static readonly int state = 1;
     [IsPure]
-    public static string DoSomething()
+    public static int DoSomething()
     {
         
-        return state.ToString();
+        return state;
     }
 }";
 

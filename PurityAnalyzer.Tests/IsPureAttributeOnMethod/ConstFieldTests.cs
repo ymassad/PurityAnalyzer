@@ -20,9 +20,9 @@ public static class Module1
 {
     const int c = 1;
     [IsPure]
-    public static string DoSomething()
+    public static int DoSomething()
     {
-        return c.ToString();
+        return c;
     }
 }";
 

@@ -20,9 +20,9 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(ImmutableDto1 input)
+    public static int DoSomething(ImmutableDto1 input)
     {
-        return input.Field1.ToString();
+        return input.Field1;
     }
 }";
 
@@ -47,9 +47,9 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(MutableDto1 input)
+    public static int DoSomething(MutableDto1 input)
     {
-        return input.Field1.ToString();
+        return input.Field1;
     }
 }";
 

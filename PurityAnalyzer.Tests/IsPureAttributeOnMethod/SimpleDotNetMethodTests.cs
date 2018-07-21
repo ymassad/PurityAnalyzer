@@ -11,7 +11,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
     [TestFixture]
     public class SimpleDotNetMethodTests
     {
-        [TestCaseSource(nameof(GetCases))]
+        [TestCaseSource(nameof(GetPureCases))]
         public void TestPureInvocation(string invocation)
         {
             string code = $@"
@@ -34,12 +34,8 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
-        public static IEnumerable<string> GetCases()
+        public static IEnumerable<string> GetPureCases()
         {
-            yield return "1.ToString()";
-            yield return "1f.ToString()";
-            yield return "1d.ToString()";
-            yield return "1m.ToString()";
             yield return "true.ToString()";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
@@ -52,6 +48,7 @@ public static class Module1
             yield return @"""1"".Equals(""2"", StringComparison.OrdinalIgnoreCase)";
             yield return "var a = ((int?)1).HasValue";
             yield return "var a = ((int?)1).Value";
+            yield return "var a = string.Empty";
         }
     }
 }

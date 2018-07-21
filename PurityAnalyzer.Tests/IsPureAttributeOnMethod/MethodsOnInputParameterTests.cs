@@ -263,10 +263,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        
-        return input.Method().ToString();
+        return input.Method();
     }
 }";
 
@@ -332,10 +331,10 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         var v = input;
-        return v.Method().ToString();
+        return v.Method();
     }
 }";
 
@@ -365,11 +364,11 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         var v = input;
         var v2 = v;
-        return v2.Method().ToString();
+        return v2.Method();
     }
 }";
 

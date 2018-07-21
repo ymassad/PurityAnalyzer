@@ -24,10 +24,10 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -88,8 +88,6 @@ public class IsPureAttribute : Attribute
 
 public class Dto1
 {
-    int state = 0;
-
     public int Prop1
     {
         get
@@ -102,9 +100,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -132,9 +130,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -366,9 +364,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
