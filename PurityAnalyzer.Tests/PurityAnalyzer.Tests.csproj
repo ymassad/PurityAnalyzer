@@ -182,6 +182,8 @@
     <Compile Include="IsPureAttributeOnMethod\OutAndRefParameters.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingAndMethodsHaveDifferentPurityTypes.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingByReturning.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingFromPureExceptLocallyToPureAndVariableIsUsedOnlyByPureOrPureExceptReadLocallyMethodsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\CastingFromPureExceptReadLocallyToPureAndVariableIsUsedOnlyByPureOrPureExceptReadLocallyMethodsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_AbstractMethod_AndInterfaceImplementationTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_InterfaceMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\OverriddenMethods\DownCasting_AbstractMethodTests.cs" />
