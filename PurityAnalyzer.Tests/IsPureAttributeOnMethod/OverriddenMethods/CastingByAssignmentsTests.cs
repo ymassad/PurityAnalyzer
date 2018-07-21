@@ -12,7 +12,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.OverriddenMethods
     public class CastingByAssignmentsTests
     {
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeMakesMethodImpure()
+        public void CastingByAssignmentAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -42,12 +42,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -56,7 +56,7 @@ public static class Module1
         }
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAnImpureAbstractOverriddenMethodAsBaseTypeMakesMethodImpure()
+        public void CastingByAssignmentAClassThatHasAnImpureAbstractOverriddenMethodAsBaseTypeMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -86,12 +86,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -101,7 +101,7 @@ public static class Module1
 
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAnImpureMethodWhichImplementsAnInterfaceAsTheInterfaceMakesMethodImpure()
+        public void CastingByAssignmentAClassThatHasAnImpureMethodWhichImplementsAnInterfaceAsTheInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -131,12 +131,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        IInterface input = obj;
+        IInterface input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -145,7 +145,7 @@ public static class Module1
         }
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAnImpureMethodWhichImplementsAnInterfaceExplicitlyAsTheInterfaceMakesMethodImpure()
+        public void CastingByAssignmentAClassThatHasAnImpureMethodWhichImplementsAnInterfaceExplicitlyAsTheInterfaceMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -175,12 +175,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        IInterface input = obj;
+        IInterface input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -192,7 +192,7 @@ public static class Module1
 
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAPureOverriddenVirtualMethodAsBaseTypeKeepsMethodPure()
+        public void CastingByAssignmentAClassThatHasAPureOverriddenVirtualMethodAsBaseTypeKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -222,12 +222,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -237,7 +237,7 @@ public static class Module1
 
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAPureAbstractOverriddenMethodAsBaseTypeKeepsMethodPure()
+        public void CastingByAssignmentAClassThatHasAPureAbstractOverriddenMethodAsBaseTypeKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -267,12 +267,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -282,7 +282,7 @@ public static class Module1
 
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAPureMethodWhichImplementsAnInterfaceAsTheInterfaceKeepsMethodPure()
+        public void CastingByAssignmentAClassThatHasAPureMethodWhichImplementsAnInterfaceAsTheInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -312,12 +312,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        IInterface input = obj;
+        IInterface input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -326,7 +326,7 @@ public static class Module1
         }
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAPureMethodWhichImplementsAnInterfaceExplicitlyAsTheInterfaceKeepsMethodPure()
+        public void CastingByAssignmentAClassThatHasAPureMethodWhichImplementsAnInterfaceExplicitlyAsTheInterfaceKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -356,12 +356,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        IInterface input = obj;
+        IInterface input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -372,7 +372,7 @@ public static class Module1
 
         //Because the target method should assume that the virtual method is impure since the base method is also impure
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeWhenBaseTypeMethodItSelfIsImpureKeepsMethodPure()
+        public void CastingByAssignmentAClassThatHasAnImpureVirtualOverriddenMethodAsBaseTypeWhenBaseTypeMethodItSelfIsImpureKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -404,12 +404,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -418,7 +418,7 @@ public static class Module1
         }
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatInheritsAnImpureMethodFromParentAsParentTypeKeepsMethodPure()
+        public void CastingByAssignmentAClassThatInheritsAnImpureMethodFromParentAsParentTypeKeepsMethodPure()
         {
             string code = @"
 using System;
@@ -451,12 +451,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base input = obj;
+        Base input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
@@ -465,7 +465,7 @@ public static class Module1
         }
 
         [Test]
-        public void CastingByAssignmentANewInstanceOfAClassThatInheritsAnImpureMethodFromParentAsGrandParentTypeWhereTheMethodIsDefinedAsPureMakesMethodImpure()
+        public void CastingByAssignmentAClassThatInheritsAnImpureMethodFromParentAsGrandParentTypeWhereTheMethodIsDefinedAsPureMakesMethodImpure()
         {
             string code = @"
 using System;
@@ -498,12 +498,12 @@ public static class Module1
     [IsPure]
     public static string DoSomething()
     {
-        var obj = new PureDto(1);
-
-        Base0 input = obj;
+        Base0 input = source;
 
         return """";
     }
+
+    public static readonly PureDto source = new PureDto(1);
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
