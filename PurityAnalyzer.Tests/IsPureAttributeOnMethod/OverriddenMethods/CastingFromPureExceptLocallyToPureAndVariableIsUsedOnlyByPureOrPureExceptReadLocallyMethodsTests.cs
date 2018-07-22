@@ -518,5 +518,555 @@ public static class Module1
 
         }
 
+        [Test]
+        public void ExplicitCastFromNewObjectAndPassResultToPureExceptReadLocallyMethod_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 class1)
+    {
+        Base x = (Base) new Derived();
+
+        class1.PureExceptReadLocally(x);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void ExplicitCastFromNewObjectAndPassResultToPureExceptLocallyMethod_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = (Base) new Derived();
+
+        Class1 class1 = new Class1();
+
+        class1.PureExceptLocally(x);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptReadLocallyMethodDirectly_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 class1)
+    {
+        class1.PureExceptReadLocally(new Derived());
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptLocallyMethodDirectly_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Class1 class1 = new Class1();
+
+        class1.PureExceptLocally(new Derived());
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptReadLocallyMethodViaVariableInitializedInDifferentStatement_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 class1)
+    {
+        Base x;
+
+        x = new Derived();
+
+        class1.PureExceptReadLocally(x);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptLocallyMethodViaVariableInitializedInDifferentStatement_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Class1 class1 = new Class1();
+
+        Base x;
+
+        x = new Derived();
+
+        class1.PureExceptLocally(x);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptReadLocallyMethodViaTwoVariablesInitializedInDifferentStatements_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 class1)
+    {
+        Base x;
+
+        x = new Derived();
+
+        Base y;
+
+        y = x;
+
+        class1.PureExceptReadLocally(y);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptLocallyMethodViaTwoVariablesInitializedInDifferentStatements_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Class1 class1 = new Class1();
+
+        Base x;
+
+        x = new Derived();
+        
+        Base y;
+
+        y = x;
+
+        class1.PureExceptLocally(y);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptReadLocallyMethodViaTwoVariablesAndOneIsInitializedInDifferentStatement_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 class1)
+    {
+        Base x;
+
+        x = new Derived();
+
+        Base y = x;
+
+        class1.PureExceptReadLocally(y);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptLocallyMethodViaTwoVariablesAndOneIsInitializedInDifferentStatement_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Class1 class1 = new Class1();
+
+        Base x;
+
+        x = new Derived();
+        
+        Base y = x;
+
+        class1.PureExceptLocally(y);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
     }
 }

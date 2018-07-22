@@ -160,5 +160,128 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
             dignostics.Length.Should().Be(0);
         }
+
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptReadLocallyMethodViaTwoVariablesAndOneIsInitializedInDifferentStatement_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething
+    {
+        get
+        {
+            Class1 class1 = new Class1();
+
+            Base x;
+
+            x = new Derived();
+
+            Base y = x;
+
+            class1.PureExceptReadLocally(y);
+
+            return 1;
+        }
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptReadLocally(Base x)
+    {
+        return state;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //A pure except locally method could decide to store the parameter inside a field
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExceptLocallyMethodViaTwoVariablesAndOneIsInitializedInDifferentStatement_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething
+    {
+        get
+        {
+            Class1 class1 = new Class1();
+
+            Base x;
+
+            x = new Derived();
+            
+            Base y = x;
+
+            class1.PureExceptLocally(y);
+
+            return 1;
+        }
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
     }
 }

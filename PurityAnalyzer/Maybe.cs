@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -120,6 +121,22 @@ namespace PurityAnalyzer
 
     public static class MaybeExtensions
     {
+        public static bool HasValueIn<T>(this Maybe<T> maybe, params T[] values)
+        {
+            if (maybe.HasNoValue)
+                return false;
+
+            return values.Contains(maybe.GetValue());
+        }
+
+        public static bool HasValueEquals<T>(this Maybe<T> maybe, T value)
+        {
+            if (maybe.HasNoValue)
+                return false;
+
+            return maybe.GetValue().Equals(value);
+        }
+
         public static Maybe<T> If<T>(this Maybe<T> maybe, Func<T, bool> condition)
         {
             if (maybe.HasNoValue)

@@ -104,7 +104,7 @@ namespace PurityAnalyzer
 
         public static bool IsNewlyCreatedObject(
             SemanticModel semanticModel,
-            ExpressionSyntax expression,
+            SyntaxNode expression,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
             if (expression is ObjectCreationExpressionSyntax)
@@ -483,9 +483,9 @@ namespace PurityAnalyzer
         }
 
         public static bool IsAccessOnNewlyCreatedObject(
-            Dictionary<string, HashSet<MethodDescriptor>> dictionary,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             SemanticModel semanticModel,
-            ExpressionSyntax node)
+            SyntaxNode node)
         {
             bool IsOnNewlyCreatedObject(ExpressionSyntax exp)
             {
@@ -497,7 +497,7 @@ namespace PurityAnalyzer
                 {
                     return IsOnNewlyCreatedObject(elementAccess1.Expression);
                 }
-                return Utils.IsNewlyCreatedObject(semanticModel, exp, dictionary);
+                return Utils.IsNewlyCreatedObject(semanticModel, exp, knownReturnsNewObjectMethods);
             }
 
             if (node.Parent is MemberAccessExpressionSyntax memberAccess)

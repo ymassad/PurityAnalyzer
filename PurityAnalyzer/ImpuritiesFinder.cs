@@ -182,7 +182,7 @@ namespace PurityAnalyzer
             if (semanticModel.GetSymbolInfo(node.Type).Symbol is ITypeSymbol destinationType &&
                 semanticModel.GetTypeInfo(node.Expression).Type is ITypeSymbol sourceType)
             {
-                if (IsImpureCast(sourceType, destinationType, recursiveState) is CastPurityResult.Impure impure)
+                if (IsImpureCast(sourceType, destinationType, recursiveState, node.Expression) is CastPurityResult.Impure impure)
                 {
                     yield return new Impurity(node, "Cast is impure" + Environment.NewLine + impure.Reason);
                 }
@@ -190,7 +190,7 @@ namespace PurityAnalyzer
         }
 
         private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
-            RecursiveState recursiveState)
+            RecursiveState recursiveState, SyntaxNode sourceNode)
         {
             if (sourceType.Equals(destinationType))
                 return new CastPurityResult.Pure();
@@ -234,11 +234,112 @@ namespace PurityAnalyzer
                     var srcPurity = GetMethodPurityType(matchingMethodInSourceType.GetValue(), recursiveState);
                     var destPurity = GetMethodPurityType(destMethod, recursiveState);
 
-                    if (!IsGreaterOrEqaulPurity(
-                        srcPurity,
-                        destPurity))
+                    bool IsSourceNodeANewObject()
                     {
-                        problems.Add(destMethod);
+                        return Utils.IsNewlyCreatedObject(semanticModel, sourceNode, knownReturnsNewObjectMethods);
+                    }
+
+                    bool IsSourceNodeAParameter()
+                    {
+                        return IsParameter(sourceNode);
+                    }
+
+                    bool IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods()
+                    {
+                        bool IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(SyntaxNode node)
+                        {
+                            if (node.Parent is ArgumentSyntax argument
+                                && argument.Parent is ArgumentListSyntax argumentList
+                                && argumentList.Parent is InvocationExpressionSyntax invocation)
+                            {
+                                if (semanticModel.GetSymbolInfo(invocation).Symbol is IMethodSymbol methodSymbol)
+                                {
+                                    if (IsAtLeastPureExceptReadLocally(methodSymbol, recursiveState))
+                                        return true;
+                                }
+                            }
+                            else if (node.Parent is AssignmentExpressionSyntax assignmentExpression &&
+                                     assignmentExpression.Kind() == SyntaxKind.SimpleAssignmentExpression &&
+                                     assignmentExpression.Left is IdentifierNameSyntax identifier &&
+                                     semanticModel.GetSymbolInfo(identifier).Symbol is ILocalSymbol localSymbol)
+                            {
+                                var scope = node
+                                    .Ancestors().First(x => x is BlockSyntax || x is ArrowExpressionClauseSyntax);
+
+                                var usagesOfVariable = scope.DescendantNodes()
+                                    .OfType<IdentifierNameSyntax>()
+                                    .Where(x => !x.Equals(identifier))
+                                    .Where(x => x.Identifier.Text == identifier.Identifier.Text)
+                                    .Where(x => semanticModel.GetSymbolInfo(x).Symbol is ILocalSymbol sym &&
+                                                sym.Equals(localSymbol))
+                                    .ToImmutableArray();
+
+                                return usagesOfVariable.All(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods);
+                            }
+                            else if (node.Parent is EqualsValueClauseSyntax equalsValueClause
+                                     && equalsValueClause.Parent is VariableDeclaratorSyntax variableDeclarator)
+                            {
+                                var variableName = variableDeclarator.Identifier.Text;
+
+                                var scope = node
+                                    .Ancestors().First(x => x is BlockSyntax || x is ArrowExpressionClauseSyntax);
+
+                                var usagesOfVariable = scope.DescendantNodes()
+                                    .OfType<IdentifierNameSyntax>()
+                                    .Where(x => x.Identifier.Text == variableName)
+                                    .Select(x => new
+                                    {
+                                        Identifier = x,
+                                        Symbol = semanticModel.GetSymbolInfo(x).Symbol as ILocalSymbol
+                                    })
+                                    .Where(x => x.Symbol != null)
+                                    .Where(x => x.Symbol.DeclaringSyntaxReferences.Length == 1 && x.Symbol.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax variableDeclarator1 && variableDeclarator1.Equals(variableDeclarator))
+                                    .Select(x => x.Identifier)
+                                    .ToImmutableArray();
+
+                                return usagesOfVariable.All(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods);
+                            }
+                            else if (node.Parent is CastExpressionSyntax castExpression)
+                            {
+                                return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(castExpression);
+                            }
+
+                            return false;
+                        }
+
+                        return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(sourceNode);
+                    }
+
+
+                    bool legalCastFromNewObjectOrParameter = false;
+
+                    if (srcPurity.HasValueEquals(PurityType.PureExceptReadLocally) &&
+                        destPurity.HasValueEquals(PurityType.Pure))
+                    {
+                        if (IsSourceNodeANewObject() || IsSourceNodeAParameter())
+                        {
+                            if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
+                                legalCastFromNewObjectOrParameter = true;
+                        }
+                    }
+                    else if (srcPurity.HasValueEquals(PurityType.PureExceptLocally) &&
+                             destPurity.HasValueIn(PurityType.Pure, PurityType.PureExceptReadLocally))
+                    {
+                        if (IsSourceNodeANewObject())
+                        {
+                            if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
+                                legalCastFromNewObjectOrParameter = true;
+                        }
+                    }
+
+                    if(!legalCastFromNewObjectOrParameter)
+                    {
+                        if (!IsGreaterOrEqaulPurity(
+                            srcPurity,
+                            destPurity))
+                        {
+                            problems.Add(destMethod);
+                        }
                     }
                 }
             }
@@ -409,7 +510,7 @@ namespace PurityAnalyzer
                     .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods, recursiveState));
         }
 
-        private bool IsParameter(ExpressionSyntax node)
+        private bool IsParameter(SyntaxNode node)
         {
             var accessedSymbol = semanticModel.GetSymbolInfo(node).Symbol;
 
@@ -461,7 +562,7 @@ namespace PurityAnalyzer
                 var sourceType = typeInfo.Type;
                 var destinationType = typeInfo.ConvertedType;
 
-                return IsImpureCast(sourceType, destinationType, recursiveState);
+                return IsImpureCast(sourceType, destinationType, recursiveState, node);
 
             }
 
@@ -760,6 +861,12 @@ namespace PurityAnalyzer
             RecursiveState recursiveState)
         {
             return IsMethodPure(method, recursiveState, PurityType.PureExceptLocally);
+        }
+
+        private bool IsAtLeastPureExceptReadLocally(IMethodSymbol method,
+            RecursiveState recursiveState)
+        {
+            return IsMethodPure(method, recursiveState, PurityType.PureExceptReadLocally);
         }
 
         private bool IsMethodPure(
