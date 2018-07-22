@@ -238,6 +238,7 @@ public static class Module1
 
         }
 
+        [Test]
         public void CallingEnumerableLinqMethodsViaQuerySyntaxAndLetUsesImpureMethodMakesMethodImpure()
         {
             string code = @"
@@ -251,7 +252,7 @@ public class IsPureAttribute : Attribute
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(int[] data)
+    public static bool DoSomething(int[] data)
     {
         var result =
             from x in data
