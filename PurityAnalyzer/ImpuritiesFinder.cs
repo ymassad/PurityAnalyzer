@@ -30,6 +30,9 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol ienumeratorType;
         private readonly INamedTypeSymbol boolType;
         private readonly INamedTypeSymbol idisposableType;
+        private readonly IMethodSymbol genericGetEnumeratorMethod;
+        private readonly INamedTypeSymbol genericIenumerableType;
+        private readonly INamedTypeSymbol genericListType;
 
         public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
@@ -50,6 +53,11 @@ namespace PurityAnalyzer
             genericIenumeratorType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IEnumerator<>).FullName);
             boolType = semanticModel.Compilation.GetTypeByMetadataName(typeof(bool).FullName);
             idisposableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IDisposable).FullName);
+
+            genericIenumerableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IEnumerable<>).FullName);
+            genericGetEnumeratorMethod = genericIenumerableType.GetMembers("GetEnumerator").OfType<IMethodSymbol>().Single(x => x.ReturnType.OriginalDefinition?.Equals(genericIenumeratorType) ?? false);
+
+            genericListType = semanticModel.Compilation.GetTypeByMetadataName(typeof(List<>).FullName);
 
             knownPureMethods = GetKnownPureMethods();
             knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
@@ -299,17 +307,43 @@ namespace PurityAnalyzer
 
                                 return usagesOfVariable.All(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods);
                             }
-                            else if (node.Parent is CastExpressionSyntax castExpression)
+                            else if (node.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Kind() == SyntaxKind.SimpleMemberAccessExpression)
                             {
-                                return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(castExpression);
+                                if (semanticModel.GetSymbolInfo(memberAccess.Name).Symbol is IMethodSymbol methodSymbol)
+                                {
+                                    if (IsAtLeastPureExceptReadLocally(methodSymbol, recursiveState))
+                                        return true;
+                                }
+                            }
+                            else if (node.Parent is ReturnStatementSyntax returnStatement)
+                            {
+                                return GetLambdaExpressionWhereReturnIsUsed(returnStatement)
+                                    .ChainValue(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods)
+                                    .ValueOr(false);
+
+                            }
+                            else if (node.Parent is LambdaExpressionSyntax lambdaExpressionSyntax)
+                            {
+                                return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(lambdaExpressionSyntax);
                             }
 
                             return false;
                         }
 
+                        if (sourceNode.Parent is CastExpressionSyntax castExpression)
+                        {
+                            return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(castExpression);
+                        }
+
                         return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(sourceNode);
                     }
 
+                    Maybe<LambdaExpressionSyntax> GetLambdaExpressionWhereReturnIsUsed(
+                        ReturnStatementSyntax returnStatement)
+                    {
+                        return returnStatement.Parent.TryCast().To<BlockSyntax>()
+                            .ChainValue(x => x.Parent.TryCast().To<LambdaExpressionSyntax>());
+                    }
 
                     bool legalCastFromNewObjectOrParameter = false;
 
@@ -353,6 +387,18 @@ namespace PurityAnalyzer
 
             Maybe<IMethodSymbol> GetMatchingMethod(IMethodSymbol method, ITypeSymbol type)
             {
+                //Arrays do not implement IEnumerable<T> except for at runtime
+                //To fix this problem, I use the implementation of the interface method of List<T>
+                if (type is IArrayTypeSymbol arrayType)
+                {
+                    if (method.ContainingType.IsGenericType &&
+                        method.ContainingType.OriginalDefinition.Equals(genericIenumerableType) &&
+                        method.OriginalDefinition.Equals(genericGetEnumeratorMethod))
+                    {
+                        return GetMatchingMethod(method, genericListType.Construct(arrayType.ElementType));
+                    }
+                }
+
                 if (method.ContainingType.TypeKind == TypeKind.Interface)
                 {
                     return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();

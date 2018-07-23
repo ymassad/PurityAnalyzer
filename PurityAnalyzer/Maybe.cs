@@ -214,5 +214,55 @@ namespace PurityAnalyzer
 
             return condition(maybe.GetValue());
         }
+
+        public static ToBeCasted<T> TryCast<T>(this T value) where T : class
+        {
+            return new ToBeCasted<T>(value);
+        }
+
+
+        public static ToBeCastedMaybe<T> TryCast<T>(this Maybe<T> maybe) where T : class
+        {
+            return new ToBeCastedMaybe<T>(maybe);
+        }
+    }
+
+    public sealed class ToBeCasted<T>
+    {
+        private T value;
+
+        public ToBeCasted(T value)
+        {
+            this.value = value;
+        }
+
+        public Maybe<TTo> To<TTo>() where TTo : class
+        {
+            var casted = value as TTo;
+
+            return casted;
+        }
+    }
+
+    public sealed class ToBeCastedMaybe<T>
+    {
+        private readonly Maybe<T> maybe;
+
+        public ToBeCastedMaybe(Maybe<T> maybe)
+        {
+            this.maybe = maybe;
+        }
+
+
+        public Maybe<TTo> To<TTo>() where TTo : class
+        {
+            if (maybe.HasNoValue)
+                return Maybe<TTo>.NoValue();
+
+            var casted = maybe.GetValue() as TTo;
+
+            return casted;
+        }
+
     }
 }

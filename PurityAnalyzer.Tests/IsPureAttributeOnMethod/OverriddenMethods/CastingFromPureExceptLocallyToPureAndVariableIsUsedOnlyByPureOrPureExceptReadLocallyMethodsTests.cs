@@ -1068,5 +1068,430 @@ public class Class1
             dignostics.Length.Should().BePositive();
 
         }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExtensionMethod_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        x.PureMethod();
+
+        return 1;
+    }
+}
+
+public static class ExtensionMethods
+{
+    public static void PureMethod(this Base x)
+    {
+
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToImpureExtensionMethod_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        x.ImpureMethod();
+
+        return 1;
+    }
+}
+
+public static class ExtensionMethods
+{
+    static int state = 0;
+    public static void ImpureMethod(this Base x)
+    {
+        state++;
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectDirectlyToPureMethod_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        PureMethod(() => new Derived());
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectStoredInVariableOfTypeBaseToPureMethod_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        PureMethod(() => x);
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureMethod_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        PureMethod(() => x);
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureMethod_AndLambdaHasABlock_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        PureMethod(() => { return x;});
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureMethod_AndLambdaHasABlockAndVariableIsAssignedToLocalVariableInLambdaOfTypeBaseAndThenReturned_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        PureMethod(() =>
+        {
+            Base y = x;
+            return y;
+        });
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureMethod_AndLambdaHasABlockAndVariableIsAssignedToLocalVariableInLambdaOfTypeDerivedAndThenReturned_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        PureMethod(() =>
+        {
+            Derived y = x;
+            return y;
+        });
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PassLambdaThatTakesAVariableThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureMethod_AndLambdaHasABlockAndVariableIsAssignedToLocalVariableInLambdaOfTypeDerivedAndThenReturned_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        PureMethod(i =>
+        {
+            Derived y = x;
+            return y;
+        });
+
+        return 1;
+    }
+
+    public static void PureMethod(Func<int,Base> func)
+    {
+
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }
