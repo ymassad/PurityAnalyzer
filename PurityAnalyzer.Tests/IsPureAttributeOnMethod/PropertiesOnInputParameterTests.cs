@@ -412,5 +412,42 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+
+        //Reading mutable input should be considered pure
+        [Test]
+        public void MethodThatReadsAnAutomaticReadWritePropertyOnLambdaParameterWhoseTypeIsDefinedInCodeIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Dto1
+{
+    public int Prop1 {get; set;} = 5;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        return Do(dto1 => dto1.Prop1);
+    }
+    
+    public static int Do(Func<Dto1,int> func)
+    {
+        return func(new Dto1());
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
