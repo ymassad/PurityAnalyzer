@@ -1493,5 +1493,61 @@ public static class Module1
 
         }
 
+        [Test]
+        public void PassLambdaThatTakesAVariableThatReturnsCastedNewObjectStoredInVariableOfTypeDerivedToPureExceptLocallyMethod_AndLambdaHasABlockAndVariableIsAssignedToLocalVariableInLambdaOfTypeDerivedAndThenReturned_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Derived x = new Derived();
+
+        var class1 = new Class1();
+
+        class1.PureExceptLocally(i =>
+        {
+            Derived y = x;
+            return y;
+        });
+
+        return 1;
+    }
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Func<int,Base> func)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }
