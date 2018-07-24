@@ -854,5 +854,92 @@ public class Class1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromNewObjectAndStoreItInFieldIndirectlyByPassingItInAndOutOfAnotherMethod_PropertyIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public class MyClass
+{
+    Base field;
+
+    [IsPureExceptLocally]
+    public int Something
+    {
+        get
+        {
+            Base x = new Derived();
+
+            field = ReturnParam(x);
+
+            return 1;
+        }
+    }
+
+    public Base ReturnParam(Base p) => p;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromNewObjectAndStoreItInFieldIndirectlyByPassingItInAndOutOfAnotherMethod_CurrentPropertyIsExpressionBodiedSet_PropertyIsNotPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public class MyClass
+{
+    Base field;
+
+    [IsPureExceptLocally]
+    public int Something
+    {
+        set => field = ReturnParam(new Derived());
+    }
+
+    public Base ReturnParam(Base p) => p;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }

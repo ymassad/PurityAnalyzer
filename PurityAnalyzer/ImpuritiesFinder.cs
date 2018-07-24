@@ -345,24 +345,43 @@ namespace PurityAnalyzer
                             .ChainValue(x => x.Parent.TryCast().To<LambdaExpressionSyntax>());
                     }
 
+                    bool CurrentMemberOrAccessorDeclarationSetsAnyField()
+                    {
+                        var currentDeclaration = GetCurrentMemberOrAccessorDeclaration(sourceNode);
+
+                        var identifiers = currentDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToArray();
+
+                        return identifiers
+                            .Select(x => new {Identifier = x, Field = semanticModel.GetSymbolInfo(x).Symbol as IFieldSymbol})
+                            .Where(x => x.Field != null)
+                            .Any(x => IsFieldWrite(x.Identifier, x.Field));
+                    }
+
                     bool legalCastFromNewObjectOrParameter = false;
+
 
                     if (srcPurity.HasValueEquals(PurityType.PureExceptReadLocally) &&
                         destPurity.HasValueEquals(PurityType.Pure))
                     {
-                        if (IsSourceNodeANewObject() || IsSourceNodeAParameter())
+                        if(!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
-                            if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
-                                legalCastFromNewObjectOrParameter = true;
+                            if (IsSourceNodeANewObject() || IsSourceNodeAParameter())
+                            {
+                                if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
+                                    legalCastFromNewObjectOrParameter = true;
+                            }
                         }
                     }
                     else if (srcPurity.HasValueEquals(PurityType.PureExceptLocally) &&
                              destPurity.HasValueIn(PurityType.Pure, PurityType.PureExceptReadLocally))
                     {
-                        if (IsSourceNodeANewObject())
+                        if (!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
-                            if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
-                                legalCastFromNewObjectOrParameter = true;
+                            if (IsSourceNodeANewObject())
+                            {
+                                if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
+                                    legalCastFromNewObjectOrParameter = true;
+                            }
                         }
                     }
 
@@ -429,6 +448,15 @@ namespace PurityAnalyzer
                 return method.OverriddenMethod.Equals(overridden) ||
                        UltimatlyOverrides(method.OverriddenMethod, overridden);
             }
+        }
+
+        public static SyntaxNode GetCurrentMemberOrAccessorDeclaration(SyntaxNode node)
+        {
+            return node.AncestorsAndSelf().First(x =>
+                x is AccessorDeclarationSyntax
+                || x is MethodDeclarationSyntax
+                || x is PropertyDeclarationSyntax
+                || x is IndexerDeclarationSyntax);
         }
 
         public static bool IsGreaterOrEqaulPurity(Maybe<PurityType> type, Maybe<PurityType> than)
@@ -702,6 +730,15 @@ namespace PurityAnalyzer
                 }
             }
         }
+
+        private bool IsFieldWrite(IdentifierNameSyntax node, IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.IsReadOnly || fieldSymbol.IsConst)
+                return false;
+
+            return Utils.GetUsage(node).IsWrite();
+        }
+
 
         private bool IsAccessingLocalField(IFieldSymbol fieldSymbol, MemberDeclarationSyntax memberThatIsTryingToAccessField)
         {

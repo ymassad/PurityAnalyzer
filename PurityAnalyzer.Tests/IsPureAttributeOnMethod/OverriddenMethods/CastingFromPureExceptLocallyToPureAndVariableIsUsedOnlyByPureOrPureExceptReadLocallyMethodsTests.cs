@@ -1548,6 +1548,5 @@ public class Class1
             dignostics.Length.Should().BePositive();
 
         }
-
     }
 }
