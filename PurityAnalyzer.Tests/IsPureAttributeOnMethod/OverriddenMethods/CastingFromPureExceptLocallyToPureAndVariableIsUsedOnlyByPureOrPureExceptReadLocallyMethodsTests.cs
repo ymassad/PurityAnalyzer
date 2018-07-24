@@ -1548,5 +1548,357 @@ public class Class1
             dignostics.Length.Should().BePositive();
 
         }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsInputAndThenPassThatToAPureExceptLocallyMethod_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        class1.PureExceptLocally(class1.ReturnSame(x));
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public Base ReturnSame(Base x) => x;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureExtensionMethodThatReturnsInputAndThenPassThatToAPureExceptLocallyMethod_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        class1.PureExceptLocally(x.ReturnSame());
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    int state = 0;
+
+    public int PureExceptLocally(Base x)
+    {
+        return state++;
+    }
+}
+
+public static class ExtensionMethods
+{
+    public static Base ReturnSame(this Base x) => x;
+
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsInputAndThenIgnoreWhatReturns_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        class1.ReturnSame(x);
+
+        return 1;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnSame(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsInputAndThenReturnThat_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static Base DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        return class1.ReturnSame(x);
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnSame(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static Base DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnSame(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnSame(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThat_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        return class1.ReturnInt(x);
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastFromNewObjectAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        Base x = new Derived();
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

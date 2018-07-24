@@ -197,6 +197,40 @@ namespace PurityAnalyzer
             }
         }
 
+        private bool IsPureData(ITypeSymbol type)
+        {
+            var pureTypes = new[]
+            {
+                SpecialType.System_Boolean,
+                SpecialType.System_Byte,
+                SpecialType.System_Char,
+                SpecialType.System_DateTime,
+                SpecialType.System_Decimal,
+                SpecialType.System_Double,
+                SpecialType.System_Int16,
+                SpecialType.System_Int32,
+                SpecialType.System_Int64,
+                SpecialType.System_UInt16,
+                SpecialType.System_UInt32,
+                SpecialType.System_Int64,
+                SpecialType.System_String,
+                SpecialType.System_SByte,
+                SpecialType.System_Single
+            };
+
+            if (pureTypes.Contains(type.SpecialType))
+                return true;
+
+            if (type is IArrayTypeSymbol array)
+                return IsPureData(array.ElementType);
+
+            return false;
+
+            //TODO: maybe I should have a special attribute for pure data
+            //TODO: include KeyValuePair, Tuple, ValueTuple
+            //TODO: include ImmutableArray and ImmutableList
+        }
+
         private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
             RecursiveState recursiveState, SyntaxNode sourceNode)
         {
@@ -252,6 +286,11 @@ namespace PurityAnalyzer
                         return IsParameter(sourceNode);
                     }
 
+                    bool IsOkAsReturnTypeFromMethodThatTakesInCastedNewObjectOrParameter(ITypeSymbol type)
+                    {
+                        return type.SpecialType == SpecialType.System_Void || IsPureData(type);
+                    }
+
                     bool IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods()
                     {
                         bool IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(SyntaxNode node)
@@ -263,8 +302,12 @@ namespace PurityAnalyzer
                                 if (semanticModel.GetSymbolInfo(invocation).Symbol is IMethodSymbol methodSymbol)
                                 {
                                     if (IsAtLeastPureExceptReadLocally(methodSymbol, recursiveState))
-                                        return true;
+                                        return
+                                            IsOkAsReturnTypeFromMethodThatTakesInCastedNewObjectOrParameter(methodSymbol.ReturnType) ||
+                                            IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(invocation);
                                 }
+
+                                return false;
                             }
                             else if (node.Parent is AssignmentExpressionSyntax assignmentExpression &&
                                      assignmentExpression.Kind() == SyntaxKind.SimpleAssignmentExpression &&
@@ -307,13 +350,18 @@ namespace PurityAnalyzer
 
                                 return usagesOfVariable.All(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods);
                             }
-                            else if (node.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Kind() == SyntaxKind.SimpleMemberAccessExpression)
+                            else if (node.Parent is MemberAccessExpressionSyntax memberAccess
+                                     && memberAccess.Kind() == SyntaxKind.SimpleMemberAccessExpression
+                                     && memberAccess.Parent is InvocationExpressionSyntax invocationExpression)
                             {
                                 if (semanticModel.GetSymbolInfo(memberAccess.Name).Symbol is IMethodSymbol methodSymbol)
                                 {
                                     if (IsAtLeastPureExceptReadLocally(methodSymbol, recursiveState))
-                                        return true;
+                                        return IsOkAsReturnTypeFromMethodThatTakesInCastedNewObjectOrParameter(methodSymbol.ReturnType) ||
+                                               IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(invocationExpression);
                                 }
+
+                                return false;
                             }
                             else if (node.Parent is ReturnStatementSyntax returnStatement)
                             {
@@ -327,7 +375,7 @@ namespace PurityAnalyzer
                                 return IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods(lambdaExpressionSyntax);
                             }
 
-                            return false;
+                            return true;
                         }
 
                         if (sourceNode.Parent is CastExpressionSyntax castExpression)
