@@ -231,6 +231,12 @@ namespace PurityAnalyzer
             //TODO: include ImmutableArray and ImmutableList
         }
 
+        private bool IsInstanceField(SyntaxNode syntaxNode)
+        {
+            return syntaxNode is IdentifierNameSyntax identifier &&
+                   semanticModel.GetSymbolInfo(identifier).Symbol is IFieldSymbol field && !field.IsStatic;
+        }
+
         private CastPurityResult IsImpureCast(ITypeSymbol sourceType, ITypeSymbol destinationType,
             RecursiveState recursiveState, SyntaxNode sourceNode)
         {
@@ -286,10 +292,30 @@ namespace PurityAnalyzer
                         return IsParameter(sourceNode);
                     }
 
+                    bool IsSourceNodeAccessToLocalState()
+                    {
+                        if (IsInstanceField(sourceNode))
+                            return true;
+
+                        if (sourceNode is MemberAccessExpressionSyntax memberAccess &&
+                            memberAccess.Kind() == SyntaxKind.SimpleMemberAccessExpression)
+                        {
+                            if (memberAccess.Name is IdentifierNameSyntax identifier && IsInstanceField(identifier))
+                            {
+                                if (IsThisExpressionOrASeriesOfFieldAccesses(memberAccess.Expression))
+                                    return true;
+                            }
+                        }
+
+                        return false;
+                    }
+
                     bool IsOkAsReturnTypeFromMethodThatTakesInCastedNewObjectOrParameter(ITypeSymbol type)
                     {
                         return type.SpecialType == SpecialType.System_Void || IsPureData(type);
                     }
+
+                    
 
                     bool IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods()
                     {
@@ -413,7 +439,7 @@ namespace PurityAnalyzer
                     {
                         if(!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
-                            if (IsSourceNodeANewObject() || IsSourceNodeAParameter())
+                            if (IsSourceNodeANewObject() || IsSourceNodeAParameter() || (IsSourceNodeAccessToLocalState() && (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)))
                             {
                                 if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
                                     legalCastFromNewObjectOrParameter = true;
@@ -425,7 +451,7 @@ namespace PurityAnalyzer
                     {
                         if (!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
-                            if (IsSourceNodeANewObject())
+                            if (IsSourceNodeANewObject() || (IsSourceNodeAccessToLocalState() && purityType == PurityType.PureExceptLocally ))
                             {
                                 if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
                                     legalCastFromNewObjectOrParameter = true;
