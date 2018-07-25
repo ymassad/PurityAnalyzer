@@ -297,13 +297,30 @@ namespace PurityAnalyzer
                         if (IsInstanceField(sourceNode))
                             return true;
 
+                        if (IsAPropertyWithAnInstancePureExceptReadLocallyGetter(sourceNode, recursiveState))
+                            return true;
+
                         if (sourceNode is MemberAccessExpressionSyntax memberAccess &&
                             memberAccess.Kind() == SyntaxKind.SimpleMemberAccessExpression)
                         {
-                            if (memberAccess.Name is IdentifierNameSyntax identifier && IsInstanceField(identifier))
+                            if (memberAccess.Name is IdentifierNameSyntax identifier)
                             {
                                 if (IsThisExpressionOrASeriesOfFieldAccesses(memberAccess.Expression))
-                                    return true;
+                                {
+                                    if (IsInstanceField(identifier))
+                                    {
+
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        if (IsAPropertyWithAnInstancePureExceptReadLocallyGetter(identifier, recursiveState))
+                                            return true;
+                                    }
+                                }
+
+                                
+
                             }
                         }
 
@@ -522,6 +539,26 @@ namespace PurityAnalyzer
                 return method.OverriddenMethod.Equals(overridden) ||
                        UltimatlyOverrides(method.OverriddenMethod, overridden);
             }
+        }
+
+        private bool IsAPropertyWithAnInstancePureExceptReadLocallyGetter(SyntaxNode syntaxNode,
+            RecursiveState recursiveState)
+        {
+            if(syntaxNode is IdentifierNameSyntax identifier)
+            {
+                if (semanticModel.GetSymbolInfo(identifier).Symbol is IPropertySymbol
+                        propertySymbol && !propertySymbol.IsStatic && propertySymbol.GetMethod != null)
+                {
+                    if (IsMethodPure(propertySymbol.GetMethod,
+                        recursiveState,
+                        PurityType.PureExceptReadLocally))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public static SyntaxNode GetCurrentMemberOrAccessorDeclaration(SyntaxNode node)

@@ -2376,5 +2376,649 @@ public class Class1
 
         }
 
+
+
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptReadLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;set;}
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptReadLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;set;}
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptReadLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingReadonlyAutomaticPropertyAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;}
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptReadLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingReadonlyAutomaticPropertyAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;}
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;set;}
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;set;}
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingReadonlyAutomaticPropertyAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;}
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingReadonlyAutomaticPropertyAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Derived localDerived {get;}
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyOnLocalFieldAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Class2 local = new Class2();    
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = local.localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+
+public class Class2
+{
+    public Derived localDerived {get;}
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyOnLocalFieldAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Class2 local = new Class2();
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = local.localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+
+public class Class2
+{
+    public Derived localDerived {get;}
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyOnLocalFieldViaThisAndPassResultToPureMethodThatReturnsAnIntegerAndThenReturnThatAfterStoringItInAVariable_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Class2 local = new Class2();    
+
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        Base x = this.local.localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInt(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public int ReturnInt(Base x) => 1;
+}
+
+public class Class2
+{
+    public Derived localDerived {get;}
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingWhereSourceIsPureExceptLocallyAndTargetIsPure_CastFromLocalMutableStateProvidedByAccessingAutomaticPropertyOnLocalFieldViaThisAndPassResultToPureMethodThatReturnsInputAndThenReturnThatAfterStoringItInAVariable_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocally : Attribute
+{
+}
+
+public class Base
+{
+    public virtual int Method() => 1;
+}
+
+public class Derived : Base
+{
+    int state = 0;
+    public override int Method() => state++;
+}
+
+
+public class MyClass
+{
+    public Class2 local = new Class2();
+
+    [IsPureExceptLocally]
+    public Base DoSomething()
+    {
+        Base x = this.local.localDerived;
+
+        Class1 class1 = new Class1();
+
+        var y = class1.ReturnInput(x);
+
+        return y;
+    }
+
+}
+
+public class Class1
+{
+    public Base ReturnInput(Base x) => x;
+}
+
+public class Class2
+{
+    public Derived localDerived {get;}
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }
