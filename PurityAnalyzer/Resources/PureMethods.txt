@@ -10,3 +10,4 @@ System.Globalization.NumberFormatInfo, get_InvariantInfo
 System.Globalization.NumberFormatInfo, GetFormat(System.Type)
 System.Linq.ImmutableArrayExtensions, All
 System.Linq.ImmutableArrayExtensions, Any
+System.ValueType, .ctor

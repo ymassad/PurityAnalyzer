@@ -224,6 +224,11 @@ namespace PurityAnalyzer
             SemanticModel semanticModel,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
+            var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
+
+            if (methodSymbol.ReturnType.IsValueType && !methodSymbol.ReturnsByRef)
+                yield break;
+
             var returnExpressions =
                 methodDeclaration.Body != null
                     ? methodDeclaration.Body

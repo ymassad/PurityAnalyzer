@@ -117,19 +117,7 @@ namespace PurityAnalyzer
 
                 if (methodSymbol != null)
                 {
-                    if (methodSymbol.ReturnType.IsValueType)
-                    {
-                        var diagnostic = Diagnostic.Create(
-                            ReturnsNewObjectRule,
-                            attribute.GetLocation(),
-                            "ReturnsNewObjectAttribute cannot be applied on methods that return value types");
-
-                        context.ReportDiagnostic(diagnostic);
-                        return;
-                    }
-
-                    ProcessNonNewObjectReturnsForMethod(context, methodDeclaration, knownReturnsNewObjectMethods);
-
+                    ProcessNonNewObjectReturnsForMethod(context, methodDeclaration, knownReturnsNewObjectMethods, methodSymbol);
                 }
             });
 
@@ -138,14 +126,10 @@ namespace PurityAnalyzer
         private void ProcessNonNewObjectReturnsForMethod(
             SyntaxNodeAnalysisContext context,
             BaseMethodDeclarationSyntax methodDeclaration,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            IMethodSymbol methodSymbol)
         {
-            var symbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
-
-            if (symbol == null)
-                return;
-
-            if (symbol.IsAbstract)
+            if (methodSymbol.IsAbstract)
                 return;
 
             foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel, knownReturnsNewObjectMethods))

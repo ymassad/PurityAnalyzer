@@ -1760,5 +1760,77 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatMutatesFieldOfValueTypeReturnedByMethodThatReturnsValueTypeNotByReference_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        var x = Create();
+        
+        x.a = 1;
+
+        return 1;
+    }
+
+    public static Struct1 Create() => new Struct1();
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatMutatesFieldOfValueTypeReturnedByMethodThatReturnsInputValueTypeByReference_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething(Struct1 input)
+    {
+        ref Struct1 x = ref ReturnByRef(ref input);
+        
+        x.a = 1;
+
+        return 1;
+    }
+
+    public static ref Struct1 ReturnByRef(ref Struct1 input) => ref input;
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

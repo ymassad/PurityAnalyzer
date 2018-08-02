@@ -7,7 +7,7 @@ namespace PurityAnalyzer.Tests.ReturnsNewObjectAttribute
     public class ReturnsNewObjectAttributeTests
     {
         [Test]
-        public void MethodWithTheReturnsNewObjectAttributeCannotBeAppliedOnMethodsThatReturnValueTypes()
+        public void MethodThatReturnsInt_ReturnsNewObject()
         {
             string code = @"
 using System;
@@ -26,7 +26,7 @@ public static class Module1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            dignostics.Length.Should().Be(0);
         }
 
         [Test]
@@ -349,6 +349,64 @@ public abstract class AbstractClass
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void AMethodThatReturnsAValueTypeNotByReference_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public int Value;
+}
+
+
+public static class MyClass
+{
+    [ReturnsNewObjectAttribute]
+    public static Struct1 DoSomething()
+    {
+        return new Struct1();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void AMethodThatReturnsAValueTypeFromInputByReference_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public int Value;
+}
+
+
+public static class MyClass
+{
+    [ReturnsNewObjectAttribute]
+    public static ref Struct1 DoSomething(ref Struct1 input)
+    {
+        return ref input;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
         }
 
     }
