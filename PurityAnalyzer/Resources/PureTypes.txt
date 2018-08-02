@@ -1,3 +1,5 @@
 System.Linq.Enumerable
 System.Linq.IGrouping`2
 System.Nullable`1
+System.Collections.Immutable.ImmutableArray`1
+System.Collections.Immutable.ImmutableArray
