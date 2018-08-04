@@ -3,7 +3,7 @@
     <Metadata>
         <Identity Id="PurityAnalyzer.4ec24b29-8678-443a-a797-44babf396127" Version="0.5" Language="en-US" Publisher="Yacoub Massad" />
         <DisplayName>PurityAnalyzer</DisplayName>
-        <Description xml:space="preserve">This is a sample diagnostic extension for the .NET Compiler Platform ("Roslyn").</Description>
+        <Description xml:space="preserve">This analyzer can help C# developers write Pure code.</Description>
         <MoreInfo>https://github.com/ymassad/PurityAnalyzer</MoreInfo>
     </Metadata>
     <Installation>
