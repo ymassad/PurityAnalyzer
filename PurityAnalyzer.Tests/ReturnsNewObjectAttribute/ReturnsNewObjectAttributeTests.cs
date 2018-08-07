@@ -1250,5 +1250,149 @@ public static class Module1
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax1_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        return new Class2[]{param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax2_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        return new []{param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax3_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        Class2[] result = {param, param};
+        return result;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsArrayContaingNewObjectReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        Class2[] result = {new Class2(), new Class2()};
+        return result;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsgMethodParameterValueTypeAsArray_Syntax3_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct2[] DoSomething(Struct2 param)
+    {
+        Struct2[] result = {param, param};
+        return result;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
     }
 }
