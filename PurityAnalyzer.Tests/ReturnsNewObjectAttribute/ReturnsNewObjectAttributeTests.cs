@@ -30,6 +30,53 @@ public static class Module1
         }
 
         [Test]
+        public void MethodThatReturnsStringLiteral_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static string DoSomething()
+    {
+        return ""hello"";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsTupleOfStringLiteralAndInt_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static (string, int) DoSomething()
+    {
+        return (""hello"", 1);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
         public void MethodThatReturnsParameterDoesNotReturnNewObject()
         {
             string code = @"
@@ -410,6 +457,37 @@ public static class MyClass
         }
 
         [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingStringLiteralReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    string str;
+    
+    public Class1(string str) => this.str = str;
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething()
+    {
+        return new Class1(""hello"");
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
         public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectDoesNotReturnNewObject()
         {
             string code = @"
@@ -689,6 +767,37 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingStringLiteralReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    string str;
+    
+    public Struct1(string str) => this.str = str;
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething()
+    {
+        return new Struct1(""hello"");
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
         }
 
 
