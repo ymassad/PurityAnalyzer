@@ -518,7 +518,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxDoesNotReturnNewObject()
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxThatSetsFieldDoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -549,6 +549,40 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
         }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxThatSetsPropertyDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class2 class2 {get;set;}
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        return new Class1() { class2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
 
         [Test]
         public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaFieldSetDoesNotReturnNewObject()
@@ -767,7 +801,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxDoesNotReturnNewObject()
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxThatSetsFieldDoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -798,6 +832,40 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
         }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxThatSetsPropertyDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Class2 class2 {get;set;}
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        return new Struct1() { class2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
 
         [Test]
         public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaFieldSetDoesNotReturnNewObject()
@@ -1016,7 +1084,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaObjectInitializationSyntaxReturnsNewObject()
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaObjectInitializationSyntaxThatSetsFieldReturnsNewObject()
         {
             string code = @"
 using System;
@@ -1047,6 +1115,40 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaObjectInitializationSyntaxThatSetsPropertyReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Struct2 struct2 {get;set;}
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        return new Struct1() { struct2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
 
         [Test]
         public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaFieldSetReturnsNewObject()
