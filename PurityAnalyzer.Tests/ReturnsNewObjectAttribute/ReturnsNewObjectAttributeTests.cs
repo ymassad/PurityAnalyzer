@@ -1547,6 +1547,39 @@ public static class Module1
         }
 
         [Test]
+        public void MethodThatReturnsgMethodParameterObjectAsArray_ElementSetLater_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        Class2[] result = new Class2[1];
+
+        result[0] = param;
+
+        return result;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
         public void MethodThatReturnsArrayContaingNewObjectReturnsNewObject()
         {
             string code = @"
@@ -1567,6 +1600,36 @@ public static class Module1
     public static Class2[] DoSomething(Class2 param)
     {
         Class2[] result = {new Class2(), new Class2()};
+        return result;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsArrayContaingNewObject_ElementSetLater_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class2[] DoSomething(Class2 param)
+    {
+        Class2[] result = new Class2[1];
+        result[0] = new Class2();
         return result;
     }
 }";
