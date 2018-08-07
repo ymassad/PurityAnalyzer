@@ -409,5 +409,846 @@ public static class MyClass
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    Class2 class2;
+    
+    public Class1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        return new Class1(param);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectIndirectlyByStoringTheObjectInAVariableDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    Class2 class2;
+    
+    public Class1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var v = new Class1(param);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectIndirectlyByStoringTheObjectInAVariableAndByStoringTheParameterInAVariableDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    Class2 class2;
+    
+    public Class1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var p = param;
+        var v = new Class1(p);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class2 class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        return new Class1() { class2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaFieldSetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class2 class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaPropertySetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class2 class2 {get;set;}
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaMethodDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class2 class2 {get;set;}
+
+    public void Set(Class2 c) => class2 = c;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.Set(param);
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Class2 class2;
+    
+    public Struct1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        return new Struct1(param);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectIndirectlyByStoringTheObjectInAVariableDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Class2 class2;
+    
+    public Struct1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        var v = new Struct1(param);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectIndirectlyByStoringTheObjectInAVariableAndByStoringTheParameterInAVariableDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Class2 class2;
+    
+    public Struct1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        var p = param;
+        var v = new Struct1(p);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaObjectInitializationSyntaxDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Class2 class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        return new Struct1() { class2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaFieldSetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Class2 class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        var obj = new Struct1();
+        obj.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaPropertySetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Class2 class2 {get;set;}
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        var obj = new Struct1();
+        obj.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectViaMethodDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Class2 class2 {get;set;}
+
+    public void Set(Class2 c) => class2 = c;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        var obj = new Struct1();
+        obj.Set(param);
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Struct2 struct2;
+    
+    public Struct1(Struct2 struct2) => this.struct2 = struct2;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        return new Struct1(param);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeIndirectlyByStoringTheObjectInAVariableReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Struct2 struct2;
+    
+    public Struct1(Struct2 struct2) => this.struct2 = struct2;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        var v = new Struct1(param);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeIndirectlyByStoringTheObjectInAVariableAndByStoringTheParameterInAVariableReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Struct2 struct2;
+    
+    public Struct1(Struct2 struct2) => this.struct2 = struct2;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        var p = param;
+        var v = new Struct1(p);
+        return v;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaObjectInitializationSyntaxReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Struct2 struct2;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        return new Struct1() { struct2 = param};
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaFieldSetReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Struct2 struct2;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        var obj = new Struct1();
+        obj.struct2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypetViaPropertySetReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Struct2 struct2 {get;set;}
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        var obj = new Struct1();
+        obj.struct2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterValueTypeViaMethodReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    public Struct2 struct2 {get;set;}
+
+    public void Set(Struct2 c) => struct2 = c;
+}
+
+public class Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Struct2 param)
+    {
+        var obj = new Struct1();
+        obj.Set(param);
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+
+        [Test]
+        public void MethodThatReturnsTupleConstructedUsingMethodParameterObjectDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static (Class2, Class2) DoSomething(Class2 param)
+    {
+        return (param, param);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsTupleConstructedUsingMethodParameterValueTypeReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+
+public struct Struct2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static (Struct2, Struct2) DoSomething(Struct2 param)
+    {
+        return (param, param);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsTupleConstructedUsingMethodParameterObjectWrappedInsideStructDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+
+public class Class2
+{
+
+}
+
+public struct Struct1
+{
+    public Class2 class2;
+}
+
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static (Struct1, Struct1) DoSomething(Class2 param)
+    {
+        return (new Struct1 { class2 = param}, new Struct1 { class2 = param});
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
