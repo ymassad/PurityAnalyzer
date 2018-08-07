@@ -107,18 +107,83 @@ namespace PurityAnalyzer
             SyntaxNode expression,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
         {
-            if (expression is ObjectCreationExpressionSyntax)
+            if (expression is LiteralExpressionSyntax)
+            {
                 return true;
+            }
 
-            if (expression is ArrayCreationExpressionSyntax)
-                return true;
+            if (expression is ObjectCreationExpressionSyntax objectCreationExpression)
+            {
+                if (objectCreationExpression
+                    .ArgumentList
+                    .Arguments.Any(arg =>
+                        !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods)))
+                {
+                    return false;
+                }
 
-            if (expression is ImplicitArrayCreationExpressionSyntax)
+                if (objectCreationExpression.Initializer != null)
+                {
+                    if (objectCreationExpression
+                        .Initializer
+                        .Expressions
+                        .OfType<AssignmentExpressionSyntax>()
+                        .Any(x =>
+                            !IsNewlyCreatedObject(semanticModel, x.Right, knownReturnsNewObjectMethods)))
+                    {
+                        return false;
+                    }
+                }
+
                 return true;
+            }
+
+            if (expression is ArrayCreationExpressionSyntax arrayCreationExpression)
+            {
+                if (arrayCreationExpression.Initializer != null)
+                {
+                    if (arrayCreationExpression
+                        .Initializer
+                        .Expressions
+                        .Any(x =>
+                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (expression is ImplicitArrayCreationExpressionSyntax arrayCreationExpression1)
+            {
+                if (arrayCreationExpression1.Initializer != null)
+                {
+                    if (arrayCreationExpression1
+                        .Initializer
+                        .Expressions
+                        .Any(x =>
+                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
 
             if (expression is InitializerExpressionSyntax initSyntax &&
                 initSyntax.Kind() == SyntaxKind.ArrayInitializerExpression)
+            {
+                if (initSyntax
+                    .Expressions
+                    .Any(x =>
+                        !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                {
+                    return false;
+                }
                 return true;
+            }
 
             if (expression is InvocationExpressionSyntax invocationExpression)
             {
