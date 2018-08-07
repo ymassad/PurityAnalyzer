@@ -11,3 +11,13 @@ System.Globalization.NumberFormatInfo, GetFormat(System.Type)
 System.Linq.ImmutableArrayExtensions, All
 System.Linq.ImmutableArrayExtensions, Any
 System.ValueType, .ctor
+System.Int32, op_Addition
+System.Int32, op_Subtraction
+System.Int32, op_LessThan
+System.Int32, op_Equality
+System.Int32, op_GreaterThan
+System.Int32, op_Modulus
+System.Int32, op_Multiply
+System.Int32, op_Division
+System.Int32, op_LessThanOrEqual
+System.Int32, op_GreaterThanOrEqual

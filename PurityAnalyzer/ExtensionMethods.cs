@@ -49,7 +49,7 @@ namespace PurityAnalyzer
 
         public static bool IsInCode(this ISymbol symbol)
         {
-            return symbol.Locations.All(x => x.IsInSource);
+            return symbol.Locations.Length > 0 && symbol.Locations.All(x => x.IsInSource);
         }
 
         public static bool IsStatic(this BaseMethodDeclarationSyntax method)

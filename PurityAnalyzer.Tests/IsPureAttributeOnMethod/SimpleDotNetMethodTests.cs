@@ -74,6 +74,15 @@ public static class Module1
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
             yield return @"var a = string.Empty";
+            yield return @"var a = 1 + 1";
+            yield return @"var a = 1 - 1";
+            yield return @"var a = 1 * 1";
+            yield return @"var a = 1 / 1";
+            yield return @"var a = 1 % 1";
+            yield return @"var a = 1 > 1";
+            yield return @"var a = 1 < 1";
+            yield return @"var a = 1 >= 1";
+            yield return @"var a = 1 <= 1";
         }
 
         public static IEnumerable<string> GetImpureCases()
