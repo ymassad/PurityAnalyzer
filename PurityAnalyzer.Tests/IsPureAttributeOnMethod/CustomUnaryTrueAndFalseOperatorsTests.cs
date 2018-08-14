@@ -186,7 +186,7 @@ public class CustomType
         }
 
         [Test]
-        public void MethodThatUsesImpureCustomTrueOperatorIsImpure()
+        public void MethodThatUsesImpureCustomTrueOperatorViaIfIsImpure()
         {
             string code = @"
 using System;
@@ -205,6 +205,49 @@ public class MyClass
         if(a)
         {
         }
+    }
+}
+
+public class CustomType
+{    
+    static int state = 0;
+    public static bool operator true(CustomType c1)
+    {
+        state++;
+        return true;
+    }
+
+    public static bool operator false(CustomType c1)
+    {
+        return true;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
+        public void MethodThatUsesImpureCustomTrueOperatorViaTernaryOperatorIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class MyClass
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        var a = new CustomType();
+
+        var b = a ? 1 : 2;
     }
 }
 
