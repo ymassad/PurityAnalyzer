@@ -121,6 +121,39 @@ namespace PurityAnalyzer
                     foreach (var impurity in GetImpurities7(forEachStatement, recursiveState))
                         yield return impurity;
                 }
+                else if (subNode is IfStatementSyntax ifStatement)
+                {
+                    if (semanticModel.GetOperation(ifStatement) is IConditionalOperation conditionalOperation)
+                    {
+                        foreach (var impurity in GetConditionalOperationImpurities(recursiveState, conditionalOperation, ifStatement))
+                            yield return impurity;
+                    }
+                }
+                else if (subNode is ConditionalExpressionSyntax conditional)
+                {
+                    if (semanticModel.GetOperation(conditional) is IConditionalOperation conditionalOperation)
+                    {
+                        foreach (var impurity in GetConditionalOperationImpurities(recursiveState, conditionalOperation, conditional))
+                            yield return impurity;
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<Impurity> GetConditionalOperationImpurities(
+            RecursiveState recursiveState,
+            IConditionalOperation conditionalOperation1,
+            SyntaxNode node)
+        {
+            if (conditionalOperation1.Condition is IUnaryOperation unaryOperation)
+            {
+                if (unaryOperation.OperatorKind == UnaryOperatorKind.True)
+                {
+                    if (!IsMethodPure(unaryOperation.OperatorMethod, recursiveState))
+                    {
+                        yield return new Impurity(node, "True operator is not pure");
+                    }
+                }
             }
         }
 
@@ -1004,9 +1037,48 @@ namespace PurityAnalyzer
             return false;
         }
 
-        private IEnumerable<Impurity> GetImpurities4(BinaryExpressionSyntax node,
+        private IEnumerable<Impurity> GetImpurities4(
+            BinaryExpressionSyntax node,
             RecursiveState recursiveState)
         {
+            if (node.OperatorToken.Kind() ==  SyntaxKind.AmpersandAmpersandToken)
+            {
+                var leftNodeType = semanticModel.GetTypeInfo(node.Left).Type;
+
+                var falseOperator = leftNodeType.GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Where(x => x.MethodKind == MethodKind.UserDefinedOperator)
+                    .Where(x => x.Name == "op_False")
+                    .FirstOrNoValue();
+
+                if (falseOperator.HasValue)
+                {
+                    if (!IsMethodPure(falseOperator.GetValue(), recursiveState))
+                    {
+                        yield return new Impurity(node, "False operator is impure");
+                    }
+                }
+            }
+
+            if (node.OperatorToken.Kind() == SyntaxKind.BarBarToken)
+            {
+                var leftNodeType = semanticModel.GetTypeInfo(node.Left).Type;
+
+                var falseOperator = leftNodeType.GetMembers()
+                    .OfType<IMethodSymbol>()
+                    .Where(x => x.MethodKind == MethodKind.UserDefinedOperator)
+                    .Where(x => x.Name == "op_True")
+                    .FirstOrNoValue();
+
+                if (falseOperator.HasValue)
+                {
+                    if (!IsMethodPure(falseOperator.GetValue(), recursiveState))
+                    {
+                        yield return new Impurity(node, "True operator is impure");
+                    }
+                }
+            }
+
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
                 if (!IsMethodPure(method, recursiveState))
