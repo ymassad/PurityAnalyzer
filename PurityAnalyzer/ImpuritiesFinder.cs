@@ -96,6 +96,16 @@ namespace PurityAnalyzer
                     foreach (var impurity in GetImpurities4(binaryExpression, recursiveState))
                         yield return impurity;
                 }
+                else if (subNode is PrefixUnaryExpressionSyntax prefixUnaryExpression)
+                {
+                    foreach (var impurity in GetImpurities8(prefixUnaryExpression, recursiveState))
+                        yield return impurity;
+                }
+                else if (subNode is PostfixUnaryExpressionSyntax postfixUnaryExpression)
+                {
+                    foreach (var impurity in GetImpurities9(postfixUnaryExpression, recursiveState))
+                        yield return impurity;
+                }
                 else if (subNode is AssignmentExpressionSyntax assignmentExpression)
                 {
                     foreach (var impurity in GetImpurities5(assignmentExpression, recursiveState))
@@ -110,6 +120,28 @@ namespace PurityAnalyzer
                 {
                     foreach (var impurity in GetImpurities7(forEachStatement, recursiveState))
                         yield return impurity;
+                }
+            }
+        }
+
+        private IEnumerable<Impurity> GetImpurities8(PrefixUnaryExpressionSyntax node, RecursiveState recursiveState)
+        {
+            if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
+            {
+                if (!IsMethodPure(method, recursiveState))
+                {
+                    yield return new Impurity(node, "Operator is impure");
+                }
+            }
+        }
+
+        private IEnumerable<Impurity> GetImpurities9(PostfixUnaryExpressionSyntax node, RecursiveState recursiveState)
+        {
+            if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
+            {
+                if (!IsMethodPure(method, recursiveState))
+                {
+                    yield return new Impurity(node, "Operator is impure");
                 }
             }
         }

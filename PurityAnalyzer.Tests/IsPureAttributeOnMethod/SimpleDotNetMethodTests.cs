@@ -83,6 +83,13 @@ public static class Module1
             yield return @"var a = 1 < 1";
             yield return @"var a = 1 >= 1";
             yield return @"var a = 1 <= 1";
+            yield return @"var b = 1; var a = -b";
+            yield return @"var b = 1; var a = +b";
+            yield return @"var b = 1; var a = --b";
+            yield return @"var b = 1; var a = ++b";
+            yield return @"var b = 1; var a = b++";
+            yield return @"var b = 1; var a = b--";
+            yield return @"var b = 1; var a = ~b";
         }
 
         public static IEnumerable<string> GetImpureCases()

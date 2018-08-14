@@ -21,3 +21,8 @@ System.Int32, op_Multiply
 System.Int32, op_Division
 System.Int32, op_LessThanOrEqual
 System.Int32, op_GreaterThanOrEqual
+System.Int32, op_Increment
+System.Int32, op_Decrement
+System.Int32, op_UnaryPlus
+System.Int32, op_UnaryNegation
+System.Int32, op_OnesComplement
