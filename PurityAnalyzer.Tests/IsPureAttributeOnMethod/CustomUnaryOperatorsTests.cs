@@ -11,7 +11,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
     [TestFixture]
     public class CustomUnaryOperatorsTests
     {
-        [TestCaseSource(nameof(GetCases))]
+        [TestCaseSource(nameof(GetPrefixCases))]
         public void PureCustomUnaryOperatorMethodIsConsideredPure(string op)
         {
             string code = @"
@@ -36,7 +36,7 @@ public class CustomType
 
         }
 
-        [TestCaseSource(nameof(GetCases))]
+        [TestCaseSource(nameof(GetPrefixCases))]
         public void ImpureCustomUnaryOperatorMethodIsConsideredImpure(string op)
         {
             string code = $@"
@@ -64,7 +64,7 @@ public class CustomType
 
         }
 
-        [TestCaseSource(nameof(GetCases))]
+        [TestCaseSource(nameof(GetPrefixCases))]
         public void MethodThatUsesPureCustomUnaryOperator_Prefix_IsPure(string op)
         {
             string code = $@"
@@ -98,7 +98,7 @@ public class CustomType
 
         }
 
-        [TestCaseSource(nameof(GetCases))]
+        [TestCaseSource(nameof(GetPrefixCases))]
         public void MethodThatUsesImpureCustomUnaryOperator_Prefix_IsImpure(string op)
         {
             string code = $@"
@@ -135,7 +135,7 @@ public class CustomType
 
         }
 
-        [TestCaseSource(nameof(GetCases2))]
+        [TestCaseSource(nameof(GetPostfixCases))]
         public void MethodThatUsesPureCustomUnaryOperator_Postfix_IsPure(string op)
         {
             string code = $@"
@@ -169,7 +169,7 @@ public class CustomType
 
         }
 
-        [TestCaseSource(nameof(GetCases2))]
+        [TestCaseSource(nameof(GetPostfixCases))]
         public void MethodThatUsesImpureCustomUnaryOperator_Postfix_IsImpure(string op)
         {
             string code = $@"
@@ -207,7 +207,7 @@ public class CustomType
         }
 
 
-        private static IEnumerable<string> GetCases()
+        private static IEnumerable<string> GetPrefixCases()
         {
             yield return "+";
             yield return "-";
@@ -217,7 +217,7 @@ public class CustomType
             yield return "~";
         }
 
-        private static IEnumerable<string> GetCases2()
+        private static IEnumerable<string> GetPostfixCases()
         {
             yield return "--";
             yield return "++";
