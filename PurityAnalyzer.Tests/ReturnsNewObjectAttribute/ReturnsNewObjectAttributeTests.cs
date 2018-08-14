@@ -1823,6 +1823,51 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatReturnsIntVariableNegated_ReturnsNewObject()
+        {
+            string code = @"
+using System;
 
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static int DoSomething()
+    {
+        var a = 1;
+        return -a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsMultiplicationOfInts_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static int DoSomething()
+    {
+        return 1 * 6;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
     }
 }

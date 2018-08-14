@@ -237,31 +237,46 @@ namespace PurityAnalyzer
                 }
             }
 
-            if (!(expression is IdentifierNameSyntax identifier))
-                return false;
+            if (expression is IdentifierNameSyntax identifier)
+            {
+                var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
 
-            var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
+                if (identifierSymbol is ILocalSymbol local)
+                {
+                    var methodBody =
+                        expression
+                            .Ancestors()
+                            .OfType<MethodDeclarationSyntax>()
+                            .FirstOrNoValue()
+                            .ChainValue(x => x.Body)
+                            .ValueOrMaybe(() =>
+                                expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue()
+                                    .ChainValue(x => x.Body));
 
-            if (!(identifierSymbol is ILocalSymbol local))
-                return false;
+                    if (methodBody.HasNoValue)
+                        return false;
 
-            var methodBody =
-                expression
-                    .Ancestors()
-                    .OfType<MethodDeclarationSyntax>()
-                    .FirstOrNoValue()
-                    .ChainValue(x => x.Body)
-                    .ValueOrMaybe(() => expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue().ChainValue(x => x.Body));
+                    var valuesInjectedIntoObject =
+                        GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue());
 
-            if (methodBody.HasNoValue)
-                return false;
+                    if (!valuesInjectedIntoObject.All(x =>
+                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                        return false;
 
-            var valuesInjectedIntoObject = GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue());
+                    return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x =>
+                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+                }
+            }
 
-            if (!valuesInjectedIntoObject.All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
-                return false;
+            if (semanticModel.GetTypeInfo(expression).Type is ITypeSymbol type)
+            {
+                if (IsCompleteValueType(type))
+                {
+                    return true;
+                }
+            }
 
-            return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+            return false;
         }
 
         public static List<ExpressionSyntax> GetValuesPossiblyInjectedInto(
