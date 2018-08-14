@@ -698,6 +698,127 @@ public static class Module1
         }
 
         [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaTwoLevelFieldSetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class3 class3;
+}
+
+public class Class2
+{
+
+}
+
+public class Class3
+{
+    public Class2 class2;
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.class3.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaTwoLevelFieldThenPropertySetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class3 class3;
+}
+
+public class Class2
+{
+
+}
+
+public class Class3
+{
+    public Class2 class2 {get;set;}
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.class3.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaTwoLevelPropertyThenFieldSetDoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public Class3 class3 {get;set;}
+}
+
+public class Class2
+{
+
+}
+
+public class Class3
+{
+    public Class2 class2;
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Class1 DoSomething(Class2 param)
+    {
+        var obj = new Class1();
+        obj.class3.class2 = param;
+        return obj;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
         public void MethodThatReturnsNewObjectConstructedUsingMethodParameterObjectViaPropertySetDoesNotReturnNewObject()
         {
             string code = @"
@@ -1462,7 +1583,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax1_DoesNotReturnNewObject()
+        public void MethodThatReturnsMethodParameterObjectAsArray_Syntax1_DoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -1490,7 +1611,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax2_DoesNotReturnNewObject()
+        public void MethodThatReturnsMethodParameterObjectAsArray_Syntax2_DoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -1518,7 +1639,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsgMethodParameterObjectAsArray_Syntax3_DoesNotReturnNewObject()
+        public void MethodThatReturnsMethodParameterObjectAsArray_Syntax3_DoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -1547,7 +1668,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsgMethodParameterObjectAsArray_ElementSetLater_DoesNotReturnNewObject()
+        public void MethodThatReturnsMethodParameterObjectAsArray_ElementSetLater_DoesNotReturnNewObject()
         {
             string code = @"
 using System;
@@ -1639,7 +1760,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReturnsgMethodParameterValueTypeAsArray_Syntax3_ReturnsNewObject()
+        public void MethodThatReturnsMethodParameterValueTypeAsArray_Syntax3_ReturnsNewObject()
         {
             string code = @"
 using System;

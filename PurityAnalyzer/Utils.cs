@@ -243,7 +243,52 @@ namespace PurityAnalyzer
             if (methodBody.HasNoValue)
                 return false;
 
+            var valuesInjectedIntoObject = GetValuesInjectedInto(semanticModel, local, methodBody.GetValue());
+
+            if (!valuesInjectedIntoObject.All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                return false;
+
             return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+        }
+
+        public static List<ExpressionSyntax> GetValuesInjectedInto(
+            SemanticModel semanticModel,
+            ILocalSymbol variable,
+            SyntaxNode containingBlockNode)
+        {
+            var usages = containingBlockNode
+                .DescendantNodes()
+                .OfType<IdentifierNameSyntax>()
+                .Where(x => x.Identifier.Text == variable.Name)
+                .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(variable) ?? false)
+                .Select(x => x.Parent)
+                .OfType<MemberAccessExpressionSyntax>()
+                .ToList();
+
+            List<ExpressionSyntax> result = new List<ExpressionSyntax>();
+
+            void Handle(MemberAccessExpressionSyntax usage)
+            {
+                if (usage.Parent is AssignmentExpressionSyntax assignment)
+                {
+                    result.Add(assignment.Right);
+                }
+                else if (usage.Parent is InvocationExpressionSyntax invocation)
+                {
+                    result.AddRange(invocation.ArgumentList.Arguments.Select(x => x.Expression));
+                }
+                else if (usage.Parent is MemberAccessExpressionSyntax memberAccess)
+                {
+                    Handle(memberAccess);
+                }
+            }
+
+            foreach (var usage in usages)
+            {
+                Handle(usage);
+            }
+
+            return result;
         }
 
         public static List<ExpressionSyntax> FindValuesAssignedToVariable(
