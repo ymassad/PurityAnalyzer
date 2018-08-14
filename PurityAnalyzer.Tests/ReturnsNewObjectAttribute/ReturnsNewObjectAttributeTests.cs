@@ -921,6 +921,41 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatReturnsNewValueTypeConstructedUsingNewObjectReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public struct Struct1
+{
+    Class2 class2;
+    
+    public Struct1(Class2 class2) => this.class2 = class2;
+}
+
+public class Class2
+{
+
+}
+
+public static class Module1
+{
+    [ReturnsNewObject]
+    public static Struct1 DoSomething(Class2 param)
+    {
+        return new Struct1(new Class2());
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
 
         [Test]
         public void MethodThatReturnsNewValueTypeConstructedUsingMethodParameterObjectDoesNotReturnNewObject()
@@ -1222,7 +1257,7 @@ public struct Struct1
     public Struct1(Struct2 struct2) => this.struct2 = struct2;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1257,7 +1292,7 @@ public struct Struct1
     public Struct1(Struct2 struct2) => this.struct2 = struct2;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1293,7 +1328,7 @@ public struct Struct1
     public Struct1(Struct2 struct2) => this.struct2 = struct2;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1328,7 +1363,7 @@ public struct Struct1
     public Struct2 struct2;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1361,7 +1396,7 @@ public struct Struct1
     public Struct2 struct2 {get;set;}
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1395,7 +1430,7 @@ public struct Struct1
     public Struct2 struct2;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1430,7 +1465,7 @@ public struct Struct1
     public Struct2 struct2 {get;set;}
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }
@@ -1467,7 +1502,7 @@ public struct Struct1
     public void Set(Struct2 c) => struct2 = c;
 }
 
-public class Struct2
+public struct Struct2
 {
 
 }

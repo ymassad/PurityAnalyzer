@@ -112,15 +112,28 @@ namespace PurityAnalyzer
                 return true;
             }
 
+            if (expression is TupleExpressionSyntax tuple)
+            {
+                return tuple.Arguments
+                    .Select(x => x.Expression)
+                    .All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+            }
+
+
             if (expression is ObjectCreationExpressionSyntax objectCreationExpression)
             {
                 if (objectCreationExpression
-                    .ArgumentList
-                    .Arguments.Any(arg =>
-                        !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods)))
+                        .ArgumentList != null)
                 {
-                    return false;
+                    if (objectCreationExpression
+                        .ArgumentList
+                        .Arguments.Any(arg =>
+                            !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods)))
+                    {
+                        return false;
+                    }
                 }
+
 
                 if (objectCreationExpression.Initializer != null)
                 {
@@ -243,7 +256,7 @@ namespace PurityAnalyzer
             if (methodBody.HasNoValue)
                 return false;
 
-            var valuesInjectedIntoObject = GetValuesInjectedInto(semanticModel, local, methodBody.GetValue());
+            var valuesInjectedIntoObject = GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue());
 
             if (!valuesInjectedIntoObject.All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
                 return false;
@@ -251,7 +264,7 @@ namespace PurityAnalyzer
             return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
         }
 
-        public static List<ExpressionSyntax> GetValuesInjectedInto(
+        public static List<ExpressionSyntax> GetValuesPossiblyInjectedInto(
             SemanticModel semanticModel,
             ILocalSymbol variable,
             SyntaxNode containingBlockNode)
@@ -262,12 +275,11 @@ namespace PurityAnalyzer
                 .Where(x => x.Identifier.Text == variable.Name)
                 .Where(x => semanticModel.GetSymbolInfo(x).Symbol?.Equals(variable) ?? false)
                 .Select(x => x.Parent)
-                .OfType<MemberAccessExpressionSyntax>()
                 .ToList();
 
             List<ExpressionSyntax> result = new List<ExpressionSyntax>();
 
-            void Handle(MemberAccessExpressionSyntax usage)
+            void HandleMemberAccess(MemberAccessExpressionSyntax usage)
             {
                 if (usage.Parent is AssignmentExpressionSyntax assignment)
                 {
@@ -279,13 +291,23 @@ namespace PurityAnalyzer
                 }
                 else if (usage.Parent is MemberAccessExpressionSyntax memberAccess)
                 {
-                    Handle(memberAccess);
+                    HandleMemberAccess(memberAccess);
                 }
             }
 
             foreach (var usage in usages)
             {
-                Handle(usage);
+                if (usage is MemberAccessExpressionSyntax memberAccess)
+                {
+                    HandleMemberAccess(memberAccess);
+                }
+                else if (usage is ElementAccessExpressionSyntax elementAccess)
+                {
+                    if (elementAccess.Parent is AssignmentExpressionSyntax assignment)
+                    {
+                        result.Add(assignment.Right);
+                    }
+                }
             }
 
             return result;
@@ -329,6 +351,18 @@ namespace PurityAnalyzer
             return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownReturnsNewObjectMethods).Any();
         }
 
+        public static bool IsCompleteValueType(ITypeSymbol type)
+        {
+            if (!type.IsValueType)
+                return false;
+
+            return type.GetMembers()
+                .OfType<IFieldSymbol>()
+                .Where(x => !x.IsStatic)
+                .Select(x => x.Type)
+                .All(IsCompleteValueType);
+        }
+
         public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForMethod(
             BaseMethodDeclarationSyntax methodDeclaration,
             SemanticModel semanticModel,
@@ -336,7 +370,7 @@ namespace PurityAnalyzer
         {
             var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
 
-            if (methodSymbol.ReturnType.IsValueType && !methodSymbol.ReturnsByRef)
+            if (!methodSymbol.ReturnsByRef && IsCompleteValueType(methodSymbol.ReturnType))
                 yield break;
 
             var returnExpressions =
