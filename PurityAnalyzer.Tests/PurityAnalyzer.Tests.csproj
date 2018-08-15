@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CustomComparisonOperatorsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomUnaryTrueAndFalseOperatorsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomUnaryOperatorsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomEnumerableTests.cs" />
