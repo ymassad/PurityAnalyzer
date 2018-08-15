@@ -26,3 +26,17 @@ System.Int32, op_Decrement
 System.Int32, op_UnaryPlus
 System.Int32, op_UnaryNegation
 System.Int32, op_OnesComplement
+System.UInt32, op_Addition
+System.UInt32, op_Subtraction
+System.UInt32, op_LessThan
+System.UInt32, op_Equality
+System.UInt32, op_GreaterThan
+System.UInt32, op_Modulus
+System.UInt32, op_Multiply
+System.UInt32, op_Division
+System.UInt32, op_LessThanOrEqual
+System.UInt32, op_GreaterThanOrEqual
+System.UInt32, op_Increment
+System.UInt32, op_Decrement
+System.UInt32, op_UnaryPlus
+System.UInt32, op_OnesComplement
