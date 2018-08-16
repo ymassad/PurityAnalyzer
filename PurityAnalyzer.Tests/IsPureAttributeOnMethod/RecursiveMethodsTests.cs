@@ -495,5 +495,102 @@ public class Class1
 
         }
 
+        //The recursion here is related to detecting whether i represents a new object
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingEqualsOnAnIntVariablePassingTheIntVariableItselfAsAParameterIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static bool DoSomething()
+    {
+        int i = 1;
+
+        return i.Equals(i);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //The recursion here is related to detecting whether i represents a new object
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingDefinedEqualsMethodOnAnClassVariablePassingTheClassVariableItselfAsAParameterIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public bool Equals(object obj) => false;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static bool DoSomething()
+    {
+        Class1 i = new Class1();
+
+        return i.Equals(i);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //The recursion here is related to detecting whether i represents a new object
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingDefinedEqualsMethodOnAnClassVariablePassingTheClassVariableItselfAsAParameterInDirectlyByWrappingItInAnotherInstanceIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public bool Equals(object obj) => false;
+
+    public Class1 wrapped;
+
+    public class Class1(Class1 c) => wrapper = c;
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static bool DoSomething()
+    {
+        Class1 i = new Class1();
+
+        return i.Equals(new Class1(i));
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

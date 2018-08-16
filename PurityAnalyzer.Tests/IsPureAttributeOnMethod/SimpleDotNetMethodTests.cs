@@ -208,6 +208,79 @@ public static class Module1
             yield return @"var a = 1ul; a <<= 1";
             yield return @"var a = 1ul; a >>= 1";
             yield return @"var a = 1ul; a ^= 1ul";
+
+
+
+            yield return @"short s = 1; var a = s + s";
+            yield return @"short s = 1; var a = s - s";
+            yield return @"short s = 1; var a = s * s";
+            yield return @"short s = 1; var a = s / s";
+            yield return @"short s = 1; var a = s % s";
+            yield return @"short s = 1; var a = s > s";
+            yield return @"short s = 1; var a = s < s";
+            yield return @"short s = 1; var a = s >= s";
+            yield return @"short s = 1; var a = s <= s";
+            yield return @"short s = 1; var a = s == s";
+            yield return @"short s = 1; var a = s != s";
+            yield return @"short s = 1; var a = s.Equals(s)";
+            yield return @"short s = 1; var a = -s";
+            yield return @"short s = 1; var a = +s";
+            yield return @"short s = 1; var a = --s";
+            yield return @"short s = 1; var a = ++s";
+            yield return @"short s = 1; var a = s++";
+            yield return @"short s = 1; var a = s--";
+            yield return @"short s = 1; var a = ~s";
+            yield return @"short s = 1; var a = s >> 1";
+            yield return @"short s = 1; var a = s << 1";
+            yield return @"short s = 1; var a = s & s";
+            yield return @"short s = 1; var a = s ^ s";
+            yield return @"short s = 1; var a = s | s";
+            yield return @"short s = 1; var a = s; a += s";
+            yield return @"short s = 1; var a = s; a *= s";
+            yield return @"short s = 1; var a = s; a /= s";
+            yield return @"short s = 1; var a = s; a %= s";
+            yield return @"short s = 1; var a = s; a -= s";
+            yield return @"short s = 1; var a = s; a &= s";
+            yield return @"short s = 1; var a = s; a |= s";
+            yield return @"short a = 1; a <<= 1";
+            yield return @"short a = 1; a >>= 1";
+            yield return @"short s = 1; var a = s; a ^= s";
+
+
+            yield return @"ushort s = 1; var a = s + s";
+            yield return @"ushort s = 1; var a = s - s";
+            yield return @"ushort s = 1; var a = s * s";
+            yield return @"ushort s = 1; var a = s / s";
+            yield return @"ushort s = 1; var a = s % s";
+            yield return @"ushort s = 1; var a = s > s";
+            yield return @"ushort s = 1; var a = s < s";
+            yield return @"ushort s = 1; var a = s >= s";
+            yield return @"ushort s = 1; var a = s <= s";
+            yield return @"ushort s = 1; var a = s == s";
+            yield return @"ushort s = 1; var a = s != s";
+            yield return @"ushort s = 1; var a = s.Equals(s)";
+            yield return @"ushort s = 1; var a = -s";
+            yield return @"ushort s = 1; var a = +s";
+            yield return @"ushort s = 1; var a = --s";
+            yield return @"ushort s = 1; var a = ++s";
+            yield return @"ushort s = 1; var a = s++";
+            yield return @"ushort s = 1; var a = s--";
+            yield return @"ushort s = 1; var a = ~s";
+            yield return @"ushort s = 1; var a = s >> 1";
+            yield return @"ushort s = 1; var a = s << 1";
+            yield return @"ushort s = 1; var a = s & s";
+            yield return @"ushort s = 1; var a = s ^ s";
+            yield return @"ushort s = 1; var a = s | s";
+            yield return @"ushort s = 1; var a = s; a += s";
+            yield return @"ushort s = 1; var a = s; a *= s";
+            yield return @"ushort s = 1; var a = s; a /= s";
+            yield return @"ushort s = 1; var a = s; a %= s";
+            yield return @"ushort s = 1; var a = s; a -= s";
+            yield return @"ushort s = 1; var a = s; a &= s";
+            yield return @"ushort s = 1; var a = s; a |= s";
+            yield return @"ushort a = 1; a <<= 1";
+            yield return @"ushort a = 1; a >>= 1";
+            yield return @"ushort s = 1; var a = s; a ^= s";
         }
 
         public static IEnumerable<string> GetImpureCases()

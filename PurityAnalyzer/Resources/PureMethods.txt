@@ -97,3 +97,9 @@ System.UInt64, op_BitwiseOr
 System.UInt64, op_ExclusiveOr
 System.UInt64, op_RightShift
 System.UInt64, op_LeftShift
+System.Int16, op_Increment
+System.Int16, op_Decrement
+System.Int16, Equals
+System.UInt16, op_Increment
+System.UInt16, op_Decrement
+System.UInt16, Equals

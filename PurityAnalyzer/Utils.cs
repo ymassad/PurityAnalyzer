@@ -243,6 +243,9 @@ namespace PurityAnalyzer
 
                 if (identifierSymbol is ILocalSymbol local)
                 {
+                    if (IsCompleteValueType(local.Type))
+                        return true;
+
                     var methodBody =
                         expression
                             .Ancestors()
