@@ -28,6 +28,11 @@ System.Int32, op_UnaryNegation
 System.Int32, op_OnesComplement
 System.Int32, op_Inequality
 System.Int32, Equals
+System.Int32, op_BitwiseAnd
+System.Int32, op_BitwiseOr
+System.Int32, op_ExclusiveOr
+System.Int32, op_RightShift
+System.Int32, op_LeftShift
 System.UInt32, op_Addition
 System.UInt32, op_Subtraction
 System.UInt32, op_LessThan
@@ -44,6 +49,11 @@ System.UInt32, op_UnaryPlus
 System.UInt32, op_OnesComplement
 System.UInt32, op_Inequality
 System.UInt32, Equals
+System.UInt32, op_BitwiseAnd
+System.UInt32, op_BitwiseOr
+System.UInt32, op_ExclusiveOr
+System.UInt32, op_RightShift
+System.UInt32, op_LeftShift
 System.Int64, op_Addition
 System.Int64, op_Subtraction
 System.Int64, op_LessThan
@@ -61,6 +71,11 @@ System.Int64, op_UnaryNegation
 System.Int64, op_OnesComplement
 System.Int64, op_Inequality
 System.Int64, Equals
+System.Int64, op_BitwiseAnd
+System.Int64, op_BitwiseOr
+System.Int64, op_ExclusiveOr
+System.Int64, op_RightShift
+System.Int64, op_LeftShift
 System.UInt64, op_Addition
 System.UInt64, op_Subtraction
 System.UInt64, op_LessThan
@@ -77,3 +92,8 @@ System.UInt64, op_UnaryPlus
 System.UInt64, op_OnesComplement
 System.UInt64, op_Inequality
 System.UInt64, Equals
+System.UInt64, op_BitwiseAnd
+System.UInt64, op_BitwiseOr
+System.UInt64, op_ExclusiveOr
+System.UInt64, op_RightShift
+System.UInt64, op_LeftShift
