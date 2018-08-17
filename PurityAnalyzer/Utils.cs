@@ -244,7 +244,7 @@ namespace PurityAnalyzer
 
                 if (identifierSymbol is ILocalSymbol local)
                 {
-                    if (IsCompleteValueType(local.Type))
+                    if (!local.IsRef && IsCompleteValueType(local.Type))
                         return true;
 
                     if (recursiveState.VariablesUnderTest.Contains(local))
