@@ -571,7 +571,7 @@ public class Class1
 
     public Class1 wrapped;
 
-    public class Class1(Class1 c) => wrapper = c;
+    public Class1(Class1 c) => wrapped = c;
 
 }
 
@@ -583,6 +583,80 @@ public static class Module1
         Class1 i = new Class1();
 
         return i.Equals(new Class1(i));
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+
+        //The recursion here is related to detecting whether i represents a new object
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingDefinedEqualsMethodOnAnClassVariableReferingToParameterPassingTheClassVariableItselfAsAParameterInDirectlyByWrappingItInAnotherInstanceIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public bool Equals(object obj) => false;
+
+    public Class1 wrapped;
+
+    public Class1(Class1 c) => wrapped = c;
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static bool DoSomething(Class1 p)
+    {
+        Class1 i = p;
+
+        return i.Equals(new Class1(i));
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        //The recursion here is related to detecting whether p represents a new object
+        [Test]
+        public void MethodThatReturnsTheResultOfCallingDefinedEqualsMethodOnAnClassParameterPassingTheClassParameterItselfAsAParameterInDirectlyByWrappingItInAnotherInstanceIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public bool Equals(object obj) => false;
+
+    public Class1 wrapped;
+
+    public Class1(Class1 c) => wrapped = c;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static bool DoSomething(Class1 p)
+    {
+        return p.Equals(new Class1(p));
     }
 
 }";
