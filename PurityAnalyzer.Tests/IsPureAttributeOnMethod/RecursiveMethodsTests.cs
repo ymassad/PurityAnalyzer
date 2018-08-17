@@ -580,7 +580,7 @@ public static class Module1
     [IsPure]
     public static bool DoSomething()
     {
-        Class1 i = new Class1();
+        Class1 i = new Class1(null);
 
         return i.Equals(new Class1(i));
     }

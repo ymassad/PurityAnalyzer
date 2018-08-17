@@ -105,7 +105,8 @@ namespace PurityAnalyzer
         public static bool IsNewlyCreatedObject(
             SemanticModel semanticModel,
             SyntaxNode expression,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            RecursiveIsNewlyCreatedObjectState recursiveState)
         {
             if (expression is LiteralExpressionSyntax)
             {
@@ -116,7 +117,7 @@ namespace PurityAnalyzer
             {
                 return tuple.Arguments
                     .Select(x => x.Expression)
-                    .All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+                    .All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState));
             }
 
 
@@ -128,7 +129,7 @@ namespace PurityAnalyzer
                     if (objectCreationExpression
                         .ArgumentList
                         .Arguments.Any(arg =>
-                            !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods)))
+                            !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods, recursiveState)))
                     {
                         return false;
                     }
@@ -142,7 +143,7 @@ namespace PurityAnalyzer
                         .Expressions
                         .OfType<AssignmentExpressionSyntax>()
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x.Right, knownReturnsNewObjectMethods)))
+                            !IsNewlyCreatedObject(semanticModel, x.Right, knownReturnsNewObjectMethods, recursiveState)))
                     {
                         return false;
                     }
@@ -159,7 +160,7 @@ namespace PurityAnalyzer
                         .Initializer
                         .Expressions
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
                     {
                         return false;
                     }
@@ -176,7 +177,7 @@ namespace PurityAnalyzer
                         .Initializer
                         .Expressions
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
                     {
                         return false;
                     }
@@ -191,7 +192,7 @@ namespace PurityAnalyzer
                 if (initSyntax
                     .Expressions
                     .Any(x =>
-                        !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                        !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
                 {
                     return false;
                 }
@@ -246,6 +247,9 @@ namespace PurityAnalyzer
                     if (IsCompleteValueType(local.Type))
                         return true;
 
+                    if (recursiveState.VariablesUnderTest.Contains(local))
+                        return true;
+
                     var methodBody =
                         expression
                             .Ancestors()
@@ -263,11 +267,11 @@ namespace PurityAnalyzer
                         GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue());
 
                     if (!valuesInjectedIntoObject.All(x =>
-                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods)))
+                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState.Add(local))))
                         return false;
 
                     return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x =>
-                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods));
+                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState.Add(local)));
                 }
             }
 
@@ -402,7 +406,7 @@ namespace PurityAnalyzer
 
             foreach (var expression in returnExpressions)
             {
-                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownReturnsNewObjectMethods))
+                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty()))
                 {
                     yield return expression;
                 }
@@ -664,7 +668,7 @@ namespace PurityAnalyzer
                 {
                     return IsOnNewlyCreatedObject(elementAccess1.Expression);
                 }
-                return Utils.IsNewlyCreatedObject(semanticModel, exp, knownReturnsNewObjectMethods);
+                return Utils.IsNewlyCreatedObject(semanticModel, exp, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty());
             }
 
             if (node.Parent is MemberAccessExpressionSyntax memberAccess)

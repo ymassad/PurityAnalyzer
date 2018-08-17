@@ -349,7 +349,7 @@ namespace PurityAnalyzer
 
                     bool IsSourceNodeANewObject()
                     {
-                        return Utils.IsNewlyCreatedObject(semanticModel, sourceNode, knownReturnsNewObjectMethods);
+                        return Utils.IsNewlyCreatedObject(semanticModel, sourceNode, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty());
                     }
 
                     bool IsSourceNodeAParameter()
