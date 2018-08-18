@@ -103,3 +103,12 @@ System.Int16, Equals
 System.UInt16, op_Increment
 System.UInt16, op_Decrement
 System.UInt16, Equals
+System.Char, op_Increment
+System.Char, op_Decrement
+System.Char, Equals
+System.Byte, op_Increment
+System.Byte, op_Decrement
+System.Byte, Equals
+System.SByte, op_Increment
+System.SByte, op_Decrement
+System.SByte, Equals

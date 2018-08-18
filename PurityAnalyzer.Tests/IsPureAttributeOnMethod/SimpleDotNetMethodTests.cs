@@ -281,6 +281,115 @@ public static class Module1
             yield return @"ushort a = 1; a <<= 1";
             yield return @"ushort a = 1; a >>= 1";
             yield return @"ushort s = 1; var a = s; a ^= s";
+
+
+            yield return @"var a = 'a' + 'a'";
+            yield return @"var a = 'a' - 'a'";
+            yield return @"var a = 'a' * 'a'";
+            yield return @"var a = 'a' / 'a'";
+            yield return @"var a = 'a' % 'a'";
+            yield return @"var a = 'a' > 'a'";
+            yield return @"var a = 'a' < 'a'";
+            yield return @"var a = 'a' >= 'a'";
+            yield return @"var a = 'a' <= 'a'";
+            yield return @"var b = 'a'; var a = -b";
+            yield return @"var b = 'a'; var a = +b";
+            yield return @"var b = 'a'; var a = --b";
+            yield return @"var b = 'a'; var a = ++b";
+            yield return @"var b = 'a'; var a = b++";
+            yield return @"var b = 'a'; var a = b--";
+            yield return @"var b = 'a'; var a = ~b";
+            yield return @"var a = 'a' == 'a'";
+            yield return @"var a = 'a' != 'a'";
+            yield return @"var a = 'a'.Equals('a')";
+            yield return @"var a = 'a' >> 1";
+            yield return @"var a = 'a' << 1";
+            yield return @"var a = 'a' & 'a'";
+            yield return @"var a = 'a' ^ 'a'";
+            yield return @"var a = 'a' | 'a'";
+            yield return @"var a = 'a'; a += 'a'";
+            yield return @"var a = 'a'; a *= 'a'";
+            yield return @"var a = 'a'; a /= 'a'";
+            yield return @"var a = 'a'; a %= 'a'";
+            yield return @"var a = 'a'; a -= 'a'";
+            yield return @"var a = 'a'; a &= 'a'";
+            yield return @"var a = 'a'; a |= 'a'";
+            yield return @"var a = 'a'; a <<= 1";
+            yield return @"var a = 'a'; a >>= 1";
+            yield return @"var a = 'a'; a ^= 'a'";
+
+
+
+            yield return @"byte s = 1; var a = s + s";
+            yield return @"byte s = 1; var a = s - s";
+            yield return @"byte s = 1; var a = s * s";
+            yield return @"byte s = 1; var a = s / s";
+            yield return @"byte s = 1; var a = s % s";
+            yield return @"byte s = 1; var a = s > s";
+            yield return @"byte s = 1; var a = s < s";
+            yield return @"byte s = 1; var a = s >= s";
+            yield return @"byte s = 1; var a = s <= s";
+            yield return @"byte s = 1; var a = s == s";
+            yield return @"byte s = 1; var a = s != s";
+            yield return @"byte s = 1; var a = s.Equals(s)";
+            yield return @"byte s = 1; var a = -s";
+            yield return @"byte s = 1; var a = +s";
+            yield return @"byte s = 1; var a = --s";
+            yield return @"byte s = 1; var a = ++s";
+            yield return @"byte s = 1; var a = s++";
+            yield return @"byte s = 1; var a = s--";
+            yield return @"byte s = 1; var a = ~s";
+            yield return @"byte s = 1; var a = s >> 1";
+            yield return @"byte s = 1; var a = s << 1";
+            yield return @"byte s = 1; var a = s & s";
+            yield return @"byte s = 1; var a = s ^ s";
+            yield return @"byte s = 1; var a = s | s";
+            yield return @"byte s = 1; var a = s; a += s";
+            yield return @"byte s = 1; var a = s; a *= s";
+            yield return @"byte s = 1; var a = s; a /= s";
+            yield return @"byte s = 1; var a = s; a %= s";
+            yield return @"byte s = 1; var a = s; a -= s";
+            yield return @"byte s = 1; var a = s; a &= s";
+            yield return @"byte s = 1; var a = s; a |= s";
+            yield return @"byte a = 1; a <<= 1";
+            yield return @"byte a = 1; a >>= 1";
+            yield return @"byte s = 1; var a = s; a ^= s";
+
+
+            yield return @"sbyte s = 1; var a = s + s";
+            yield return @"sbyte s = 1; var a = s - s";
+            yield return @"sbyte s = 1; var a = s * s";
+            yield return @"sbyte s = 1; var a = s / s";
+            yield return @"sbyte s = 1; var a = s % s";
+            yield return @"sbyte s = 1; var a = s > s";
+            yield return @"sbyte s = 1; var a = s < s";
+            yield return @"sbyte s = 1; var a = s >= s";
+            yield return @"sbyte s = 1; var a = s <= s";
+            yield return @"sbyte s = 1; var a = s == s";
+            yield return @"sbyte s = 1; var a = s != s";
+            yield return @"sbyte s = 1; var a = s.Equals(s)";
+            yield return @"sbyte s = 1; var a = -s";
+            yield return @"sbyte s = 1; var a = +s";
+            yield return @"sbyte s = 1; var a = --s";
+            yield return @"sbyte s = 1; var a = ++s";
+            yield return @"sbyte s = 1; var a = s++";
+            yield return @"sbyte s = 1; var a = s--";
+            yield return @"sbyte s = 1; var a = ~s";
+            yield return @"sbyte s = 1; var a = s >> 1";
+            yield return @"sbyte s = 1; var a = s << 1";
+            yield return @"sbyte s = 1; var a = s & s";
+            yield return @"sbyte s = 1; var a = s ^ s";
+            yield return @"sbyte s = 1; var a = s | s";
+            yield return @"sbyte s = 1; var a = s; a += s";
+            yield return @"sbyte s = 1; var a = s; a *= s";
+            yield return @"sbyte s = 1; var a = s; a /= s";
+            yield return @"sbyte s = 1; var a = s; a %= s";
+            yield return @"sbyte s = 1; var a = s; a -= s";
+            yield return @"sbyte s = 1; var a = s; a &= s";
+            yield return @"sbyte s = 1; var a = s; a |= s";
+            yield return @"sbyte a = 1; a <<= 1";
+            yield return @"sbyte a = 1; a >>= 1";
+            yield return @"sbyte s = 1; var a = s; a ^= s";
         }
 
         public static IEnumerable<string> GetImpureCases()
