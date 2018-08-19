@@ -73,8 +73,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForUInt16()) yield return c;
 
+            foreach (var c in GetPureCasesForBoolean()) yield return c;
 
-            yield return "true.ToString()";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
             yield return @"String.Join("","", new []{""1"", ""2""})";
@@ -87,9 +87,6 @@ public static class Module1
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
             yield return @"var a = string.Empty";
-
-
-            
 
 
             yield return @"var a = 'a' + 'a'";
@@ -111,6 +108,7 @@ public static class Module1
             yield return @"var a = 'a' == 'a'";
             yield return @"var a = 'a' != 'a'";
             yield return @"var a = 'a'.Equals('a')";
+            yield return @"var a = 'a'.Equals(new object())";
             yield return @"var a = 'a' >> 1";
             yield return @"var a = 'a' << 1";
             yield return @"var a = 'a' & 'a'";
@@ -128,7 +126,6 @@ public static class Module1
             yield return @"var a = 'a'; a ^= 'a'";
 
 
-
             yield return @"byte s = 1; var a = s + s";
             yield return @"byte s = 1; var a = s - s";
             yield return @"byte s = 1; var a = s * s";
@@ -141,6 +138,7 @@ public static class Module1
             yield return @"byte s = 1; var a = s == s";
             yield return @"byte s = 1; var a = s != s";
             yield return @"byte s = 1; var a = s.Equals(s)";
+            yield return @"byte s = 1; var a = s.Equals(new object())";
             yield return @"byte s = 1; var a = -s";
             yield return @"byte s = 1; var a = +s";
             yield return @"byte s = 1; var a = --s";
@@ -177,6 +175,7 @@ public static class Module1
             yield return @"sbyte s = 1; var a = s == s";
             yield return @"sbyte s = 1; var a = s != s";
             yield return @"sbyte s = 1; var a = s.Equals(s)";
+            yield return @"sbyte s = 1; var a = s.Equals(new object())";
             yield return @"sbyte s = 1; var a = -s";
             yield return @"sbyte s = 1; var a = +s";
             yield return @"sbyte s = 1; var a = --s";
@@ -199,20 +198,6 @@ public static class Module1
             yield return @"sbyte a = 1; a <<= 1";
             yield return @"sbyte a = 1; a >>= 1";
             yield return @"sbyte s = 1; var a = s; a ^= s";
-
-            yield return @"var a = !true";
-            yield return @"var a = true == true";
-            yield return @"var a = true != true";
-            yield return @"var a = true.Equals(true)";
-            yield return @"var a = true & true";
-            yield return @"var a = true ^ true";
-            yield return @"var a = true | true";
-            yield return @"var a = true && true";
-            yield return @"var a = true || true";
-            yield return @"var a = true; a &= true";
-            yield return @"var a = true; a |= true";
-            yield return @"var a = true; a ^= true";
-
 
             yield return @"var a = IntPtr.Zero == IntPtr.Zero";
             yield return @"var a = IntPtr.Zero != IntPtr.Zero";
@@ -237,6 +222,7 @@ public static class Module1
             yield return @"var a = 1 == 1";
             yield return @"var a = 1 != 1";
             yield return @"var a = 1.Equals(1)";
+            yield return @"var a = 1.Equals(new object())";
             yield return @"var b = 1; var a = -b";
             yield return @"var b = 1; var a = +b";
             yield return @"var b = 1; var a = --b";
@@ -280,6 +266,7 @@ public static class Module1
             yield return @"var a = 1u == 1u";
             yield return @"var a = 1u != 1u";
             yield return @"var a = 1u.Equals(1u)";
+            yield return @"var a = 1u.Equals(new object())";
             yield return @"var b = 1u; var a = +b";
             yield return @"var b = 1u; var a = --b";
             yield return @"var b = 1u; var a = ++b";
@@ -329,6 +316,7 @@ public static class Module1
             yield return @"var a = 1L == 1L";
             yield return @"var a = 1L != 1L";
             yield return @"var a = 1L.Equals(1L)";
+            yield return @"var a = 1L.Equals(new object())";
             yield return @"var a = 1L >> 1";
             yield return @"var a = 1L << 1";
             yield return @"var a = 1L & 1L";
@@ -366,6 +354,7 @@ public static class Module1
             yield return @"var a = 1ul == 1ul";
             yield return @"var a = 1ul != 1ul";
             yield return @"var a = 1ul.Equals(1ul)";
+            yield return @"var a = 1ul.Equals(new object())";
             yield return @"var b = 1ul; var a = +b";
             yield return @"var b = 1ul; var a = --b";
             yield return @"var b = 1ul; var a = ++b";
@@ -408,6 +397,7 @@ public static class Module1
             yield return @"short s = 1; var a = s == s";
             yield return @"short s = 1; var a = s != s";
             yield return @"short s = 1; var a = s.Equals(s)";
+            yield return @"short s = 1; var a = s.Equals(new object())";
             yield return @"short s = 1; var a = -s";
             yield return @"short s = 1; var a = +s";
             yield return @"short s = 1; var a = --s";
@@ -451,6 +441,7 @@ public static class Module1
             yield return @"ushort s = 1; var a = s == s";
             yield return @"ushort s = 1; var a = s != s";
             yield return @"ushort s = 1; var a = s.Equals(s)";
+            yield return @"ushort s = 1; var a = s.Equals(new object())";
             yield return @"ushort s = 1; var a = -s";
             yield return @"ushort s = 1; var a = +s";
             yield return @"ushort s = 1; var a = --s";
@@ -478,6 +469,34 @@ public static class Module1
             yield return @"ushort s = 1; var a = s.CompareTo(new object())";
             yield return @"ushort s = 1; var a = s.GetHashCode()";
             yield return @"ushort s = 1; var a = s.GetTypeCode()";
+        }
+
+        public static IEnumerable<string> GetPureCasesForBoolean()
+        {
+            yield return @"var a = !true";
+            yield return @"var a = true == true";
+            yield return @"var a = true != true";
+            yield return @"var a = true & true";
+            yield return @"var a = true ^ true";
+            yield return @"var a = true | true";
+            yield return @"var a = true && true";
+            yield return @"var a = true || true";
+            yield return @"var a = true; a &= true";
+            yield return @"var a = true; a |= true";
+            yield return @"var a = true; a ^= true";
+
+            yield return @"var a = true.Equals(true)";
+            yield return @"var a = true.Equals(new object())";
+            yield return "true.ToString()";
+            yield return "true.ToString(null)";
+            yield return @"var a = true.CompareTo(true)";
+            yield return @"var a = true.CompareTo(new object())";
+            yield return @"var a = true.GetHashCode()";
+            yield return @"var a = true.GetTypeCode()";
+
+            yield return @"var a = bool.Parse(""True"")";
+            yield return @"var a = bool.TryParse(""True"", out var result)";
+
         }
 
         public static IEnumerable<string> GetImpureCases()

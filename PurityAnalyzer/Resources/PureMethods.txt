@@ -1,4 +1,3 @@
-System.Boolean, ToString
 System.String, ToString
 System.Guid, ToString
 System.Guid, Parse
@@ -142,6 +141,13 @@ System.Boolean, op_Equality
 System.Boolean, op_BitwiseAnd
 System.Boolean, op_BitwiseOr
 System.Boolean, op_ExclusiveOr
+System.Boolean, ToString
+System.Boolean, CompareTo(System.Boolean)
+System.Boolean, CompareTo(System.Object)
+System.Boolean, GetHashCode
+System.Boolean, GetTypeCode
+System.Boolean, Parse
+System.Boolean, TryParse
 System.Boolean, Equals
 System.IntPtr, Equals
 System.IntPtr, op_Inequality
