@@ -132,6 +132,10 @@ System.Char, Equals
 System.Byte, op_Increment
 System.Byte, op_Decrement
 System.Byte, Equals
+System.Byte, CompareTo(System.Byte)
+System.Byte, CompareTo(System.Object)
+System.Byte, GetHashCode
+System.Byte, GetTypeCode
 System.SByte, op_Increment
 System.SByte, op_Decrement
 System.SByte, Equals

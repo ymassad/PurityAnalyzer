@@ -75,6 +75,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForBoolean()) yield return c;
 
+            foreach (var c in GetPureCasesForByte()) yield return c;
+
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
             yield return @"String.Join("","", new []{""1"", ""2""})";
@@ -124,43 +126,6 @@ public static class Module1
             yield return @"var a = 'a'; a <<= 1";
             yield return @"var a = 'a'; a >>= 1";
             yield return @"var a = 'a'; a ^= 'a'";
-
-
-            yield return @"byte s = 1; var a = s + s";
-            yield return @"byte s = 1; var a = s - s";
-            yield return @"byte s = 1; var a = s * s";
-            yield return @"byte s = 1; var a = s / s";
-            yield return @"byte s = 1; var a = s % s";
-            yield return @"byte s = 1; var a = s > s";
-            yield return @"byte s = 1; var a = s < s";
-            yield return @"byte s = 1; var a = s >= s";
-            yield return @"byte s = 1; var a = s <= s";
-            yield return @"byte s = 1; var a = s == s";
-            yield return @"byte s = 1; var a = s != s";
-            yield return @"byte s = 1; var a = s.Equals(s)";
-            yield return @"byte s = 1; var a = s.Equals(new object())";
-            yield return @"byte s = 1; var a = -s";
-            yield return @"byte s = 1; var a = +s";
-            yield return @"byte s = 1; var a = --s";
-            yield return @"byte s = 1; var a = ++s";
-            yield return @"byte s = 1; var a = s++";
-            yield return @"byte s = 1; var a = s--";
-            yield return @"byte s = 1; var a = ~s";
-            yield return @"byte s = 1; var a = s >> 1";
-            yield return @"byte s = 1; var a = s << 1";
-            yield return @"byte s = 1; var a = s & s";
-            yield return @"byte s = 1; var a = s ^ s";
-            yield return @"byte s = 1; var a = s | s";
-            yield return @"byte s = 1; var a = s; a += s";
-            yield return @"byte s = 1; var a = s; a *= s";
-            yield return @"byte s = 1; var a = s; a /= s";
-            yield return @"byte s = 1; var a = s; a %= s";
-            yield return @"byte s = 1; var a = s; a -= s";
-            yield return @"byte s = 1; var a = s; a &= s";
-            yield return @"byte s = 1; var a = s; a |= s";
-            yield return @"byte a = 1; a <<= 1";
-            yield return @"byte a = 1; a >>= 1";
-            yield return @"byte s = 1; var a = s; a ^= s";
 
 
             yield return @"sbyte s = 1; var a = s + s";
@@ -497,6 +462,50 @@ public static class Module1
             yield return @"var a = bool.Parse(""True"")";
             yield return @"var a = bool.TryParse(""True"", out var result)";
 
+        }
+
+        public static IEnumerable<string> GetPureCasesForByte()
+        {
+            yield return @"byte s = 1; var a = s + s";
+            yield return @"byte s = 1; var a = s - s";
+            yield return @"byte s = 1; var a = s * s";
+            yield return @"byte s = 1; var a = s / s";
+            yield return @"byte s = 1; var a = s % s";
+            yield return @"byte s = 1; var a = s > s";
+            yield return @"byte s = 1; var a = s < s";
+            yield return @"byte s = 1; var a = s >= s";
+            yield return @"byte s = 1; var a = s <= s";
+            yield return @"byte s = 1; var a = s == s";
+            yield return @"byte s = 1; var a = s != s";
+            yield return @"byte s = 1; var a = s.Equals(s)";
+            yield return @"byte s = 1; var a = s.Equals(new object())";
+            yield return @"byte s = 1; var a = -s";
+            yield return @"byte s = 1; var a = +s";
+            yield return @"byte s = 1; var a = --s";
+            yield return @"byte s = 1; var a = ++s";
+            yield return @"byte s = 1; var a = s++";
+            yield return @"byte s = 1; var a = s--";
+            yield return @"byte s = 1; var a = ~s";
+            yield return @"byte s = 1; var a = s >> 1";
+            yield return @"byte s = 1; var a = s << 1";
+            yield return @"byte s = 1; var a = s & s";
+            yield return @"byte s = 1; var a = s ^ s";
+            yield return @"byte s = 1; var a = s | s";
+            yield return @"byte s = 1; var a = s; a += s";
+            yield return @"byte s = 1; var a = s; a *= s";
+            yield return @"byte s = 1; var a = s; a /= s";
+            yield return @"byte s = 1; var a = s; a %= s";
+            yield return @"byte s = 1; var a = s; a -= s";
+            yield return @"byte s = 1; var a = s; a &= s";
+            yield return @"byte s = 1; var a = s; a |= s";
+            yield return @"byte a = 1; a <<= 1";
+            yield return @"byte a = 1; a >>= 1";
+            yield return @"byte s = 1; var a = s; a ^= s";
+
+            yield return @"byte s = 1; var a = s.CompareTo(s)";
+            yield return @"byte s = 1; var a = s.CompareTo(new object())";
+            yield return @"byte s = 1; var a = s.GetHashCode()";
+            yield return @"byte s = 1; var a = s.GetTypeCode()";
         }
 
         public static IEnumerable<string> GetImpureCases()
