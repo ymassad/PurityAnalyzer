@@ -390,6 +390,20 @@ public static class Module1
             yield return @"sbyte a = 1; a <<= 1";
             yield return @"sbyte a = 1; a >>= 1";
             yield return @"sbyte s = 1; var a = s; a ^= s";
+
+            yield return @"var a = !true";
+            yield return @"var a = true == true";
+            yield return @"var a = true != true";
+            yield return @"var a = true.Equals(true)";
+            yield return @"var a = true & true";
+            yield return @"var a = true ^ true";
+            yield return @"var a = true | true";
+            yield return @"var a = true && true";
+            yield return @"var a = true || true";
+            yield return @"var a = true; a &= true";
+            yield return @"var a = true; a |= true";
+            yield return @"var a = true; a ^= true";
+
         }
 
         public static IEnumerable<string> GetImpureCases()

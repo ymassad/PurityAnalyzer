@@ -112,3 +112,10 @@ System.Byte, Equals
 System.SByte, op_Increment
 System.SByte, op_Decrement
 System.SByte, Equals
+System.Boolean, op_LogicalNot
+System.Boolean, op_Inequality
+System.Boolean, op_Equality
+System.Boolean, op_BitwiseAnd
+System.Boolean, op_BitwiseOr
+System.Boolean, op_ExclusiveOr
+System.Boolean, Equals
