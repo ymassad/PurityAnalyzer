@@ -109,6 +109,10 @@ System.UInt64, op_BitwiseOr
 System.UInt64, op_ExclusiveOr
 System.UInt64, op_RightShift
 System.UInt64, op_LeftShift
+System.UInt64, CompareTo(System.UInt64)
+System.UInt64, CompareTo(System.Object)
+System.UInt64, GetHashCode
+System.UInt64, GetTypeCode
 System.Int16, op_Increment
 System.Int16, op_Decrement
 System.Int16, Equals
