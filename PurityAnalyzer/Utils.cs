@@ -558,14 +558,11 @@ namespace PurityAnalyzer
 
         public static IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
         {
-            if (Utils.GetFullMetaDataName(symbol).Equals(typeof(object).FullName))
-                return new IMethodSymbol[0];
-
             return
                 symbol
                     .GetMembers()
                     .OfType<IMethodSymbol>()
-                    .Concat(GetAllMethods(symbol.BaseType))
+                    .Concat(symbol.BaseType == null ? Array.Empty<IMethodSymbol>() : GetAllMethods(symbol.BaseType))
                     .ToArray();
         }
 

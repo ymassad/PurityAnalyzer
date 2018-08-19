@@ -127,3 +127,4 @@ System.IntPtr, op_Equality
 System.UIntPtr, Equals
 System.UIntPtr, op_Inequality
 System.UIntPtr, op_Equality
+System.Object, .ctor
