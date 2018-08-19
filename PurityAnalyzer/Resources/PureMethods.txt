@@ -58,7 +58,7 @@ System.UInt32, op_BitwiseOr
 System.UInt32, op_ExclusiveOr
 System.UInt32, op_RightShift
 System.UInt32, op_LeftShift
-System.UInt32, CompareTo(System.Int32)
+System.UInt32, CompareTo(System.UInt32)
 System.UInt32, CompareTo(System.Object)
 System.UInt32, GetHashCode
 System.UInt32, GetTypeCode
@@ -84,6 +84,10 @@ System.Int64, op_BitwiseOr
 System.Int64, op_ExclusiveOr
 System.Int64, op_RightShift
 System.Int64, op_LeftShift
+System.Int64, CompareTo(System.Int64)
+System.Int64, CompareTo(System.Object)
+System.Int64, GetHashCode
+System.Int64, GetTypeCode
 System.UInt64, op_Addition
 System.UInt64, op_Subtraction
 System.UInt64, op_LessThan
