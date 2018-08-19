@@ -139,6 +139,10 @@ System.Byte, GetTypeCode
 System.SByte, op_Increment
 System.SByte, op_Decrement
 System.SByte, Equals
+System.SByte, CompareTo(System.SByte)
+System.SByte, CompareTo(System.Object)
+System.SByte, GetHashCode
+System.SByte, GetTypeCode
 System.Boolean, op_LogicalNot
 System.Boolean, op_Inequality
 System.Boolean, op_Equality
