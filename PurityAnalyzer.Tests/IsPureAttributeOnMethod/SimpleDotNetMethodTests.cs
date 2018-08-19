@@ -404,6 +404,14 @@ public static class Module1
             yield return @"var a = true; a |= true";
             yield return @"var a = true; a ^= true";
 
+
+            yield return @"var a = IntPtr.Zero == IntPtr.Zero";
+            yield return @"var a = IntPtr.Zero != IntPtr.Zero";
+            yield return @"var a = IntPtr.Zero.Equals(IntPtr.Zero)";
+
+            yield return @"var a = UIntPtr.Zero == UIntPtr.Zero";
+            yield return @"var a = UIntPtr.Zero != UIntPtr.Zero";
+            yield return @"var a = UIntPtr.Zero.Equals(UIntPtr.Zero)";
         }
 
         public static IEnumerable<string> GetImpureCases()

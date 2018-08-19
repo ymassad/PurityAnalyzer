@@ -119,3 +119,9 @@ System.Boolean, op_BitwiseAnd
 System.Boolean, op_BitwiseOr
 System.Boolean, op_ExclusiveOr
 System.Boolean, Equals
+System.IntPtr, Equals
+System.IntPtr, op_Inequality
+System.IntPtr, op_Equality
+System.UIntPtr, Equals
+System.UIntPtr, op_Inequality
+System.UIntPtr, op_Equality
