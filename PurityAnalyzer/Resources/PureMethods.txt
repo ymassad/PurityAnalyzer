@@ -33,6 +33,8 @@ System.Int32, op_BitwiseOr
 System.Int32, op_ExclusiveOr
 System.Int32, op_RightShift
 System.Int32, op_LeftShift
+System.Int32, CompareTo(System.Int32)
+System.Int32, CompareTo(System.Object)
 System.UInt32, op_Addition
 System.UInt32, op_Subtraction
 System.UInt32, op_LessThan

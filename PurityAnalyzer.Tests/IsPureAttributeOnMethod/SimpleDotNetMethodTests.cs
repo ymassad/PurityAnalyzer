@@ -61,6 +61,9 @@ public static class Module1
 
         public static IEnumerable<string> GetPureCases()
         {
+            foreach (var c in GetPureCasesForInt32()) yield return c;
+
+
             yield return "true.ToString()";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
@@ -74,40 +77,7 @@ public static class Module1
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
             yield return @"var a = string.Empty";
-            yield return @"var a = 1 + 1";
-            yield return @"var a = 1 - 1";
-            yield return @"var a = 1 * 1";
-            yield return @"var a = 1 / 1";
-            yield return @"var a = 1 % 1";
-            yield return @"var a = 1 > 1";
-            yield return @"var a = 1 < 1";
-            yield return @"var a = 1 >= 1";
-            yield return @"var a = 1 <= 1";
-            yield return @"var a = 1 == 1";
-            yield return @"var a = 1 != 1";
-            yield return @"var a = 1.Equals(1)";
-            yield return @"var b = 1; var a = -b";
-            yield return @"var b = 1; var a = +b";
-            yield return @"var b = 1; var a = --b";
-            yield return @"var b = 1; var a = ++b";
-            yield return @"var b = 1; var a = b++";
-            yield return @"var b = 1; var a = b--";
-            yield return @"var b = 1; var a = ~b";
-            yield return @"var a = 1 >> 1";
-            yield return @"var a = 1 << 1";
-            yield return @"var a = 1 & 1";
-            yield return @"var a = 1 ^ 1";
-            yield return @"var a = 1 | 1";
-            yield return @"var a = 1; a += 1";
-            yield return @"var a = 1; a *= 1";
-            yield return @"var a = 1; a /= 1";
-            yield return @"var a = 1; a %= 1";
-            yield return @"var a = 1; a -= 1";
-            yield return @"var a = 1; a &= 1";
-            yield return @"var a = 1; a |= 1";
-            yield return @"var a = 1; a <<= 1";
-            yield return @"var a = 1; a >>= 1";
-            yield return @"var a = 1; a ^= 1";
+
             yield return @"var a = 1u + 1u";
             yield return @"var a = 1u - 1u";
             yield return @"var a = 1u * 1u";
@@ -412,6 +382,48 @@ public static class Module1
             yield return @"var a = UIntPtr.Zero == UIntPtr.Zero";
             yield return @"var a = UIntPtr.Zero != UIntPtr.Zero";
             yield return @"var a = UIntPtr.Zero.Equals(UIntPtr.Zero)";
+        }
+
+        public static IEnumerable<string> GetPureCasesForInt32()
+        {
+            yield return @"var a = 1 + 1";
+            yield return @"var a = 1 - 1";
+            yield return @"var a = 1 * 1";
+            yield return @"var a = 1 / 1";
+            yield return @"var a = 1 % 1";
+            yield return @"var a = 1 > 1";
+            yield return @"var a = 1 < 1";
+            yield return @"var a = 1 >= 1";
+            yield return @"var a = 1 <= 1";
+            yield return @"var a = 1 == 1";
+            yield return @"var a = 1 != 1";
+            yield return @"var a = 1.Equals(1)";
+            yield return @"var b = 1; var a = -b";
+            yield return @"var b = 1; var a = +b";
+            yield return @"var b = 1; var a = --b";
+            yield return @"var b = 1; var a = ++b";
+            yield return @"var b = 1; var a = b++";
+            yield return @"var b = 1; var a = b--";
+            yield return @"var b = 1; var a = ~b";
+            yield return @"var a = 1 >> 1";
+            yield return @"var a = 1 << 1";
+            yield return @"var a = 1 & 1";
+            yield return @"var a = 1 ^ 1";
+            yield return @"var a = 1 | 1";
+            yield return @"var a = 1; a += 1";
+            yield return @"var a = 1; a *= 1";
+            yield return @"var a = 1; a /= 1";
+            yield return @"var a = 1; a %= 1";
+            yield return @"var a = 1; a -= 1";
+            yield return @"var a = 1; a &= 1";
+            yield return @"var a = 1; a |= 1";
+            yield return @"var a = 1; a <<= 1";
+            yield return @"var a = 1; a >>= 1";
+            yield return @"var a = 1; a ^= 1";
+
+            yield return @"var a = 1.CompareTo(1)";
+            yield return @"var a = 1.CompareTo(new object())";
+
         }
 
         public static IEnumerable<string> GetImpureCases()
