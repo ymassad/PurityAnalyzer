@@ -160,6 +160,17 @@ System.Boolean, Equals
 System.IntPtr, Equals
 System.IntPtr, op_Inequality
 System.IntPtr, op_Equality
+System.IntPtr, Add
+System.IntPtr, GetHashCode
+System.IntPtr, Subtract
+System.IntPtr, op_Addition
+System.IntPtr, op_Subtraction
+System.IntPtr, .ctor(System.Int32)
+System.IntPtr, .ctor(System.Int64)
+System.IntPtr, ToInt32
+System.IntPtr, ToInt64
+System.IntPtr, ToString()
+System.IntPtr, ToString(System.String)
 System.UIntPtr, Equals
 System.UIntPtr, op_Inequality
 System.UIntPtr, op_Equality

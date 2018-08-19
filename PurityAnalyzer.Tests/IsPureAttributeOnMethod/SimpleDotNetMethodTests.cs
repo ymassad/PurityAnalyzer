@@ -79,6 +79,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForSByte()) yield return c;
 
+            foreach (var c in GetPureCasesForIntPtr()) yield return c;
+
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
             yield return @"String.Join("","", new []{""1"", ""2""})";
@@ -129,12 +131,6 @@ public static class Module1
             yield return @"var a = 'a'; a >>= 1";
             yield return @"var a = 'a'; a ^= 'a'";
 
-
-
-
-            yield return @"var a = IntPtr.Zero == IntPtr.Zero";
-            yield return @"var a = IntPtr.Zero != IntPtr.Zero";
-            yield return @"var a = IntPtr.Zero.Equals(IntPtr.Zero)";
 
             yield return @"var a = UIntPtr.Zero == UIntPtr.Zero";
             yield return @"var a = UIntPtr.Zero != UIntPtr.Zero";
@@ -518,6 +514,29 @@ public static class Module1
             yield return @"sbyte s = 1; var a = s.CompareTo(new object())";
             yield return @"sbyte s = 1; var a = s.GetHashCode()";
             yield return @"sbyte s = 1; var a = s.GetTypeCode()";
+        }
+
+        public static IEnumerable<string> GetPureCasesForIntPtr()
+        {
+            yield return @"var a = IntPtr.Zero == IntPtr.Zero";
+            yield return @"var a = IntPtr.Zero != IntPtr.Zero";
+            yield return @"var a = IntPtr.Zero.Equals(IntPtr.Zero)";
+            yield return @"var a = IntPtr.Zero.Equals(new object())";
+            yield return @"var a = new IntPtr(1)";
+            yield return @"var a = new IntPtr(1L)";
+            yield return @"var a = IntPtr.Zero.GetHashCode()";
+            yield return @"var a = IntPtr.Zero.ToInt32()";
+            yield return @"var a = IntPtr.Zero.ToInt64()";
+            yield return @"var a = IntPtr.Zero.ToString()"; //This is InvariantCulture
+            yield return @"var a = IntPtr.Zero.ToString("""")"; //This is InvariantCulture
+            yield return @"var a = (IntPtr)1";
+            yield return @"var a = (IntPtr)1L";
+            yield return @"var a = (int)IntPtr.Zero";
+            yield return @"var a = (long)IntPtr.Zero";
+            yield return @"var a = IntPtr.Add(IntPtr.Zero, 1)";
+            yield return @"var a = IntPtr.Zero + 1";
+            yield return @"var a = IntPtr.Subtract(IntPtr.Zero, 1)";
+            yield return @"var a = IntPtr.Zero - 1";
         }
 
         public static IEnumerable<string> GetImpureCases()
