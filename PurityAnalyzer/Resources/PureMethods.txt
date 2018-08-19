@@ -116,9 +116,17 @@ System.UInt64, GetTypeCode
 System.Int16, op_Increment
 System.Int16, op_Decrement
 System.Int16, Equals
+System.Int16, CompareTo(System.Int16)
+System.Int16, CompareTo(System.Object)
+System.Int16, GetHashCode
+System.Int16, GetTypeCode
 System.UInt16, op_Increment
 System.UInt16, op_Decrement
 System.UInt16, Equals
+System.UInt16, CompareTo(System.UInt16)
+System.UInt16, CompareTo(System.Object)
+System.UInt16, GetHashCode
+System.UInt16, GetTypeCode
 System.Char, op_Increment
 System.Char, op_Decrement
 System.Char, Equals

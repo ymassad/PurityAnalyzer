@@ -69,6 +69,11 @@ public static class Module1
 
             foreach (var c in GetPureCasesForUInt64()) yield return c;
 
+            foreach (var c in GetPureCasesForInt16()) yield return c;
+
+            foreach (var c in GetPureCasesForUInt16()) yield return c;
+
+
             yield return "true.ToString()";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
@@ -84,80 +89,7 @@ public static class Module1
             yield return @"var a = string.Empty";
 
 
-
-
-
-
-            yield return @"short s = 1; var a = s + s";
-            yield return @"short s = 1; var a = s - s";
-            yield return @"short s = 1; var a = s * s";
-            yield return @"short s = 1; var a = s / s";
-            yield return @"short s = 1; var a = s % s";
-            yield return @"short s = 1; var a = s > s";
-            yield return @"short s = 1; var a = s < s";
-            yield return @"short s = 1; var a = s >= s";
-            yield return @"short s = 1; var a = s <= s";
-            yield return @"short s = 1; var a = s == s";
-            yield return @"short s = 1; var a = s != s";
-            yield return @"short s = 1; var a = s.Equals(s)";
-            yield return @"short s = 1; var a = -s";
-            yield return @"short s = 1; var a = +s";
-            yield return @"short s = 1; var a = --s";
-            yield return @"short s = 1; var a = ++s";
-            yield return @"short s = 1; var a = s++";
-            yield return @"short s = 1; var a = s--";
-            yield return @"short s = 1; var a = ~s";
-            yield return @"short s = 1; var a = s >> 1";
-            yield return @"short s = 1; var a = s << 1";
-            yield return @"short s = 1; var a = s & s";
-            yield return @"short s = 1; var a = s ^ s";
-            yield return @"short s = 1; var a = s | s";
-            yield return @"short s = 1; var a = s; a += s";
-            yield return @"short s = 1; var a = s; a *= s";
-            yield return @"short s = 1; var a = s; a /= s";
-            yield return @"short s = 1; var a = s; a %= s";
-            yield return @"short s = 1; var a = s; a -= s";
-            yield return @"short s = 1; var a = s; a &= s";
-            yield return @"short s = 1; var a = s; a |= s";
-            yield return @"short a = 1; a <<= 1";
-            yield return @"short a = 1; a >>= 1";
-            yield return @"short s = 1; var a = s; a ^= s";
-
-
-            yield return @"ushort s = 1; var a = s + s";
-            yield return @"ushort s = 1; var a = s - s";
-            yield return @"ushort s = 1; var a = s * s";
-            yield return @"ushort s = 1; var a = s / s";
-            yield return @"ushort s = 1; var a = s % s";
-            yield return @"ushort s = 1; var a = s > s";
-            yield return @"ushort s = 1; var a = s < s";
-            yield return @"ushort s = 1; var a = s >= s";
-            yield return @"ushort s = 1; var a = s <= s";
-            yield return @"ushort s = 1; var a = s == s";
-            yield return @"ushort s = 1; var a = s != s";
-            yield return @"ushort s = 1; var a = s.Equals(s)";
-            yield return @"ushort s = 1; var a = -s";
-            yield return @"ushort s = 1; var a = +s";
-            yield return @"ushort s = 1; var a = --s";
-            yield return @"ushort s = 1; var a = ++s";
-            yield return @"ushort s = 1; var a = s++";
-            yield return @"ushort s = 1; var a = s--";
-            yield return @"ushort s = 1; var a = ~s";
-            yield return @"ushort s = 1; var a = s >> 1";
-            yield return @"ushort s = 1; var a = s << 1";
-            yield return @"ushort s = 1; var a = s & s";
-            yield return @"ushort s = 1; var a = s ^ s";
-            yield return @"ushort s = 1; var a = s | s";
-            yield return @"ushort s = 1; var a = s; a += s";
-            yield return @"ushort s = 1; var a = s; a *= s";
-            yield return @"ushort s = 1; var a = s; a /= s";
-            yield return @"ushort s = 1; var a = s; a %= s";
-            yield return @"ushort s = 1; var a = s; a -= s";
-            yield return @"ushort s = 1; var a = s; a &= s";
-            yield return @"ushort s = 1; var a = s; a |= s";
-            yield return @"ushort a = 1; a <<= 1";
-            yield return @"ushort a = 1; a >>= 1";
-            yield return @"ushort s = 1; var a = s; a ^= s";
+            
 
 
             yield return @"var a = 'a' + 'a'";
@@ -460,6 +392,92 @@ public static class Module1
             yield return @"var a = 1ul.CompareTo(new object())";
             yield return @"var a = 1ul.GetHashCode()";
             yield return @"var a = 1ul.GetTypeCode()";
+        }
+
+        public static IEnumerable<string> GetPureCasesForInt16()
+        {
+            yield return @"short s = 1; var a = s + s";
+            yield return @"short s = 1; var a = s - s";
+            yield return @"short s = 1; var a = s * s";
+            yield return @"short s = 1; var a = s / s";
+            yield return @"short s = 1; var a = s % s";
+            yield return @"short s = 1; var a = s > s";
+            yield return @"short s = 1; var a = s < s";
+            yield return @"short s = 1; var a = s >= s";
+            yield return @"short s = 1; var a = s <= s";
+            yield return @"short s = 1; var a = s == s";
+            yield return @"short s = 1; var a = s != s";
+            yield return @"short s = 1; var a = s.Equals(s)";
+            yield return @"short s = 1; var a = -s";
+            yield return @"short s = 1; var a = +s";
+            yield return @"short s = 1; var a = --s";
+            yield return @"short s = 1; var a = ++s";
+            yield return @"short s = 1; var a = s++";
+            yield return @"short s = 1; var a = s--";
+            yield return @"short s = 1; var a = ~s";
+            yield return @"short s = 1; var a = s >> 1";
+            yield return @"short s = 1; var a = s << 1";
+            yield return @"short s = 1; var a = s & s";
+            yield return @"short s = 1; var a = s ^ s";
+            yield return @"short s = 1; var a = s | s";
+            yield return @"short s = 1; var a = s; a += s";
+            yield return @"short s = 1; var a = s; a *= s";
+            yield return @"short s = 1; var a = s; a /= s";
+            yield return @"short s = 1; var a = s; a %= s";
+            yield return @"short s = 1; var a = s; a -= s";
+            yield return @"short s = 1; var a = s; a &= s";
+            yield return @"short s = 1; var a = s; a |= s";
+            yield return @"short a = 1; a <<= 1";
+            yield return @"short a = 1; a >>= 1";
+            yield return @"short s = 1; var a = s; a ^= s";
+
+            yield return @"short s = 1; var a = s.CompareTo(s)";
+            yield return @"short s = 1; var a = s.CompareTo(new object())";
+            yield return @"short s = 1; var a = s.GetHashCode()";
+            yield return @"short s = 1; var a = s.GetTypeCode()";
+        }
+
+        public static IEnumerable<string> GetPureCasesForUInt16()
+        {
+            yield return @"ushort s = 1; var a = s + s";
+            yield return @"ushort s = 1; var a = s - s";
+            yield return @"ushort s = 1; var a = s * s";
+            yield return @"ushort s = 1; var a = s / s";
+            yield return @"ushort s = 1; var a = s % s";
+            yield return @"ushort s = 1; var a = s > s";
+            yield return @"ushort s = 1; var a = s < s";
+            yield return @"ushort s = 1; var a = s >= s";
+            yield return @"ushort s = 1; var a = s <= s";
+            yield return @"ushort s = 1; var a = s == s";
+            yield return @"ushort s = 1; var a = s != s";
+            yield return @"ushort s = 1; var a = s.Equals(s)";
+            yield return @"ushort s = 1; var a = -s";
+            yield return @"ushort s = 1; var a = +s";
+            yield return @"ushort s = 1; var a = --s";
+            yield return @"ushort s = 1; var a = ++s";
+            yield return @"ushort s = 1; var a = s++";
+            yield return @"ushort s = 1; var a = s--";
+            yield return @"ushort s = 1; var a = ~s";
+            yield return @"ushort s = 1; var a = s >> 1";
+            yield return @"ushort s = 1; var a = s << 1";
+            yield return @"ushort s = 1; var a = s & s";
+            yield return @"ushort s = 1; var a = s ^ s";
+            yield return @"ushort s = 1; var a = s | s";
+            yield return @"ushort s = 1; var a = s; a += s";
+            yield return @"ushort s = 1; var a = s; a *= s";
+            yield return @"ushort s = 1; var a = s; a /= s";
+            yield return @"ushort s = 1; var a = s; a %= s";
+            yield return @"ushort s = 1; var a = s; a -= s";
+            yield return @"ushort s = 1; var a = s; a &= s";
+            yield return @"ushort s = 1; var a = s; a |= s";
+            yield return @"ushort a = 1; a <<= 1";
+            yield return @"ushort a = 1; a >>= 1";
+            yield return @"ushort s = 1; var a = s; a ^= s";
+
+            yield return @"ushort s = 1; var a = s.CompareTo(s)";
+            yield return @"ushort s = 1; var a = s.CompareTo(new object())";
+            yield return @"ushort s = 1; var a = s.GetHashCode()";
+            yield return @"ushort s = 1; var a = s.GetTypeCode()";
         }
 
         public static IEnumerable<string> GetImpureCases()
