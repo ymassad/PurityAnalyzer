@@ -35,6 +35,8 @@ System.Int32, op_RightShift
 System.Int32, op_LeftShift
 System.Int32, CompareTo(System.Int32)
 System.Int32, CompareTo(System.Object)
+System.Int32, GetHashCode
+System.Int32, GetTypeCode
 System.UInt32, op_Addition
 System.UInt32, op_Subtraction
 System.UInt32, op_LessThan

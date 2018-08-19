@@ -423,6 +423,8 @@ public static class Module1
 
             yield return @"var a = 1.CompareTo(1)";
             yield return @"var a = 1.CompareTo(new object())";
+            yield return @"var a = 1.GetHashCode()";
+            yield return @"var a = 1.GetTypeCode()";
 
         }
 
