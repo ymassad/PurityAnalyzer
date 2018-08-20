@@ -174,5 +174,15 @@ System.IntPtr, ToString(System.String)
 System.UIntPtr, Equals
 System.UIntPtr, op_Inequality
 System.UIntPtr, op_Equality
+System.UIntPtr, Add
+System.UIntPtr, GetHashCode
+System.UIntPtr, Subtract
+System.UIntPtr, op_Addition
+System.UIntPtr, op_Subtraction
+System.UIntPtr, .ctor(System.UInt32)
+System.UIntPtr, .ctor(System.UInt64)
+System.UIntPtr, ToUInt32
+System.UIntPtr, ToUInt64
+System.UIntPtr, ToString()
 System.Object, .ctor
 System.Attribute, .ctor
