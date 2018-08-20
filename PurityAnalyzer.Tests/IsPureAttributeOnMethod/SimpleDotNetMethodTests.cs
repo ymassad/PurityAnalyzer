@@ -83,6 +83,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForUIntPtr()) yield return c;
 
+            foreach (var c in GetPureCasesForChar()) yield return c;
+
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
             yield return @"String.Join("","", new []{""1"", ""2""})";
@@ -97,41 +99,7 @@ public static class Module1
             yield return @"var a = string.Empty";
 
 
-            yield return @"var a = 'a' + 'a'";
-            yield return @"var a = 'a' - 'a'";
-            yield return @"var a = 'a' * 'a'";
-            yield return @"var a = 'a' / 'a'";
-            yield return @"var a = 'a' % 'a'";
-            yield return @"var a = 'a' > 'a'";
-            yield return @"var a = 'a' < 'a'";
-            yield return @"var a = 'a' >= 'a'";
-            yield return @"var a = 'a' <= 'a'";
-            yield return @"var b = 'a'; var a = -b";
-            yield return @"var b = 'a'; var a = +b";
-            yield return @"var b = 'a'; var a = --b";
-            yield return @"var b = 'a'; var a = ++b";
-            yield return @"var b = 'a'; var a = b++";
-            yield return @"var b = 'a'; var a = b--";
-            yield return @"var b = 'a'; var a = ~b";
-            yield return @"var a = 'a' == 'a'";
-            yield return @"var a = 'a' != 'a'";
-            yield return @"var a = 'a'.Equals('a')";
-            yield return @"var a = 'a'.Equals(new object())";
-            yield return @"var a = 'a' >> 1";
-            yield return @"var a = 'a' << 1";
-            yield return @"var a = 'a' & 'a'";
-            yield return @"var a = 'a' ^ 'a'";
-            yield return @"var a = 'a' | 'a'";
-            yield return @"var a = 'a'; a += 'a'";
-            yield return @"var a = 'a'; a *= 'a'";
-            yield return @"var a = 'a'; a /= 'a'";
-            yield return @"var a = 'a'; a %= 'a'";
-            yield return @"var a = 'a'; a -= 'a'";
-            yield return @"var a = 'a'; a &= 'a'";
-            yield return @"var a = 'a'; a |= 'a'";
-            yield return @"var a = 'a'; a <<= 1";
-            yield return @"var a = 'a'; a >>= 1";
-            yield return @"var a = 'a'; a ^= 'a'";
+
         }
 
         public static IEnumerable<string> GetPureCasesForInt32()
@@ -556,6 +524,53 @@ public static class Module1
             yield return @"var a = UIntPtr.Zero + 1";
             yield return @"var a = UIntPtr.Subtract(UIntPtr.Zero, 1)";
             yield return @"var a = UIntPtr.Zero - 1";
+        }
+
+        public static IEnumerable<string> GetPureCasesForChar()
+        {
+            yield return @"var a = 'a' + 'a'";
+            yield return @"var a = 'a' - 'a'";
+            yield return @"var a = 'a' * 'a'";
+            yield return @"var a = 'a' / 'a'";
+            yield return @"var a = 'a' % 'a'";
+            yield return @"var a = 'a' > 'a'";
+            yield return @"var a = 'a' < 'a'";
+            yield return @"var a = 'a' >= 'a'";
+            yield return @"var a = 'a' <= 'a'";
+            yield return @"var b = 'a'; var a = -b";
+            yield return @"var b = 'a'; var a = +b";
+            yield return @"var b = 'a'; var a = --b";
+            yield return @"var b = 'a'; var a = ++b";
+            yield return @"var b = 'a'; var a = b++";
+            yield return @"var b = 'a'; var a = b--";
+            yield return @"var b = 'a'; var a = ~b";
+            yield return @"var a = 'a' == 'a'";
+            yield return @"var a = 'a' != 'a'";
+            yield return @"var a = 'a'.Equals('a')";
+            yield return @"var a = 'a'.Equals(new object())";
+            yield return @"var a = 'a' >> 1";
+            yield return @"var a = 'a' << 1";
+            yield return @"var a = 'a' & 'a'";
+            yield return @"var a = 'a' ^ 'a'";
+            yield return @"var a = 'a' | 'a'";
+            yield return @"var a = 'a'; a += 'a'";
+            yield return @"var a = 'a'; a *= 'a'";
+            yield return @"var a = 'a'; a /= 'a'";
+            yield return @"var a = 'a'; a %= 'a'";
+            yield return @"var a = 'a'; a -= 'a'";
+            yield return @"var a = 'a'; a &= 'a'";
+            yield return @"var a = 'a'; a |= 'a'";
+            yield return @"var a = 'a'; a <<= 1";
+            yield return @"var a = 'a'; a >>= 1";
+            yield return @"var a = 'a'; a ^= 'a'";
+            yield return @"var a = 'a'.GetHashCode()";
+            yield return @"var a = 'a'.CompareTo('a')";
+            yield return @"var a = 'a'.CompareTo(new object())";
+            yield return @"var a = 'a'.ToString()";
+            yield return @"var a = 'a'.ToString(null)";
+            yield return @"var a = char.ToString('a')";
+            yield return @"var a = char.Parse(""a"")";
+            yield return @"var a = char.TryParse(""a"", out var result)";
         }
 
         public static IEnumerable<string> GetImpureCases()
