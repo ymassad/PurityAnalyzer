@@ -298,11 +298,25 @@ namespace PurityAnalyzer
             {
                 var containingType = constructor.FirstAncestorOrSelf<TypeDeclarationSyntax>();
 
-                if (Utils.AnyImpureFieldInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, RecursiveState.Empty, constructor.IsStatic()))
+                if (Utils.AnyImpureFieldInitializer(
+                    containingType,
+                    context.SemanticModel,
+                    knownReturnsNewObjectMethods,
+                    RecursiveState.Empty,
+                    constructor.IsStatic() ? (InstanceStaticCombination) new InstanceStaticCombination.Static() : new InstanceStaticCombination.InstanceAndStatic()))
+                {
                     impurities.Add(new Impurity(methodLikeNode, "There are impure field initializers"));
+                }
 
-                if (Utils.AnyImpurePropertyInitializer(containingType, context.SemanticModel, knownReturnsNewObjectMethods, RecursiveState.Empty, constructor.IsStatic()))
+                if (Utils.AnyImpurePropertyInitializer(
+                    containingType,
+                    context.SemanticModel,
+                    knownReturnsNewObjectMethods,
+                    RecursiveState.Empty,
+                    constructor.IsStatic() ? (InstanceStaticCombination)new InstanceStaticCombination.Static() : new InstanceStaticCombination.InstanceAndStatic()))
+                {
                     impurities.Add(new Impurity(methodLikeNode, "There are impure property initializers"));
+                }
             }
 
             foreach (var impurity in impurities)

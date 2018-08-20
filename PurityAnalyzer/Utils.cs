@@ -65,12 +65,12 @@ namespace PurityAnalyzer
             SemanticModel semanticModel,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState,
-            bool onlyStaticFields = false)
+            InstanceStaticCombination instanceStaticCombination)
         {
             var props = typeDeclaration
                 .Members
                 .OfType<PropertyDeclarationSyntax>()
-                .Where(x => !onlyStaticFields || x.IsStatic())
+                .Where(instanceStaticCombination.Matches)
                 .ToArray();
 
             foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
@@ -86,12 +86,12 @@ namespace PurityAnalyzer
             SemanticModel semanticModel,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             RecursiveState recursiveState,
-            bool onlyStaticFields = false)
+            InstanceStaticCombination instanceStaticCombination)
         {
             var fields =
                 typeDeclaration.Members
                     .OfType<FieldDeclarationSyntax>()
-                    .Where(x => !onlyStaticFields || x.IsStatic())
+                    .Where(instanceStaticCombination.Matches)
                     .ToArray();
 
             foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
@@ -703,7 +703,7 @@ namespace PurityAnalyzer
 
                 return new MethodDescriptor.ByNameAndParameterTypes(
                     str.Substring(0, str.IndexOf('(')).Trim(),
-                    paramList.Split(new []{','}).Select(x => x.Trim()).ToImmutableArray());
+                    paramList.Split(new []{','}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToImmutableArray());
             }
 
             return (partsSeparatedByComma[0], ParseMethodDescriptor(partsSeparatedByComma[1]));

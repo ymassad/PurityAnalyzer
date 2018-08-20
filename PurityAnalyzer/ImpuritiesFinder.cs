@@ -202,7 +202,7 @@ namespace PurityAnalyzer
 
                 if (getEnumeratorMethod.HasValue)
                 {
-                    if(!IsMethodPure(getEnumeratorMethod.GetValue(), recursiveState))
+                    if (!IsMethodPure(getEnumeratorMethod.GetValue(), recursiveState))
                         yield return new Impurity(forEachStatement, "GetEnumerator method is impure");
 
 
@@ -314,7 +314,7 @@ namespace PurityAnalyzer
                 Utils.RemoveOverriddenMethods(allDestinationMethods)
                     .Where(x => x.IsAbstract || x.IsVirtual || x.IsOverride);
 
-            var destInterfaceBasedMethods = 
+            var destInterfaceBasedMethods =
                     Utils.GetAllInterfaceIncludingSelfIfIsInterface(destinationType)
                         .SelectMany(x => x.GetMembers()
                         .OfType<IMethodSymbol>())
@@ -327,7 +327,7 @@ namespace PurityAnalyzer
             var methodsToCheck = nonInterfaceMethodsToCheck.Union(destInterfaceBasedMethods).ToArray();
 
             List<IMethodSymbol> problems = new List<IMethodSymbol>();
-            
+
             foreach (var destMethod in methodsToCheck)
             {
                 var matchingMethodInSourceType = GetMatchingMethod(destMethod, sourceType);
@@ -384,7 +384,7 @@ namespace PurityAnalyzer
                                     }
                                 }
 
-                                
+
 
                             }
                         }
@@ -397,7 +397,7 @@ namespace PurityAnalyzer
                         return type.SpecialType == SpecialType.System_Void || IsPureData(type);
                     }
 
-                    
+
 
                     bool IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods()
                     {
@@ -508,7 +508,7 @@ namespace PurityAnalyzer
                         var identifiers = currentDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToArray();
 
                         return identifiers
-                            .Select(x => new {Identifier = x, Field = semanticModel.GetSymbolInfo(x).Symbol as IFieldSymbol})
+                            .Select(x => new { Identifier = x, Field = semanticModel.GetSymbolInfo(x).Symbol as IFieldSymbol })
                             .Where(x => x.Field != null)
                             .Any(x => IsFieldWrite(x.Identifier, x.Field));
                     }
@@ -519,7 +519,7 @@ namespace PurityAnalyzer
                     if (srcPurity.HasValueEquals(PurityType.PureExceptReadLocally) &&
                         destPurity.HasValueEquals(PurityType.Pure))
                     {
-                        if(!CurrentMemberOrAccessorDeclarationSetsAnyField())
+                        if (!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
                             if (IsSourceNodeANewObject() || IsSourceNodeAParameter() || (IsSourceNodeAccessToLocalState() && (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)))
                             {
@@ -533,7 +533,7 @@ namespace PurityAnalyzer
                     {
                         if (!CurrentMemberOrAccessorDeclarationSetsAnyField())
                         {
-                            if (IsSourceNodeANewObject() || (IsSourceNodeAccessToLocalState() && purityType == PurityType.PureExceptLocally ))
+                            if (IsSourceNodeANewObject() || (IsSourceNodeAccessToLocalState() && purityType == PurityType.PureExceptLocally))
                             {
                                 if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
                                     legalCastFromNewObjectOrParameter = true;
@@ -541,7 +541,7 @@ namespace PurityAnalyzer
                         }
                     }
 
-                    if(!legalCastFromNewObjectOrParameter)
+                    if (!legalCastFromNewObjectOrParameter)
                     {
                         if (!IsGreaterOrEqaulPurity(
                             srcPurity,
@@ -609,7 +609,7 @@ namespace PurityAnalyzer
         private bool IsAPropertyWithAnInstancePureExceptReadLocallyGetter(SyntaxNode syntaxNode,
             RecursiveState recursiveState)
         {
-            if(syntaxNode is IdentifierNameSyntax identifier)
+            if (syntaxNode is IdentifierNameSyntax identifier)
             {
                 if (semanticModel.GetSymbolInfo(identifier).Symbol is IPropertySymbol
                         propertySymbol && !propertySymbol.IsStatic && propertySymbol.GetMethod != null)
@@ -663,101 +663,47 @@ namespace PurityAnalyzer
         private IEnumerable<Impurity> GetImpurities2(ObjectCreationExpressionSyntax node,
             RecursiveState recursiveState)
         {
-            if (semanticModel.GetSymbolInfo(node.Type).Symbol is INamedTypeSymbol symbol)
+            if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol symbol)
             {
-                if (!IsTypePureForConstruction(symbol, recursiveState))
+                if (!IsMethodPure(symbol, recursiveState))
                 {
-                    yield return new Impurity(node, "Constructed object is not pure");
+                    yield return new Impurity(node, "Constructor is not pure");
                 }
             }
-        }
-
-        private bool IsTypePureForConstruction(INamedTypeSymbol symbol, RecursiveState recursiveState)
-        {
-            if (recursiveState.ConstructedTypesInStack.Contains(symbol))
-                return true;
-
-            var modifiedRecursiveState = recursiveState.AddConstructedType(symbol);
-
-            if (Utils.SymbolHasAssumeIsPureAttribute(symbol))
-                return true;
-
-            if (!Utils.GetAllMethods(symbol)
-                    .Where(x =>
-                        x.MethodKind == MethodKind.Constructor ||
-                        x.MethodKind == MethodKind.StaticConstructor)
-                    .All(method => IsMethodPure(method, modifiedRecursiveState)))
-                return false;
-
-            if (symbol.IsInCode())
-            {
-                var semanticModelForType =
-                    semanticModel.Compilation.GetSemanticModel(symbol.Locations.First().SourceTree);
-
-                if (AnyImpureFieldInitializer(
-                    symbol,
-                    semanticModelForType,
-                    modifiedRecursiveState))
-                    return false;
-
-                if (AnyImpurePropertyInitializer(
-                    symbol,
-                    semanticModelForType,
-                    modifiedRecursiveState))
-                    return false;
-            }
-
-            var baseType = symbol.BaseType;
-
-            if (baseType != null)
-            {
-                while (!baseType.Equals(objectType))
-                {
-                    if (baseType.IsInCode())
-                    {
-                        var semanticModelForType =
-                            semanticModel.Compilation.GetSemanticModel(baseType.Locations.First().SourceTree);
-
-                        if (AnyImpureFieldInitializer(
-                            baseType,
-                            semanticModelForType,
-                            modifiedRecursiveState))
-                            return false;
-
-                        if (AnyImpurePropertyInitializer(
-                            baseType,
-                            semanticModelForType,
-                            modifiedRecursiveState))
-                            return false;
-                    }
-
-                    baseType = baseType.BaseType;
-                }
-            }
-
-            return true;
         }
 
         private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol,
             SemanticModel semanticModel,
-            RecursiveState recursiveState)
+            RecursiveState recursiveState,
+            InstanceStaticCombination instanceStaticCombination)
         {
             return
                 symbol.Locations
                     .Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpurePropertyInitializer(x, semanticModel, knownReturnsNewObjectMethods, recursiveState));
+                    .Any(x => Utils.AnyImpurePropertyInitializer(
+                        x,
+                        semanticModel,
+                        knownReturnsNewObjectMethods,
+                        recursiveState,
+                        instanceStaticCombination));
         }
 
         private bool AnyImpureFieldInitializer(
             INamedTypeSymbol symbol,
             SemanticModel semanticModel,
-            RecursiveState recursiveState)
+            RecursiveState recursiveState,
+            InstanceStaticCombination instanceStaticCombination)
         {
             return
                 symbol.Locations.Select(x => x.SourceTree.GetRoot().FindNode(x.SourceSpan))
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(x => Utils.AnyImpureFieldInitializer(x, semanticModel, knownReturnsNewObjectMethods, recursiveState));
+                    .Any(x => Utils.AnyImpureFieldInitializer(
+                        x,
+                        semanticModel,
+                        knownReturnsNewObjectMethods,
+                        recursiveState,
+                        instanceStaticCombination));
         }
 
         private bool IsParameter(SyntaxNode node)
@@ -841,7 +787,7 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IEventSymbol)
             {
-                return new []{new Impurity(node, "Event access")};
+                return new[] { new Impurity(node, "Event access") };
             }
 
             return Enumerable.Empty<Impurity>();
@@ -892,7 +838,7 @@ namespace PurityAnalyzer
 
                         if (usage.IsWrite())
                         {
-                             yield return new Impurity(node, "Write access to field");
+                            yield return new Impurity(node, "Write access to field");
                         }
                         else
                         {
@@ -1041,7 +987,7 @@ namespace PurityAnalyzer
             BinaryExpressionSyntax node,
             RecursiveState recursiveState)
         {
-            if (node.OperatorToken.Kind() ==  SyntaxKind.AmpersandAmpersandToken)
+            if (node.OperatorToken.Kind() == SyntaxKind.AmpersandAmpersandToken)
             {
                 var leftNodeType = semanticModel.GetTypeInfo(node.Left).Type;
 
@@ -1202,10 +1148,27 @@ namespace PurityAnalyzer
             if (Utils.SymbolHasIsPureAttribute(method.ContainingType))
                 return true;
 
+
+            if (method.MethodKind == MethodKind.Constructor || method.IsStatic)
+            {
+                var staticConstructor = method.ContainingType.StaticConstructors.FirstOrNoValue();
+
+                if (staticConstructor.HasValue)
+                {
+                    if (!IsMethodPure(staticConstructor.GetValue(), recursiveState.AddMethod(method, purityType)))
+                    {
+                        return false;
+                    }
+                }
+            }
+
             if (method.IsInCode())
             {
-                if (method.IsImplicitlyDeclared)
-                    return true;
+                if (method.MethodKind != MethodKind.Constructor && method.MethodKind != MethodKind.StaticConstructor)
+                {
+                    if (method.IsImplicitlyDeclared)
+                        return true;
+                }
 
                 var location = method.Locations.First();
 
@@ -1233,21 +1196,93 @@ namespace PurityAnalyzer
                     }
                 }
 
-                var imp = Utils.GetImpurities(
-                    methodNode,
-                    semanticModel.Compilation.GetSemanticModel(locationSourceTree),
-                    knownReturnsNewObjectMethods,
-                    recursiveState.AddMethod(method, purityType),
-                    purityType);
+                if (method.MethodKind != MethodKind.Constructor && method.MethodKind != MethodKind.StaticConstructor)
+                {
+                    return !AnyImpuritiesInMethod();
+                }
 
-                if (imp.Any()) return false;
-            }
-            else
-            {
-                if (!IsKnownPureMethod(method, purityType)) return false;
+                var semanticModelForType =
+                    semanticModel.Compilation.GetSemanticModel(method.ContainingType.Locations.First().SourceTree);
+
+                var modifiedRecursiveState = recursiveState.AddMethod(method, purityType);
+
+                if (AnyImpureFieldInitializer(
+                    method.ContainingType,
+                    semanticModelForType,
+                    modifiedRecursiveState,
+                    method.IsStatic
+                        ? (InstanceStaticCombination) new InstanceStaticCombination.Static()
+                        : new InstanceStaticCombination.Instance()))
+                {
+                    return false;
+                }
+
+                if (AnyImpurePropertyInitializer(
+                    method.ContainingType,
+                    semanticModelForType,
+                    modifiedRecursiveState,
+                    method.IsStatic
+                        ? (InstanceStaticCombination) new InstanceStaticCombination.Static()
+                        : new InstanceStaticCombination.Instance()))
+                {
+                    return false;
+                }
+
+                Maybe<IMethodSymbol> GetBaseParameterLessConstructor()
+                {
+                    return method.ContainingType.BaseType
+                        .ToMaybe()
+                        .ChainValue(b => b.Constructors.Where(x => x.Parameters.Length == 0).FirstOrNoValue());
+                }
+
+                if (method.IsImplicitlyDeclared)
+                {
+                    return
+                        GetBaseParameterLessConstructor()
+                            .ChainValue(x => IsMethodPure(x, modifiedRecursiveState))
+                            .ValueOr(true);
+                }
+
+                ConstructorDeclarationSyntax constructorDeclaration = (ConstructorDeclarationSyntax) methodNode;
+
+                if (constructorDeclaration.Initializer != null)
+                {
+                    if (semanticModelForType.GetSymbolInfo(constructorDeclaration.Initializer).Symbol is
+                        IMethodSymbol calledConstructor)
+                    {
+                        if (!IsMethodPure(calledConstructor, modifiedRecursiveState))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    var implicitBaseConstructor = GetBaseParameterLessConstructor();
+
+                    if (implicitBaseConstructor.HasValue)
+                    {
+                        if (!IsMethodPure(implicitBaseConstructor.GetValue(), modifiedRecursiveState))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return !AnyImpuritiesInMethod();
+
+                bool AnyImpuritiesInMethod()
+                {
+                    return Utils.GetImpurities(
+                        methodNode,
+                        semanticModel.Compilation.GetSemanticModel(locationSourceTree),
+                        knownReturnsNewObjectMethods,
+                        recursiveState.AddMethod(method, purityType),
+                        purityType).Any();
+                }
             }
 
-            return true;
+            return IsKnownPureMethod(method, purityType);
         }
 
         private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
@@ -1271,7 +1306,7 @@ namespace PurityAnalyzer
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptLocallyMethods
-                    +Environment.NewLine
+                    + Environment.NewLine
                     + PurityAnalyzerAnalyzer
                         .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
                         .ValueOr("");
@@ -1288,7 +1323,7 @@ namespace PurityAnalyzer
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptReadLocallyMethods
-                    +Environment.NewLine
+                    + Environment.NewLine
                     + PurityAnalyzerAnalyzer
                         .CustomPureExceptReadLocallyMethodsFilename.ChainValue(File.ReadAllText)
                         .ValueOr("");
@@ -1350,7 +1385,7 @@ namespace PurityAnalyzer
                 }
             }
 
-            if(purityType == PurityType.PureExceptLocally)
+            if (purityType == PurityType.PureExceptLocally)
             {
                 if (knownPureExceptLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
