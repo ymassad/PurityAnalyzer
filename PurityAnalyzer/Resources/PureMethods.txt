@@ -1,8 +1,66 @@
 System.String, ToString
+System.String, Equals(System.String)
+System.String, Equals(System.String, System.String)
+System.String, Equals(System.Object)
+System.String, Join(System.String, System.String[])
+System.String, Join(System.String, System.Object[])
+System.String, Join(System.String, System.Collections.Generic.IEnumerable`1)
+System.String, Join(System.String, System.String[], System.Int32, System.Int32)
+System.String, ToCharArray()
+System.String, ToCharArray(System.Int32, System.Int32)
+System.String, IsNullOrEmpty(System.String)
+System.String, IsNullOrWhiteSpace(System.String)
+System.String, get_Length
+System.String, Substring(System.Int32)
+System.String, Substring(System.Int32, System.Int32)
+System.String, CompareOrdinal(System.String, System.String)
+System.String, CompareOrdinal(System.String, System.Int32, System.String, System.Int32, System.Int32)
+System.String, Contains(System.String)
+System.String, IndexOf(System.Char)
+System.String, IndexOf(System.Char, System.Int32)
+System.String, IndexOf(System.Char, System.Int32, System.Int32)
+System.String, IndexOfAny(System.Char[])
+System.String, IndexOfAny(System.Char[], System.Int32)
+System.String, IndexOfAny(System.Char[], System.Int32, System.Int32)
+System.String, LastIndexOf(System.Char)
+System.String, LastIndexOf(System.Char, System.Int32)
+System.String, LastIndexOf(System.Char, System.Int32, System.Int32)
+System.String, LastIndexOfAny(System.Char[])
+System.String, LastIndexOfAny(System.Char[], System.Int32)
+System.String, LastIndexOfAny(System.Char[], System.Int32, System.Int32)
+System.String, PadLeft(System.Int32)
+System.String, PadLeft(System.Int32, System.Char)
+System.String, PadRight(System.Int32)
+System.String, PadRight(System.Int32, System.Char)
+System.String, ToUpperInvariant
+System.String, ToLowerInvariant
+System.String, ToString()
+System.String, ToString(System.IFormatProvider)
+System.String, Clone
+System.String, Replace(System.Char, System.Char)
+System.String, Replace(System.String, System.String)
+System.String, Remove(System.Int32, System.Int32)
+System.String, Remove(System.Int32)
+System.String, Copy(System.String)
+System.String, Concat(System.Object)
+System.String, Concat(System.Object, System.Object)
+System.String, Concat(System.Object, System.Object, System.Object)
+System.String, Concat(System.Object[])
+System.String, Concat(System.Collections.Generic.IEnumerable`1)
+System.String, Concat(System.String, System.String)
+System.String, Concat(System.String, System.String, System.String)
+System.String, Concat(System.String, System.String, System.String, System.String)
+System.String, Concat(System.String[])
+System.String, GetTypeCode
+System.String, GetEnumerator
+System.String, System.Collections.Generic.IEnumerable<System.Char>.GetEnumerator
+System.String, System.Collections.IEnumerable.GetEnumerator
+System.String, get_Chars
+System.String, op_Addition
+System.String, op_Equality
+System.String, op_Inequality
 System.Guid, ToString
 System.Guid, Parse
-System.String, Join
-System.String, Equals
 System.Text.StringBuilder, .ctor
 System.Xml.XmlDocument, .ctor
 System.Globalization.NumberFormatInfo, get_InvariantInfo
@@ -205,3 +263,4 @@ System.UIntPtr, ToUInt64
 System.UIntPtr, ToString()
 System.Object, .ctor
 System.Attribute, .ctor
+System.Collections.Generic.List`1, .ctor

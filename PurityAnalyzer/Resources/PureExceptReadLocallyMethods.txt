@@ -3,3 +3,4 @@ System.Array, System.Collections.IList.get_Item
 System.Array, GetEnumerator
 System.Collections.Generic.List`1, GetEnumerator
 System.Collections.Generic.List`1, System.Collections.Generic.IEnumerable<T>.GetEnumerator
+System.Collections.Generic.List`1, System.Collections.IEnumerable.GetEnumerator

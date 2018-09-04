@@ -453,6 +453,9 @@ namespace PurityAnalyzer
 
         public static string GetFullMetaDataName(ITypeSymbol typeSymbol)
         {
+            if (typeSymbol is IArrayTypeSymbol arrayType)
+                return GetFullMetaDataName(arrayType.ElementType) + "[]";
+
             string name = typeSymbol.MetadataName;
 
             if (typeSymbol.ContainingType != null)

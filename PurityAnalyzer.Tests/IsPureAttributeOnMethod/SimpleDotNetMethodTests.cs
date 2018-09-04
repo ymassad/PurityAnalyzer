@@ -17,6 +17,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
         {
             string code = $@"
 using System;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {{
@@ -40,6 +41,7 @@ public static class Module1
         {
             string code = $@"
 using System;
+using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
 {{
@@ -85,20 +87,12 @@ public static class Module1
 
             foreach (var c in GetPureCasesForChar()) yield return c;
 
+            foreach (var c in GetPureCasesForString()) yield return c;
+
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
-            yield return @"String.Join("","", new []{""1"", ""2""})";
-            yield return @"String.Equals(""1"", ""2"")";
-            yield return @"""1"".Equals(""2"")";
-            yield return @"String.Equals(""1"", ""2"", StringComparison.Ordinal)";
-            yield return @"""1"".Equals(""2"", StringComparison.Ordinal)";
-            yield return @"String.Equals(""1"", ""2"", StringComparison.OrdinalIgnoreCase)";
-            yield return @"""1"".Equals(""2"", StringComparison.OrdinalIgnoreCase)";
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
-            yield return @"var a = string.Empty";
-
-
 
         }
 
@@ -584,9 +578,90 @@ public static class Module1
             yield return @"var a = char.ConvertToUtf32('a', 'a')";
         }
 
+        public static IEnumerable<string> GetPureCasesForString()
+        {
+            yield return @"String.Equals(""1"", ""2"")";
+            yield return @"""1"".Equals(""2"")";
+            yield return @"""1"".Equals(new object())";
+
+            yield return @"var a = string.Empty";
+            yield return @"var a = string.Empty + string.Empty";
+            yield return @"var a = string.Empty == string.Empty";
+            yield return @"var a = string.Empty != string.Empty";
+            yield return @"var a = string.Empty; a += string.Empty";
+            yield return @"String.Join("","", new []{""1"", ""2""})";
+            yield return @"var a = string.Join(string.Empty, string.Empty, string.Empty)";
+            yield return @"var a = string.Join(string.Empty, new object(), new object())";
+            yield return @"var a = string.Join<char>(string.Empty, new List<char> {'a','b','c'})";
+            yield return @"var a = string.Join(string.Empty, new List<string> {string.Empty, string.Empty})";
+            yield return @"var a = string.Join(string.Empty, new [] {string.Empty, string.Empty}, 0 ,2)";
+            yield return @"var a = ""1""[0]";
+            yield return @"var a = string.Empty.ToCharArray()";
+            yield return @"var a = ""1"".ToCharArray(0,1)";
+            yield return @"var a = string.IsNullOrEmpty(string.Empty)";
+            yield return @"var a = string.IsNullOrWhiteSpace(string.Empty)";
+            yield return @"var a = string.Empty.Length";
+            yield return @"var a = ""1"".Substring(0)";
+            yield return @"var a = ""1"".Substring(0,1)";
+            yield return @"var a = string.CompareOrdinal(""1"", ""1"")";
+            yield return @"var a = string.CompareOrdinal(""1"", 0, ""1"", 0, 1)";
+            yield return @"var a = string.Empty.Contains(string.Empty)";
+            yield return @"var a = ""1"".IndexOf('1')";
+            yield return @"var a = ""1"".IndexOf('1', 0)";
+            yield return @"var a = ""1"".IndexOf('1', 0, 1)";
+            yield return @"var a = ""1"".IndexOfAny(new []{'1'})";
+            yield return @"var a = ""1"".IndexOfAny(new []{'1'}, 0)";
+            yield return @"var a = ""1"".IndexOfAny(new []{'1'}, 0, 1)";
+            yield return @"var a = ""1"".LastIndexOf('1')";
+            yield return @"var a = ""1"".LastIndexOf('1', 0)";
+            yield return @"var a = ""1"".LastIndexOf('1', 0, 1)";
+            yield return @"var a = ""1"".LastIndexOfAny(new []{'1'})";
+            yield return @"var a = ""1"".LastIndexOfAny(new []{'1'}, 0)";
+            yield return @"var a = ""1"".LastIndexOfAny(new []{'1'}, 0, 1)";
+            yield return @"var a = ""1"".PadLeft(2)";
+            yield return @"var a = ""1"".PadLeft(2, 'a')";
+            yield return @"var a = ""1"".PadRight(2)";
+            yield return @"var a = ""1"".PadRight(2, 'a')";
+            yield return @"var a = ""a"".ToUpperInvariant()";
+            yield return @"var a = ""A"".ToLowerInvariant()";
+            yield return @"var a = ""A"".ToString()";
+            yield return @"var a = ""A"".ToString(null)";
+            yield return @"var a = ""A"".Clone()";
+            yield return @"var a = ""A"".Replace('a', 'b')";
+            yield return @"var a = ""A"".Replace(""a"", ""b"")";
+            yield return @"var a = ""A"".Remove(0, 1)";
+            yield return @"var a = ""A"".Remove(0)";
+            yield return @"var a = string.Copy(""A"")";
+            yield return @"var a = string.Concat(new object())";
+            yield return @"var a = string.Concat(new object(), new object())";
+            yield return @"var a = string.Concat(new object(), new object(), new object())";
+            yield return @"var a = string.Concat(new object []{new object(), new object(), new object()})";
+            yield return @"var a = string.Concat<char>(new List<char> {'a','b','c'})";
+            yield return @"var a = string.Concat(new List<string> {""a"",""b"",""c""})";
+            yield return @"var a = string.Concat(string.Empty, string.Empty)";
+            yield return @"var a = string.Concat(string.Empty, string.Empty, string.Empty)";
+            yield return @"var a = string.Concat(string.Empty, string.Empty, string.Empty, string.Empty)";
+            yield return @"var a = string.Concat(new string[]{string.Empty, string.Empty})";
+            yield return @"var a = ""1"".GetTypeCode()";
+            yield return @"var a = (IEnumerable<char>) ""1""";
+            yield return @"var a = ""1"".GetEnumerator()";
+        }
+
         public static IEnumerable<string> GetImpureCases()
         {
             yield return @"1.ToString()";
+            yield return @"String.Equals(""1"", ""2"", StringComparison.CurrentCulture)";
+            yield return @"""1"".Equals(""2"", StringComparison.CurrentCulture)";
+            yield return @"String.Equals(""1"", ""2"", StringComparison.CurrentCultureIgnoreCase)";
+            yield return @"""1"".Equals(""2"", StringComparison.CurrentCultureIgnoreCase)";
+
+
+            yield return @"var a = ""1"".IndexOf(""1"")";
+            yield return @"var a = ""1"".IndexOf(""1"", 0)";
+            yield return @"var a = ""1"".IndexOf(""1"", 0, 1)";
+
+            yield return @"var a = string.Join<int>(string.Empty, new List<int> {1,2,3})";
+            yield return @"var a = string.Concat<int>(new List<int> {1,2,3})";
         }
     }
 }
