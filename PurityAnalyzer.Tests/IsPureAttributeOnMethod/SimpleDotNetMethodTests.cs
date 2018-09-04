@@ -571,6 +571,17 @@ public static class Module1
             yield return @"var a = char.ToString('a')";
             yield return @"var a = char.Parse(""a"")";
             yield return @"var a = char.TryParse(""a"", out var result)";
+            yield return @"var a = 'a'.GetTypeCode()";
+            yield return @"var a = char.IsSurrogate('a')";
+            yield return @"var a = char.IsSurrogate(""a"", 0)";
+            yield return @"var a = char.IsHighSurrogate('a')";
+            yield return @"var a = char.IsHighSurrogate(""a"", 0)";
+            yield return @"var a = char.IsLowSurrogate('a')";
+            yield return @"var a = char.IsLowSurrogate(""a"", 0)";
+            yield return @"var a = char.IsSurrogatePair(""a"", 0)";
+            yield return @"var a = char.IsSurrogatePair('a', 'a')";
+            yield return @"var a = char.ConvertFromUtf32(1)";
+            yield return @"var a = char.ConvertToUtf32('a', 'a')";
         }
 
         public static IEnumerable<string> GetImpureCases()

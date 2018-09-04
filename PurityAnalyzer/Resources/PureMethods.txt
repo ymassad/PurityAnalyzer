@@ -129,6 +129,25 @@ System.UInt16, GetTypeCode
 System.Char, op_Increment
 System.Char, op_Decrement
 System.Char, Equals
+System.Char, CompareTo(System.Char)
+System.Char, CompareTo(System.Object)
+System.Char, GetHashCode
+System.Char, GetTypeCode
+System.Char, ToString()
+System.Char, ToString(System.IFormatProvider)
+System.Char, ToString(System.Char)
+System.Char, Parse(System.String)
+System.Char, TryParse(System.String, System.Char)
+System.Char, IsSurrogate(System.String, System.Int32)
+System.Char, IsSurrogate(System.Char)
+System.Char, IsSurrogatePair(System.String, System.Int32)
+System.Char, IsSurrogatePair(System.Char, System.Char)
+System.Char, IsHighSurrogate(System.String, System.Int32)
+System.Char, IsHighSurrogate(System.Char)
+System.Char, IsLowSurrogate(System.String, System.Int32)
+System.Char, IsLowSurrogate(System.Char)
+System.Char, ConvertFromUtf32(System.Int32)
+System.Char, ConvertToUtf32(System.Char, System.Char)
 System.Byte, op_Increment
 System.Byte, op_Decrement
 System.Byte, Equals
