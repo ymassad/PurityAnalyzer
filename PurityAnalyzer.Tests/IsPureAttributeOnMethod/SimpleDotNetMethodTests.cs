@@ -93,8 +93,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForDouble()) yield return c;
 
-            yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
-            yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
+            foreach (var c in GetPureCasesForGuid()) yield return c;
+
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
 
@@ -735,6 +735,29 @@ public static class Module1
             yield return @"var a = Double.IsNaN(1d)";
         }
 
+        public static IEnumerable<string> GetPureCasesForGuid()
+        {
+            yield return @"var guid = new Guid(new byte[16])";
+            yield return @"var guid = new Guid(1u,1,1,1,1,1,1,1,1,1,1)";
+            yield return @"var guid = new Guid(1, 1, 1, new byte[8])";
+            yield return @"var guid = new Guid(1,1,1,1,1,1,1,1,1,1,1)";
+            yield return @"var guid = new Guid(""41C19760-DF17-4499-A992-F8D8423B2294"")";
+            yield return @"var guid = Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
+            yield return @"var a = Guid.Empty.ToString()";
+            yield return @"var a = Guid.TryParse(""41C19760-DF17-4499-A992-F8D8423B2294"", out var guid)";
+            yield return @"var guid = Guid.ParseExact(""41C19760-DF17-4499-A992-F8D8423B2294"", ""d"")";
+            yield return @"var a = Guid.TryParseExact(""41C19760-DF17-4499-A992-F8D8423B2294"", ""d"", out var guid)";
+            yield return @"var a = Guid.Empty.ToByteArray()";
+            yield return @"var a = Guid.Empty.GetHashCode()";
+            yield return @"var a = Guid.Empty.Equals(Guid.Empty)";
+            yield return @"var a = Guid.Empty.Equals((object)Guid.Empty)";
+            yield return @"var a = Guid.Empty.CompareTo(Guid.Empty)";
+            yield return @"var a = Guid.Empty.CompareTo((object)Guid.Empty)";
+            yield return @"var a = Guid.Empty == Guid.Empty";
+            yield return @"var a = Guid.Empty != Guid.Empty";
+            yield return @"var a = Guid.Empty.ToString(""d"", (IFormatProvider)null)";
+            yield return @"var a = Guid.Empty.ToString(""d"")";
+        }
 
         public static IEnumerable<string> GetImpureCases()
         {
@@ -751,6 +774,8 @@ public static class Module1
 
             yield return @"var a = string.Join<int>(string.Empty, new List<int> {1,2,3})";
             yield return @"var a = string.Concat<int>(new List<int> {1,2,3})";
+
+            yield return @"var guid = Guid.NewGuid()";
         }
     }
 }

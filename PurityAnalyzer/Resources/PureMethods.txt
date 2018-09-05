@@ -59,8 +59,26 @@ System.String, get_Chars
 System.String, op_Addition
 System.String, op_Equality
 System.String, op_Inequality
-System.Guid, ToString
-System.Guid, Parse
+System.Guid, .ctor(System.Byte[])
+System.Guid, .ctor(System.UInt32, System.UInt16,  System.UInt16,  System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte)
+System.Guid, .ctor(System.Int32, System.Int16,  System.Int16,  System.Byte[])
+System.Guid, .ctor(System.Int32, System.Int16,  System.Int16,  System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte, System.Byte)
+System.Guid, .ctor(System.String)
+System.Guid, Parse(System.String)
+System.Guid, TryParse(System.String, System.Guid)
+System.Guid, ParseExact(System.String, System.String)
+System.Guid, TryParseExact(System.String, System.String, System.Guid)
+System.Guid, ToByteArray()
+System.Guid, GetHashCode()
+System.Guid, Equals(System.Guid)
+System.Guid, Equals(System.Object)
+System.Guid, CompareTo(System.Guid)
+System.Guid, CompareTo(System.Object)
+System.Guid, op_Equality
+System.Guid, op_Inequality
+System.Guid, ToString()
+System.Guid, ToString(System.String)
+System.Guid, ToString(System.String, System.IFormatProvider)
 System.Text.StringBuilder, .ctor
 System.Xml.XmlDocument, .ctor
 System.Globalization.NumberFormatInfo, get_InvariantInfo
