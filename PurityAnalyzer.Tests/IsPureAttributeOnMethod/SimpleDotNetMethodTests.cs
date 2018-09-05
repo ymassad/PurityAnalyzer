@@ -89,6 +89,10 @@ public static class Module1
 
             foreach (var c in GetPureCasesForString()) yield return c;
 
+            foreach (var c in GetPureCasesForSingle()) yield return c;
+
+            foreach (var c in GetPureCasesForDouble()) yield return c;
+
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"")";
             yield return @"Guid.Parse(""41C19760-DF17-4499-A992-F8D8423B2294"").ToString()";
             yield return @"var a = ((int?)1).HasValue";
@@ -646,6 +650,91 @@ public static class Module1
             yield return @"var a = (IEnumerable<char>) ""1""";
             yield return @"var a = ""1"".GetEnumerator()";
         }
+
+        public static IEnumerable<string> GetPureCasesForSingle()
+        {
+            yield return @"var a = 1f + 1f";
+            yield return @"var a = 1f - 1f";
+            yield return @"var a = 1f * 1f";
+            yield return @"var a = 1f / 1f";
+            yield return @"var a = 1f % 1f";
+            yield return @"var a = 1f > 1f";
+            yield return @"var a = 1f < 1f";
+            yield return @"var a = 1f >= 1f";
+            yield return @"var a = 1f <= 1f";
+            yield return @"var b = 1f; var a = -b";
+            yield return @"var b = 1f; var a = +b";
+            yield return @"var b = 1f; var a = --b";
+            yield return @"var b = 1f; var a = ++b";
+            yield return @"var b = 1f; var a = b++";
+            yield return @"var b = 1f; var a = b--";
+
+            yield return @"var a = 1f == 1f";
+            yield return @"var a = 1f != 1f";
+            yield return @"var a = 1f.Equals(1f)";
+            yield return @"var a = 1f.Equals(new object())";
+
+
+            yield return @"var a = 1f; a += 1f";
+            yield return @"var a = 1f; a *= 1f";
+            yield return @"var a = 1f; a /= 1f";
+            yield return @"var a = 1f; a %= 1f";
+            yield return @"var a = 1f; a -= 1f";
+
+            yield return @"var a = 1f.CompareTo(1f)";
+            yield return @"var a = 1f.CompareTo(new object())";
+            yield return @"var a = 1f.GetHashCode()";
+            yield return @"var a = 1f.GetTypeCode()";
+
+            yield return @"var a = Single.IsInfinity(1f)";
+            yield return @"var a = Single.IsPositiveInfinity(1f)";
+            yield return @"var a = Single.IsNegativeInfinity(1f)";
+            yield return @"var a = Single.IsNaN(1f)";
+
+
+        }
+
+        public static IEnumerable<string> GetPureCasesForDouble()
+        {
+            yield return @"var a = 1d + 1d";
+            yield return @"var a = 1d - 1d";
+            yield return @"var a = 1d * 1d";
+            yield return @"var a = 1d / 1d";
+            yield return @"var a = 1d % 1d";
+            yield return @"var a = 1d > 1d";
+            yield return @"var a = 1d < 1d";
+            yield return @"var a = 1d >= 1d";
+            yield return @"var a = 1d <= 1d";
+            yield return @"var b = 1d; var a = -b";
+            yield return @"var b = 1d; var a = +b";
+            yield return @"var b = 1d; var a = --b";
+            yield return @"var b = 1d; var a = ++b";
+            yield return @"var b = 1d; var a = b++";
+            yield return @"var b = 1d; var a = b--";
+
+            yield return @"var a = 1d == 1d";
+            yield return @"var a = 1d != 1d";
+            yield return @"var a = 1d.Equals(1d)";
+            yield return @"var a = 1d.Equals(new object())";
+
+
+            yield return @"var a = 1d; a += 1d";
+            yield return @"var a = 1d; a *= 1d";
+            yield return @"var a = 1d; a /= 1d";
+            yield return @"var a = 1d; a %= 1d";
+            yield return @"var a = 1d; a -= 1d";
+
+            yield return @"var a = 1d.CompareTo(1d)";
+            yield return @"var a = 1d.CompareTo(new object())";
+            yield return @"var a = 1d.GetHashCode()";
+            yield return @"var a = 1d.GetTypeCode()";
+
+            yield return @"var a = Double.IsInfinity(1d)";
+            yield return @"var a = Double.IsPositiveInfinity(1d)";
+            yield return @"var a = Double.IsNegativeInfinity(1d)";
+            yield return @"var a = Double.IsNaN(1d)";
+        }
+
 
         public static IEnumerable<string> GetImpureCases()
         {
