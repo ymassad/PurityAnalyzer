@@ -1312,6 +1312,12 @@ namespace PurityAnalyzer
 
         public static bool IsKnownPureMethod(KnownSymbols knownSymbols1, IMethodSymbol method, PurityType purityType = PurityType.Pure)
         {
+            if (method.ContainingType.TypeKind == TypeKind.Enum)
+            {
+                if (method.Name == "op_Equality" || method.Name == "op_Inequality")
+                    return true;
+            }
+
             if (method.ContainingType.TypeKind == TypeKind.Delegate)
                 return true;
 

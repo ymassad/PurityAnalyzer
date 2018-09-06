@@ -292,6 +292,9 @@ public static class Module1
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
 
+            yield return @"var a = StringComparison.Ordinal == StringComparison.Ordinal";
+            yield return @"var a = StringComparison.Ordinal != StringComparison.Ordinal";
+
         }
 
         public static IEnumerable<string> GetPureCasesForInt32()
