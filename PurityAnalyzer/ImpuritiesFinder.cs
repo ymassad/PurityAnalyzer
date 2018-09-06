@@ -14,17 +14,32 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
+    public class KnownSymbols
+    {
+        public KnownSymbols(Dictionary<string, HashSet<MethodDescriptor>> knownPureMethods, Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptLocallyMethods, Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods, HashSet<INamedTypeSymbol> knownPureTypes)
+        {
+            KnownPureMethods = knownPureMethods;
+            KnownPureExceptLocallyMethods = knownPureExceptLocallyMethods;
+            KnownPureExceptReadLocallyMethods = knownPureExceptReadLocallyMethods;
+            KnownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
+            KnownPureTypes = knownPureTypes;
+        }
+
+        public Dictionary<string, HashSet<MethodDescriptor>> KnownPureMethods { get; }
+        public Dictionary<string, HashSet<MethodDescriptor>> KnownPureExceptLocallyMethods { get; }
+        public Dictionary<string, HashSet<MethodDescriptor>> KnownPureExceptReadLocallyMethods { get; }
+        public Dictionary<string, HashSet<MethodDescriptor>> KnownReturnsNewObjectMethods { get; }
+        public HashSet<INamedTypeSymbol> KnownPureTypes { get; }
+
+
+    }
+
     public class ImpuritiesFinder
     {
         private readonly PurityType purityType;
 
         private readonly SemanticModel semanticModel;
         private readonly INamedTypeSymbol objectType;
-        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureMethods;
-        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptLocallyMethods;
-        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods;
-        private readonly Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods;
-        private readonly HashSet<INamedTypeSymbol> knownPureTypes;
         private readonly IPropertySymbol arrayIListItemProperty;
         private readonly INamedTypeSymbol genericIenumeratorType;
         private readonly INamedTypeSymbol ienumeratorType;
@@ -33,13 +48,17 @@ namespace PurityAnalyzer
         private readonly IMethodSymbol genericGetEnumeratorMethod;
         private readonly INamedTypeSymbol genericIenumerableType;
         private readonly INamedTypeSymbol genericListType;
+        private readonly KnownSymbols knownSymbols;
 
-        public ImpuritiesFinder(SemanticModel semanticModel, PurityType purityType, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
+        public ImpuritiesFinder(
+            SemanticModel semanticModel,
+            PurityType purityType,
+            KnownSymbols knownSymbols)
         {
             this.semanticModel = semanticModel;
             this.purityType = purityType;
-            this.knownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
 
+            
             objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
 
             var arrayType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Array).FullName);
@@ -59,10 +78,7 @@ namespace PurityAnalyzer
 
             genericListType = semanticModel.Compilation.GetTypeByMetadataName(typeof(List<>).FullName);
 
-            knownPureMethods = GetKnownPureMethods();
-            knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
-            knownPureExceptReadLocallyMethods = GetKnownPureExceptReadLocallyMethods();
-            knownPureTypes = GetKnownPureTypes(this.semanticModel);
+            this.knownSymbols = knownSymbols;
         }
 
         public IEnumerable<Impurity> GetImpurities(SyntaxNode node, RecursiveState recursiveState)
@@ -149,7 +165,7 @@ namespace PurityAnalyzer
             {
                 if (unaryOperation.OperatorKind == UnaryOperatorKind.True)
                 {
-                    if (!IsMethodPure(unaryOperation.OperatorMethod, recursiveState))
+                    if (!IsMethodPure(knownSymbols, semanticModel, unaryOperation.OperatorMethod, recursiveState))
                     {
                         yield return new Impurity(node, "True operator is not pure");
                     }
@@ -161,7 +177,7 @@ namespace PurityAnalyzer
         {
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method, recursiveState))
+                if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState))
                 {
                     yield return new Impurity(node, "Operator is impure");
                 }
@@ -172,7 +188,7 @@ namespace PurityAnalyzer
         {
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method, recursiveState))
+                if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState))
                 {
                     yield return new Impurity(node, "Operator is impure");
                 }
@@ -202,7 +218,7 @@ namespace PurityAnalyzer
 
                 if (getEnumeratorMethod.HasValue)
                 {
-                    if (!IsMethodPure(getEnumeratorMethod.GetValue(), recursiveState))
+                    if (!IsMethodPure(knownSymbols, semanticModel, getEnumeratorMethod.GetValue(), recursiveState))
                         yield return new Impurity(forEachStatement, "GetEnumerator method is impure");
 
 
@@ -216,7 +232,7 @@ namespace PurityAnalyzer
 
                     if (currentPropertyGetter.HasValue)
                     {
-                        if (!IsMethodPure(currentPropertyGetter.GetValue(), recursiveState))
+                        if (!IsMethodPure(knownSymbols, semanticModel, currentPropertyGetter.GetValue(), recursiveState))
                             yield return new Impurity(forEachStatement, "Current property is impure");
                     }
 
@@ -230,7 +246,7 @@ namespace PurityAnalyzer
 
                     if (moveNextMethod.HasValue)
                     {
-                        if (!IsMethodPure(moveNextMethod.GetValue(), recursiveState))
+                        if (!IsMethodPure(knownSymbols, semanticModel, moveNextMethod.GetValue(), recursiveState))
                             yield return new Impurity(forEachStatement, "MoveNext method is impure");
                     }
 
@@ -241,7 +257,7 @@ namespace PurityAnalyzer
                                 .FindImplementationForInterfaceMember(
                                     idisposableType.GetMembers("Dispose").First()) is IMethodSymbol disposeMethod)
                         {
-                            if (!IsMethodPure(disposeMethod, recursiveState))
+                            if (!IsMethodPure(knownSymbols, semanticModel, disposeMethod, recursiveState))
                                 yield return new Impurity(forEachStatement, "Dispose method is impure");
                         }
                     }
@@ -344,12 +360,12 @@ namespace PurityAnalyzer
                 }
                 else
                 {
-                    var srcPurity = GetMethodPurityType(matchingMethodInSourceType.GetValue(), recursiveState);
-                    var destPurity = GetMethodPurityType(destMethod, recursiveState);
+                    var srcPurity = GetMethodPurityType(semanticModel, knownSymbols, matchingMethodInSourceType.GetValue(), recursiveState);
+                    var destPurity = GetMethodPurityType(semanticModel, knownSymbols, destMethod, recursiveState);
 
                     bool IsSourceNodeANewObject()
                     {
-                        return Utils.IsNewlyCreatedObject(semanticModel, sourceNode, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty());
+                        return Utils.IsNewlyCreatedObject(semanticModel, sourceNode, knownSymbols, RecursiveIsNewlyCreatedObjectState.Empty(), recursiveState);
                     }
 
                     bool IsSourceNodeAParameter()
@@ -618,7 +634,7 @@ namespace PurityAnalyzer
                 if (semanticModel.GetSymbolInfo(identifier).Symbol is IPropertySymbol
                         propertySymbol && !propertySymbol.IsStatic && propertySymbol.GetMethod != null)
                 {
-                    if (IsMethodPure(propertySymbol.GetMethod,
+                    if (IsMethodPure(knownSymbols, semanticModel, propertySymbol.GetMethod,
                         recursiveState,
                         PurityType.PureExceptReadLocally))
                     {
@@ -669,7 +685,7 @@ namespace PurityAnalyzer
         {
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol symbol)
             {
-                if (!IsMethodPure(symbol, recursiveState))
+                if (!IsMethodPure(knownSymbols, semanticModel, symbol, recursiveState))
                 {
                     yield return new Impurity(node, "Constructor is not pure");
                 }
@@ -677,7 +693,7 @@ namespace PurityAnalyzer
         }
 
         public static bool AnyImpurePropertyInitializer(
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            KnownSymbols knownSymbols,
             INamedTypeSymbol symbol,
             SemanticModel semanticModel,
             RecursiveState recursiveState,
@@ -690,13 +706,13 @@ namespace PurityAnalyzer
                     .Any(x => Utils.AnyImpurePropertyInitializer(
                         x,
                         semanticModel,
-                        knownReturnsNewObjectMethods,
+                        knownSymbols,
                         recursiveState,
                         instanceStaticCombination));
         }
 
         public static bool AnyImpureFieldInitializer(
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            KnownSymbols knownSymbols,
             INamedTypeSymbol symbol,
             SemanticModel semanticModel,
             RecursiveState recursiveState,
@@ -708,7 +724,7 @@ namespace PurityAnalyzer
                     .Any(x => Utils.AnyImpureFieldInitializer(
                         x,
                         semanticModel,
-                        knownReturnsNewObjectMethods,
+                        knownSymbols,
                         recursiveState,
                         instanceStaticCombination));
         }
@@ -779,7 +795,7 @@ namespace PurityAnalyzer
 
             if (symbol.Symbol is IFieldSymbol field)
             {
-                return GetImpuritiesForFieldAccess(node, field);
+                return GetImpuritiesForFieldAccess(node, field, recursiveState);
             }
 
             if (symbol.Symbol is IPropertySymbol property)
@@ -800,11 +816,12 @@ namespace PurityAnalyzer
             return Enumerable.Empty<Impurity>();
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForFieldAccess(IdentifierNameSyntax node, IFieldSymbol fieldSymbol)
+        private IEnumerable<Impurity> GetImpuritiesForFieldAccess(IdentifierNameSyntax node, IFieldSymbol fieldSymbol,
+            RecursiveState recursiveState1)
         {
             if (!(fieldSymbol.IsReadOnly || fieldSymbol.IsConst))
             {
-                if (!Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
+                if (!Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState1))
                 {
                     var constructorWhereIdentifierIsUsed =
                         node.Ancestors()
@@ -939,7 +956,7 @@ namespace PurityAnalyzer
             }
             else
             {
-                if (Utils.IsAccessOnNewlyCreatedObject(knownReturnsNewObjectMethods, semanticModel, node))
+                if (Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState))
                 {
                     acceptedPurityType = PurityType.PureExceptLocally;
                 }
@@ -949,7 +966,7 @@ namespace PurityAnalyzer
                 }
             }
 
-            if (!IsMethodPure(method, recursiveState, acceptedPurityType))
+            if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState, acceptedPurityType))
             {
                 yield return new Impurity(node, "Method is impure");
             }
@@ -1006,7 +1023,7 @@ namespace PurityAnalyzer
 
                 if (falseOperator.HasValue)
                 {
-                    if (!IsMethodPure(falseOperator.GetValue(), recursiveState))
+                    if (!IsMethodPure(knownSymbols, semanticModel, falseOperator.GetValue(), recursiveState))
                     {
                         yield return new Impurity(node, "False operator is impure");
                     }
@@ -1025,7 +1042,7 @@ namespace PurityAnalyzer
 
                 if (falseOperator.HasValue)
                 {
-                    if (!IsMethodPure(falseOperator.GetValue(), recursiveState))
+                    if (!IsMethodPure(knownSymbols, semanticModel, falseOperator.GetValue(), recursiveState))
                     {
                         yield return new Impurity(node, "True operator is impure");
                     }
@@ -1034,7 +1051,7 @@ namespace PurityAnalyzer
 
             if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
             {
-                if (!IsMethodPure(method, recursiveState))
+                if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState))
                 {
                     yield return new Impurity(node, "Operator is impure");
                 }
@@ -1059,7 +1076,7 @@ namespace PurityAnalyzer
             {
                 if (semanticModel.GetSymbolInfo(node).Symbol is IMethodSymbol method)
                 {
-                    if (!IsMethodPure(method, recursiveState))
+                    if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState))
                     {
                         yield return new Impurity(node, "Operator is impure");
                     }
@@ -1092,17 +1109,19 @@ namespace PurityAnalyzer
             }
         }
 
-        private Maybe<PurityType> GetMethodPurityType(
+        public static Maybe<PurityType> GetMethodPurityType(
+            SemanticModel semanticModel1,
+            KnownSymbols knownSymbols1,
             IMethodSymbol method,
             RecursiveState recursiveState)
         {
-            if (IsMethodPure(method, recursiveState, PurityType.Pure))
+            if (IsMethodPure(knownSymbols1, semanticModel1, method, recursiveState, PurityType.Pure))
                 return PurityType.Pure;
 
-            if (IsMethodPure(method, recursiveState, PurityType.PureExceptReadLocally))
+            if (IsMethodPure(knownSymbols1, semanticModel1, method, recursiveState, PurityType.PureExceptReadLocally))
                 return PurityType.PureExceptReadLocally;
 
-            if (IsMethodPure(method, recursiveState, PurityType.PureExceptLocally))
+            if (IsMethodPure(knownSymbols1, semanticModel1, method, recursiveState, PurityType.PureExceptLocally))
                 return PurityType.PureExceptLocally;
 
             return Maybe.NoValue;
@@ -1111,16 +1130,18 @@ namespace PurityAnalyzer
         private bool IsAnyKindOfPure(IMethodSymbol method,
             RecursiveState recursiveState)
         {
-            return IsMethodPure(method, recursiveState, PurityType.PureExceptLocally);
+            return IsMethodPure(knownSymbols, semanticModel, method, recursiveState, PurityType.PureExceptLocally);
         }
 
         private bool IsAtLeastPureExceptReadLocally(IMethodSymbol method,
             RecursiveState recursiveState)
         {
-            return IsMethodPure(method, recursiveState, PurityType.PureExceptReadLocally);
+            return IsMethodPure(knownSymbols, semanticModel, method, recursiveState, PurityType.PureExceptReadLocally);
         }
 
-        private bool IsMethodPure(
+        private static bool IsMethodPure(
+            KnownSymbols knownSymbols1,
+            SemanticModel semanticModel1,
             IMethodSymbol method,
             RecursiveState recursiveState,
             PurityType purityType = PurityType.Pure)
@@ -1162,7 +1183,7 @@ namespace PurityAnalyzer
 
                 if (staticConstructor.HasValue)
                 {
-                    if (!IsMethodPure(staticConstructor.GetValue(), recursiveState.AddMethod(method, purityType)))
+                    if (!IsMethodPure(knownSymbols1, semanticModel1, staticConstructor.GetValue(), recursiveState.AddMethod(method, purityType)))
                     {
                         return false;
                     }
@@ -1209,11 +1230,11 @@ namespace PurityAnalyzer
                 }
 
                 var semanticModelForType =
-                    semanticModel.Compilation.GetSemanticModel(method.ContainingType.Locations.First().SourceTree);
+                    semanticModel1.Compilation.GetSemanticModel(method.ContainingType.Locations.First().SourceTree);
 
                 var modifiedRecursiveState = recursiveState.AddMethod(method, purityType);
 
-                if (AnyImpureFieldInitializer(knownReturnsNewObjectMethods, method.ContainingType,
+                if (AnyImpureFieldInitializer(knownSymbols1, method.ContainingType,
                     semanticModelForType,
                     modifiedRecursiveState,
                     method.IsStatic
@@ -1223,7 +1244,7 @@ namespace PurityAnalyzer
                     return false;
                 }
 
-                if (AnyImpurePropertyInitializer(knownReturnsNewObjectMethods, method.ContainingType,
+                if (AnyImpurePropertyInitializer(knownSymbols1, method.ContainingType,
                     semanticModelForType,
                     modifiedRecursiveState,
                     method.IsStatic
@@ -1244,7 +1265,7 @@ namespace PurityAnalyzer
                 {
                     return
                         GetBaseParameterLessConstructor()
-                            .ChainValue(x => IsMethodPure(x, modifiedRecursiveState))
+                            .ChainValue(x => IsMethodPure(knownSymbols1, semanticModel1, x, modifiedRecursiveState))
                             .ValueOr(true);
                 }
 
@@ -1255,7 +1276,7 @@ namespace PurityAnalyzer
                     if (semanticModelForType.GetSymbolInfo(constructorDeclaration.Initializer).Symbol is
                         IMethodSymbol calledConstructor)
                     {
-                        if (!IsMethodPure(calledConstructor, modifiedRecursiveState))
+                        if (!IsMethodPure(knownSymbols1, semanticModel1, calledConstructor, modifiedRecursiveState))
                         {
                             return false;
                         }
@@ -1267,7 +1288,7 @@ namespace PurityAnalyzer
 
                     if (implicitBaseConstructor.HasValue)
                     {
-                        if (!IsMethodPure(implicitBaseConstructor.GetValue(), modifiedRecursiveState))
+                        if (!IsMethodPure(knownSymbols1, semanticModel1, implicitBaseConstructor.GetValue(), modifiedRecursiveState))
                         {
                             return false;
                         }
@@ -1280,100 +1301,33 @@ namespace PurityAnalyzer
                 {
                     return Utils.GetImpurities(
                         methodNode,
-                        semanticModel.Compilation.GetSemanticModel(locationSourceTree),
-                        knownReturnsNewObjectMethods,
+                        semanticModel1.Compilation.GetSemanticModel(locationSourceTree), knownSymbols1,
                         recursiveState.AddMethod(method, purityType),
                         purityType).Any();
                 }
             }
 
-            return IsKnownPureMethod(method, purityType);
+            return IsKnownPureMethod(knownSymbols1, method, purityType);
         }
 
-        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
-        {
-            var pureMethodsFileContents =
-                Resources.PureMethods
-                + Environment.NewLine
-                + PurityAnalyzerAnalyzer
-                  .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
-                  .ValueOr("");
-
-            return pureMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(Utils.ParseMethodDescriptorLine)
-                .GroupBy(x => x.Type, x => x.Method)
-                .ToDictionary(
-                    x => x.Key,
-                    x => new HashSet<MethodDescriptor>(x));
-        }
-
-        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptLocallyMethods()
-        {
-            var pureMethodsExceptLocallyFileContents =
-                Resources.PureExceptLocallyMethods
-                    + Environment.NewLine
-                    + PurityAnalyzerAnalyzer
-                        .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
-                        .ValueOr("");
-
-            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(Utils.ParseMethodDescriptorLine)
-                .GroupBy(x => x.Type, x => x.Method)
-                .ToDictionary(
-                    x => x.Key,
-                    x => new HashSet<MethodDescriptor>(x));
-        }
-
-        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptReadLocallyMethods()
-        {
-            var pureMethodsExceptLocallyFileContents =
-                Resources.PureExceptReadLocallyMethods
-                    + Environment.NewLine
-                    + PurityAnalyzerAnalyzer
-                        .CustomPureExceptReadLocallyMethodsFilename.ChainValue(File.ReadAllText)
-                        .ValueOr("");
-
-            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(Utils.ParseMethodDescriptorLine)
-                .GroupBy(x => x.Type, x => x.Method)
-                .ToDictionary(
-                    x => x.Key,
-                    x => new HashSet<MethodDescriptor>(x));
-        }
-
-        private static HashSet<INamedTypeSymbol> GetKnownPureTypes(SemanticModel semanticModel1)
-        {
-            var pureTypesFileContents =
-                Resources.PureTypes
-                + Environment.NewLine
-                + PurityAnalyzerAnalyzer
-                    .CustomPureTypesFilename.ChainValue(File.ReadAllText)
-                    .ValueOr("");
-
-            var pureTypes =
-                pureTypesFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel1.Compilation.GetTypeByMetadataName(x)));
-        }
-
-        private bool IsKnownPureMethod(IMethodSymbol method, PurityType purityType = PurityType.Pure)
+        public static bool IsKnownPureMethod(KnownSymbols knownSymbols1, IMethodSymbol method, PurityType purityType = PurityType.Pure)
         {
             if (method.ContainingType.TypeKind == TypeKind.Delegate)
                 return true;
 
             if (method.ContainingType.IsGenericType)
             {
-                if (knownPureTypes.Contains(method.ContainingType.ConstructedFrom))
+                if (knownSymbols1.KnownPureTypes.Contains(method.ContainingType.ConstructedFrom))
                     return true;
             }
             else
             {
-                if (knownPureTypes.Contains(method.ContainingType))
+                if (knownSymbols1.KnownPureTypes.Contains(method.ContainingType))
                     return true;
             }
 
 
-            if (knownPureMethods.TryGetValue(Utils.GetFullMetaDataName(method.ContainingType), out var pureMethods) &&
+            if (knownSymbols1.KnownPureMethods.TryGetValue(Utils.GetFullMetaDataName(method.ContainingType), out var pureMethods) &&
                 pureMethods.AnyMatches(method))
             {
                 return true;
@@ -1381,7 +1335,7 @@ namespace PurityAnalyzer
 
             if (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)
             {
-                if (knownPureExceptReadLocallyMethods.TryGetValue(
+                if (knownSymbols1.KnownPureExceptReadLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
                         out var pureExceptReadLocallyMethods) &&
                     pureExceptReadLocallyMethods.AnyMatches(method))
@@ -1392,7 +1346,7 @@ namespace PurityAnalyzer
 
             if (purityType == PurityType.PureExceptLocally)
             {
-                if (knownPureExceptLocallyMethods.TryGetValue(
+                if (knownSymbols1.KnownPureExceptLocallyMethods.TryGetValue(
                         Utils.GetFullMetaDataName(method.ContainingType),
                         out var pureExceptLocallyMethods) &&
                     pureExceptLocallyMethods.AnyMatches(method))

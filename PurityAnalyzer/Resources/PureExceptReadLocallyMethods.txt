@@ -7,21 +7,21 @@ System.Collections.Generic.List`1, System.Collections.IEnumerable.GetEnumerator
 System.Collections.Generic.List`1, get_Capacity
 System.Collections.Generic.List`1, get_Count
 System.Collections.Generic.List`1, get_Item
-System.Collections.Generic.List`1, ConvertAll(System.Converter<T, TOutput>)
-System.Collections.Generic.List`1, Exists(System.Predicate<T>)
-System.Collections.Generic.List`1, Find(System.Predicate<T>)
-System.Collections.Generic.List`1, FindAll(System.Predicate<T>)
-System.Collections.Generic.List`1, FindIndex(System.Predicate<T>)
-System.Collections.Generic.List`1, FindIndex(System.Int32, System.Predicate<T>)
-System.Collections.Generic.List`1, FindIndex(System.Int32, System.Predicate<T>)
-System.Collections.Generic.List`1, Find(System.Predicate<T>)
-System.Collections.Generic.List`1, FindLast(System.Predicate<T>)
-System.Collections.Generic.List`1, FindLastIndex(System.Predicate<T>)
-System.Collections.Generic.List`1, FindLastIndex(System.Int32, System.Predicate<T>)
-System.Collections.Generic.List`1, FindLastIndex(System.Int32, System.Predicate<T>)
+System.Collections.Generic.List`1, ConvertAll(System.Converter`2)
+System.Collections.Generic.List`1, Exists(System.Predicate`1)
+System.Collections.Generic.List`1, Find(System.Predicate`1)
+System.Collections.Generic.List`1, FindAll(System.Predicate`1)
+System.Collections.Generic.List`1, FindIndex(System.Predicate`1)
+System.Collections.Generic.List`1, FindIndex(System.Int32, System.Predicate`1)
+System.Collections.Generic.List`1, FindIndex(System.Int32, System.Int32, System.Predicate`1)
+System.Collections.Generic.List`1, Find(System.Predicate`1)
+System.Collections.Generic.List`1, FindLast(System.Predicate`1)
+System.Collections.Generic.List`1, FindLastIndex(System.Predicate`1)
+System.Collections.Generic.List`1, FindLastIndex(System.Int32, System.Predicate`1)
+System.Collections.Generic.List`1, FindLastIndex(System.Int32, System.Int32, System.Predicate`1)
 System.Collections.Generic.List`1, GetRange(System.Int32, System.Int32)
 System.Collections.Generic.List`1, ToArray()
-System.Collections.Generic.List`1, TrueForAll(System.Predicate<T>)
+System.Collections.Generic.List`1, TrueForAll(System.Predicate`1)
 System.Array, GetEnumerator
 System.Array, System.Collections.Generic.IEnumerable<T>.GetEnumerator
 System.Array, System.Collections.IEnumerable.GetEnumerator

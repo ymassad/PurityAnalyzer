@@ -53,17 +53,17 @@ namespace PurityAnalyzer
 
         public static IEnumerable<Impurity> GetImpurities(SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            KnownSymbols knownSymbols,
             RecursiveState recursiveState, PurityType purityType = PurityType.Pure)
         {
-            var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownReturnsNewObjectMethods);
+            var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownSymbols);
 
             return impuritiesFinder.GetImpurities(methodDeclaration, recursiveState);
         }
 
         public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            KnownSymbols knownSymbols,
             RecursiveState recursiveState,
             InstanceStaticCombination instanceStaticCombination)
         {
@@ -75,7 +75,7 @@ namespace PurityAnalyzer
 
             foreach (var var in props.Select(x => x.Initializer).Where(i => i != null))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, recursiveState).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownSymbols, recursiveState).Any()) return true;
             }
 
             return false;
@@ -84,7 +84,7 @@ namespace PurityAnalyzer
         public static bool AnyImpureFieldInitializer(
             TypeDeclarationSyntax typeDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            KnownSymbols knownSymbols,
             RecursiveState recursiveState,
             InstanceStaticCombination instanceStaticCombination)
         {
@@ -96,17 +96,16 @@ namespace PurityAnalyzer
 
             foreach (var var in fields.SelectMany(x => x.Declaration.Variables))
             {
-                if (Utils.GetImpurities(var, semanticModel, knownReturnsNewObjectMethods, recursiveState).Any()) return true;
+                if (Utils.GetImpurities(var, semanticModel, knownSymbols, recursiveState).Any()) return true;
             }
 
             return false;
         }
 
-        public static bool IsNewlyCreatedObject(
-            SemanticModel semanticModel,
+        public static bool IsNewlyCreatedObject(SemanticModel semanticModel,
             SyntaxNode expression,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
-            RecursiveIsNewlyCreatedObjectState recursiveState)
+            KnownSymbols knownSymbols,
+            RecursiveIsNewlyCreatedObjectState recursiveState, RecursiveState recursiveState1)
         {
             if (expression is LiteralExpressionSyntax)
             {
@@ -117,7 +116,7 @@ namespace PurityAnalyzer
             {
                 return tuple.Arguments
                     .Select(x => x.Expression)
-                    .All(x => IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState));
+                    .All(x => IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState, recursiveState1));
             }
 
 
@@ -129,7 +128,7 @@ namespace PurityAnalyzer
                     if (objectCreationExpression
                         .ArgumentList
                         .Arguments.Any(arg =>
-                            !IsNewlyCreatedObject(semanticModel, arg.Expression, knownReturnsNewObjectMethods, recursiveState)))
+                            !IsNewlyCreatedObject(semanticModel, arg.Expression, knownSymbols, recursiveState, recursiveState1)))
                     {
                         return false;
                     }
@@ -143,7 +142,7 @@ namespace PurityAnalyzer
                         .Expressions
                         .OfType<AssignmentExpressionSyntax>()
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x.Right, knownReturnsNewObjectMethods, recursiveState)))
+                            !IsNewlyCreatedObject(semanticModel, x.Right, knownSymbols, recursiveState, recursiveState1)))
                     {
                         return false;
                     }
@@ -160,7 +159,7 @@ namespace PurityAnalyzer
                         .Initializer
                         .Expressions
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
+                            !IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState, recursiveState1)))
                     {
                         return false;
                     }
@@ -177,7 +176,7 @@ namespace PurityAnalyzer
                         .Initializer
                         .Expressions
                         .Any(x =>
-                            !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
+                            !IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState, recursiveState1)))
                     {
                         return false;
                     }
@@ -192,7 +191,7 @@ namespace PurityAnalyzer
                 if (initSyntax
                     .Expressions
                     .Any(x =>
-                        !IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState)))
+                        !IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState, recursiveState1)))
                 {
                     return false;
                 }
@@ -216,7 +215,7 @@ namespace PurityAnalyzer
                             if (ReturnsNewObject(
                                 methodNode,
                                 semanticModel.Compilation.GetSemanticModel(methodNode.SyntaxTree),
-                                knownReturnsNewObjectMethods))
+                                knownSymbols, recursiveState1))
                                 return true;
                         }
                     }
@@ -228,7 +227,7 @@ namespace PurityAnalyzer
                             return true;
                         }
 
-                        if (knownReturnsNewObjectMethods.TryGetValue(
+                        if (knownSymbols.KnownReturnsNewObjectMethods.TryGetValue(
                                 Utils.GetFullMetaDataName(invokedMethod.ContainingType), out var methods) &&
                             methods.AnyMatches(invokedMethod))
                         {
@@ -264,14 +263,14 @@ namespace PurityAnalyzer
                         return false;
 
                     var valuesInjectedIntoObject =
-                        GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue());
+                        GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue(), knownSymbols, recursiveState1);
 
                     if (!valuesInjectedIntoObject.All(x =>
-                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState.Add(local))))
+                        IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState.Add(local), recursiveState1)))
                         return false;
 
                     return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x =>
-                        IsNewlyCreatedObject(semanticModel, x, knownReturnsNewObjectMethods, recursiveState.Add(local)));
+                        IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState.Add(local), recursiveState1));
                 }
             }
 
@@ -286,10 +285,9 @@ namespace PurityAnalyzer
             return false;
         }
 
-        public static List<ExpressionSyntax> GetValuesPossiblyInjectedInto(
-            SemanticModel semanticModel,
+        public static List<ExpressionSyntax> GetValuesPossiblyInjectedInto(SemanticModel semanticModel,
             ILocalSymbol variable,
-            SyntaxNode containingBlockNode)
+            SyntaxNode containingBlockNode, KnownSymbols knownSymbols, RecursiveState recursiveState)
         {
             var usages = containingBlockNode
                 .DescendantNodes()
@@ -311,9 +309,14 @@ namespace PurityAnalyzer
                 {
                     if (semanticModel.GetSymbolInfo(invocation.Expression).Symbol is IMethodSymbol invokedMethod)
                     {
-                        if(new ImpuritiesFinder())
+                        var purityType = ImpuritiesFinder.GetMethodPurityType(semanticModel, knownSymbols,
+                            invokedMethod, recursiveState);
+
+                        if (purityType.HasValueAnd(x => x.Equals(PurityType.PureExceptLocally)))
+                        {
+                            result.AddRange(invocation.ArgumentList.Arguments.Select(x => x.Expression));
+                        }
                     }
-                    result.AddRange(invocation.ArgumentList.Arguments.Select(x => x.Expression));
                 }
                 else if (usage.Parent is MemberAccessExpressionSyntax memberAccess)
                 {
@@ -372,9 +375,11 @@ namespace PurityAnalyzer
             return list;
         }
 
-        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
+        public static bool ReturnsNewObject(BaseMethodDeclarationSyntax methodDeclaration,
+            SemanticModel semanticModel,
+            KnownSymbols knownSymbols, RecursiveState recursiveState1)
         {
-            return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownReturnsNewObjectMethods).Any();
+            return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownSymbols, recursiveState1).Any();
         }
 
         public static bool IsCompleteValueType(ITypeSymbol type)
@@ -392,7 +397,7 @@ namespace PurityAnalyzer
         public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForMethod(
             BaseMethodDeclarationSyntax methodDeclaration,
             SemanticModel semanticModel,
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods)
+            KnownSymbols knownSymbols, RecursiveState recursiveState1)
         {
             var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
 
@@ -410,7 +415,7 @@ namespace PurityAnalyzer
 
             foreach (var expression in returnExpressions)
             {
-                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty()))
+                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownSymbols, RecursiveIsNewlyCreatedObjectState.Empty(), recursiveState1))
                 {
                     yield return expression;
                 }
@@ -660,10 +665,9 @@ namespace PurityAnalyzer
             return set.ToArray();
         }
 
-        public static bool IsAccessOnNewlyCreatedObject(
-            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+        public static bool IsAccessOnNewlyCreatedObject(KnownSymbols knownSymbols,
             SemanticModel semanticModel,
-            SyntaxNode node)
+            SyntaxNode node, RecursiveState recursiveState1)
         {
             bool IsOnNewlyCreatedObject(ExpressionSyntax exp)
             {
@@ -675,7 +679,7 @@ namespace PurityAnalyzer
                 {
                     return IsOnNewlyCreatedObject(elementAccess1.Expression);
                 }
-                return Utils.IsNewlyCreatedObject(semanticModel, exp, knownReturnsNewObjectMethods, RecursiveIsNewlyCreatedObjectState.Empty());
+                return Utils.IsNewlyCreatedObject(semanticModel, exp, knownSymbols, RecursiveIsNewlyCreatedObjectState.Empty(), recursiveState1);
             }
 
             if (node.Parent is MemberAccessExpressionSyntax memberAccess)
@@ -717,6 +721,72 @@ namespace PurityAnalyzer
             }
 
             return (partsSeparatedByComma[0], ParseMethodDescriptor(partsSeparatedByComma[1]));
+        }
+
+        public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
+        {
+            var pureMethodsFileContents =
+                Resources.PureMethods
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                    .CustomPureMethodsFilename.ChainValue(File.ReadAllText)
+                    .ValueOr("");
+
+            return pureMethodsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(Utils.ParseMethodDescriptorLine)
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<MethodDescriptor>(x));
+        }
+
+        public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptLocallyMethods()
+        {
+            var pureMethodsExceptLocallyFileContents =
+                Resources.PureExceptLocallyMethods
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                    .CustomPureExceptLocallyMethodsFilename.ChainValue(File.ReadAllText)
+                    .ValueOr("");
+
+            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(Utils.ParseMethodDescriptorLine)
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<MethodDescriptor>(x));
+        }
+
+        public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptReadLocallyMethods()
+        {
+            var pureMethodsExceptLocallyFileContents =
+                Resources.PureExceptReadLocallyMethods
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                    .CustomPureExceptReadLocallyMethodsFilename.ChainValue(File.ReadAllText)
+                    .ValueOr("");
+
+            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(Utils.ParseMethodDescriptorLine)
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<MethodDescriptor>(x));
+        }
+
+        public static HashSet<INamedTypeSymbol> GetKnownPureTypes(SemanticModel semanticModel1)
+        {
+            var pureTypesFileContents =
+                Resources.PureTypes
+                + Environment.NewLine
+                + PurityAnalyzerAnalyzer
+                    .CustomPureTypesFilename.ChainValue(File.ReadAllText)
+                    .ValueOr("");
+
+            var pureTypes =
+                pureTypesFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel1.Compilation.GetTypeByMetadataName(x)));
         }
     }
 }
