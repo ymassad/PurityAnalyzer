@@ -281,7 +281,9 @@ System.UIntPtr, ToUInt64
 System.UIntPtr, ToString()
 System.Object, .ctor
 System.Attribute, .ctor
-System.Collections.Generic.List`1, .ctor
+System.Collections.Generic.List`1, .ctor()
+System.Collections.Generic.List`1, .ctor(System.Int32)
+System.Collections.Generic.List`1, .ctor(System.Collections.Generic.IEnumerable`1)
 System.Single, op_Addition
 System.Single, op_Subtraction
 System.Single, op_Multiply

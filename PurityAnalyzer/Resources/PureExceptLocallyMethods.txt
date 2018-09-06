@@ -2,3 +2,4 @@ System.Text.StringBuilder, AppendLine
 System.Xml.XmlDocument, CreateElement
 System.Xml.XmlElement, SetAttribute
 System.Array, System.Collections.IList.set_Item
+System.Collections.Generic.List`1, set_Capacity
