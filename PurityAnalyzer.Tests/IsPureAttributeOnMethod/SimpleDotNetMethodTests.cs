@@ -17,6 +17,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
         {
             string code = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -41,6 +42,7 @@ public static class Module1
         {
             string code = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -65,6 +67,7 @@ public static class Module1
         {
             string code = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -76,7 +79,7 @@ public static class Module1
     [IsPure]
     public static void DoSomething()
     {{
-        var obj = new {caseInfo.objectType}({caseInfo.constructionArguments});
+        var obj = new {caseInfo.objectType}{caseInfo.constructionArguments};
         
         {caseInfo.invocation};
     }}
@@ -87,6 +90,7 @@ public static class Module1
 
             string code2 = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -107,6 +111,7 @@ public static class Module1
 
             string code3 = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -133,6 +138,7 @@ public static class Module1
         {
             string code = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -144,7 +150,7 @@ public static class Module1
     [IsPure]
     public static void DoSomething()
     {{
-        var obj = new {caseInfo.objectType}({caseInfo.constructionArguments});
+        var obj = new {caseInfo.objectType}{caseInfo.constructionArguments};
         
         {caseInfo.invocation};
     }}
@@ -155,6 +161,7 @@ public static class Module1
 
             string code2 = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -175,6 +182,7 @@ public static class Module1
 
             string code3 = $@"
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 public class IsPureAttribute : Attribute
@@ -199,48 +207,50 @@ public static class Module1
         public static IEnumerable<(string objectType, string constructionArguments, string invocation)>
             GetPureExceptLocallyCases()
         {
-            yield return ("List<char>", "", "obj.Capacity = 5");
-            yield return ("List<char>", "", "obj[0] = 'a'");
-            yield return ("List<char>", "", "obj.Add('a')");
-            yield return ("List<char>", "", "obj.AddRange(new []{'a'})");
-            yield return ("List<char>", "", "obj.Clear()");
-            yield return ("List<char>", "", "obj.Insert(0, 'a')");
-            yield return ("List<char>", "", "obj.InsertRange(0, new []{'a'})");
-            yield return ("List<char>", "", "obj.RemoveAll(x => x == 'a')");
-            yield return ("List<char>", "", "obj.RemoveAt(0)");
-            yield return ("List<char>", "", "obj.RemoveRange(0, 2)");
-            yield return ("List<char>", "", "obj.Reverse()");
-            yield return ("List<char>", "", "obj.Reverse(0, 2)");
-            yield return ("List<char>", "", "obj.Sort((x,y) => 0)");
-            yield return ("List<char>", "", "obj.TrimExcess()");
-            //
-
-
+            yield return ("List<char>", "()", "obj.Capacity = 5");
+            yield return ("List<char>", "()", "obj[0] = 'a'");
+            yield return ("List<char>", "()", "obj.Add('a')");
+            yield return ("List<char>", "()", "obj.AddRange(new []{'a'})");
+            yield return ("List<char>", "()", "obj.Clear()");
+            yield return ("List<char>", "()", "obj.Insert(0, 'a')");
+            yield return ("List<char>", "()", "obj.InsertRange(0, new []{'a'})");
+            yield return ("List<char>", "()", "obj.RemoveAll(x => x == 'a')");
+            yield return ("List<char>", "()", "obj.RemoveAt(0)");
+            yield return ("List<char>", "()", "obj.RemoveRange(0, 2)");
+            yield return ("List<char>", "()", "obj.Reverse()");
+            yield return ("List<char>", "()", "obj.Reverse(0, 2)");
+            yield return ("List<char>", "()", "obj.Sort((x,y) => 0)");
+            yield return ("List<char>", "()", "obj.TrimExcess()");
         }
 
         public static IEnumerable<(string objectType, string constructionArguments, string invocation)>
             GetPureExceptReadLocallyCases()
         {
-            yield return ("List<char>", "", "var a = obj.Capacity");
-            yield return ("List<char>", "", "var a = obj.Count");
-            yield return ("List<char>", "", "var a = obj[0]");
-            yield return ("List<char>", "", "var a = obj.ConvertAll(x => (int)x)");
-            yield return ("List<char>", "", "var a = obj.Exists(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.Find(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindAll(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindIndex(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindIndex(0, x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindIndex(0, 2, x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindLast(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindLastIndex(x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindLastIndex(0, x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.FindLastIndex(0, 2, x => x == 'a')");
-            yield return ("List<char>", "", "var a = obj.GetEnumerator()");
-            yield return ("List<char>", "", "var a = (IEnumerable<char>) obj");
-            yield return ("List<char>", "", "var a = (IEnumerable) obj");
-            yield return ("List<char>", "", "var a = obj.GetRange(0, 2)");
-            yield return ("List<char>", "", "var a = obj.ToArray()");
-            yield return ("List<char>", "", "var a = obj.TrueForAll(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.Capacity");
+            yield return ("List<char>", "()", "var a = obj.Count");
+            yield return ("List<char>", "()", "var a = obj[0]");
+            yield return ("List<char>", "()", "var a = obj.ConvertAll(x => (int)x)");
+            yield return ("List<char>", "()", "var a = obj.Exists(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.Find(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindAll(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindIndex(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindIndex(0, x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindIndex(0, 2, x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindLast(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindLastIndex(x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindLastIndex(0, x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.FindLastIndex(0, 2, x => x == 'a')");
+            yield return ("List<char>", "()", "var a = obj.GetEnumerator()");
+            yield return ("List<char>", "()", "var a = (IEnumerable<char>) obj");
+            yield return ("List<char>", "()", "var a = (IEnumerable) obj");
+            yield return ("List<char>", "()", "var a = obj.GetRange(0, 2)");
+            yield return ("List<char>", "()", "var a = obj.ToArray()");
+            yield return ("List<char>", "()", "var a = obj.TrueForAll(x => x == 'a')");
+
+
+            yield return ("char[]", "{'a'}", "var a = (IEnumerable<char>) obj");
+            yield return ("char[]", "{'a'}", "var a = (IEnumerable) obj");
+
         }
 
         public static IEnumerable<string> GetPureCases()

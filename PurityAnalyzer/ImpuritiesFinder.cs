@@ -62,7 +62,7 @@ namespace PurityAnalyzer
             knownPureMethods = GetKnownPureMethods();
             knownPureExceptLocallyMethods = GetKnownPureExceptLocallyMethods();
             knownPureExceptReadLocallyMethods = GetKnownPureExceptReadLocallyMethods();
-            knownPureTypes = GetKnownPureTypes();
+            knownPureTypes = GetKnownPureTypes(this.semanticModel);
         }
 
         public IEnumerable<Impurity> GetImpurities(SyntaxNode node, RecursiveState recursiveState)
@@ -523,6 +523,7 @@ namespace PurityAnalyzer
                         {
                             if (IsSourceNodeANewObject() || IsSourceNodeAParameter() || (IsSourceNodeAccessToLocalState() && (purityType == PurityType.PureExceptReadLocally || purityType == PurityType.PureExceptLocally)))
                             {
+                                //TODO: OR a PureExceptLocally method that is invoked on a new obejct. See the List.AddRange(new array) test
                                 if (IsSourceNodeOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods())
                                     legalCastFromNewObjectOrParameter = true;
                             }
@@ -555,8 +556,11 @@ namespace PurityAnalyzer
 
             if (problems.Any())
                 return new CastPurityResult.Impure(
-                    "Error casting. Relevent methods: " + Environment.NewLine +
-                    string.Join(Environment.NewLine, problems.Select(x => x.Name)));
+                    "Error casting" + Environment.NewLine +
+                    "From: " + Utils.GetFullMetaDataName(sourceType) + Environment.NewLine +
+                    "To: " + Utils.GetFullMetaDataName(destinationType) + Environment.NewLine +
+                    "Relevant methods: " + Environment.NewLine +
+                    string.Join(Environment.NewLine, problems.Select(x => Utils.GetFullMetaDataName(x.ContainingType) + "." + x.Name)));
 
             return new CastPurityResult.Pure();
 
@@ -672,7 +676,9 @@ namespace PurityAnalyzer
             }
         }
 
-        private bool AnyImpurePropertyInitializer(INamedTypeSymbol symbol,
+        public static bool AnyImpurePropertyInitializer(
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            INamedTypeSymbol symbol,
             SemanticModel semanticModel,
             RecursiveState recursiveState,
             InstanceStaticCombination instanceStaticCombination)
@@ -689,7 +695,8 @@ namespace PurityAnalyzer
                         instanceStaticCombination));
         }
 
-        private bool AnyImpureFieldInitializer(
+        public static bool AnyImpureFieldInitializer(
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             INamedTypeSymbol symbol,
             SemanticModel semanticModel,
             RecursiveState recursiveState,
@@ -1206,8 +1213,7 @@ namespace PurityAnalyzer
 
                 var modifiedRecursiveState = recursiveState.AddMethod(method, purityType);
 
-                if (AnyImpureFieldInitializer(
-                    method.ContainingType,
+                if (AnyImpureFieldInitializer(knownReturnsNewObjectMethods, method.ContainingType,
                     semanticModelForType,
                     modifiedRecursiveState,
                     method.IsStatic
@@ -1217,8 +1223,7 @@ namespace PurityAnalyzer
                     return false;
                 }
 
-                if (AnyImpurePropertyInitializer(
-                    method.ContainingType,
+                if (AnyImpurePropertyInitializer(knownReturnsNewObjectMethods, method.ContainingType,
                     semanticModelForType,
                     modifiedRecursiveState,
                     method.IsStatic
@@ -1285,7 +1290,7 @@ namespace PurityAnalyzer
             return IsKnownPureMethod(method, purityType);
         }
 
-        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
+        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureMethods()
         {
             var pureMethodsFileContents =
                 Resources.PureMethods
@@ -1302,7 +1307,7 @@ namespace PurityAnalyzer
                     x => new HashSet<MethodDescriptor>(x));
         }
 
-        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptLocallyMethods()
+        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptLocallyMethods
@@ -1319,7 +1324,7 @@ namespace PurityAnalyzer
                     x => new HashSet<MethodDescriptor>(x));
         }
 
-        private Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptReadLocallyMethods()
+        private static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureExceptReadLocallyMethods()
         {
             var pureMethodsExceptLocallyFileContents =
                 Resources.PureExceptReadLocallyMethods
@@ -1336,7 +1341,7 @@ namespace PurityAnalyzer
                     x => new HashSet<MethodDescriptor>(x));
         }
 
-        private HashSet<INamedTypeSymbol> GetKnownPureTypes()
+        private static HashSet<INamedTypeSymbol> GetKnownPureTypes(SemanticModel semanticModel1)
         {
             var pureTypesFileContents =
                 Resources.PureTypes
@@ -1348,7 +1353,7 @@ namespace PurityAnalyzer
             var pureTypes =
                 pureTypesFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel.Compilation.GetTypeByMetadataName(x)));
+            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel1.Compilation.GetTypeByMetadataName(x)));
         }
 
         private bool IsKnownPureMethod(IMethodSymbol method, PurityType purityType = PurityType.Pure)

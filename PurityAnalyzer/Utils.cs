@@ -309,6 +309,10 @@ namespace PurityAnalyzer
                 }
                 else if (usage.Parent is InvocationExpressionSyntax invocation)
                 {
+                    if (semanticModel.GetSymbolInfo(invocation.Expression).Symbol is IMethodSymbol invokedMethod)
+                    {
+                        if(new ImpuritiesFinder())
+                    }
                     result.AddRange(invocation.ArgumentList.Arguments.Select(x => x.Expression));
                 }
                 else if (usage.Parent is MemberAccessExpressionSyntax memberAccess)
@@ -453,6 +457,9 @@ namespace PurityAnalyzer
 
         public static string GetFullMetaDataName(ITypeSymbol typeSymbol)
         {
+            if (typeSymbol.TypeKind == TypeKind.TypeParameter)
+                return typeSymbol.MetadataName;
+
             if (typeSymbol is IArrayTypeSymbol arrayType)
                 return GetFullMetaDataName(arrayType.ElementType) + "[]";
 
