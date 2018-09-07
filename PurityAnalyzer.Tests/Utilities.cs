@@ -81,9 +81,12 @@ namespace PurityAnalyzer.Tests
 
             var results = result.GetAllDiagnosticsAsync().Result;
 
-            if (results.Where(x => !IsFromPurityAnalyzer(x)).Any(x => x.Severity == DiagnosticSeverity.Error))
+            var compilationErrors = results.Where(x => !IsFromPurityAnalyzer(x))
+                .Where(x => x.Severity == DiagnosticSeverity.Error).ToList();
+
+            if (compilationErrors.Any())
             {
-                throw new Exception("Error in compilation");
+                throw new Exception("Error in compilation" + Environment.NewLine + string.Join(Environment.NewLine, compilationErrors.Select(x => x.GetMessage())));
             }
 
             var ad0001Results = results.Where(x => x.Descriptor.Id == "AD0001").ToArray();
