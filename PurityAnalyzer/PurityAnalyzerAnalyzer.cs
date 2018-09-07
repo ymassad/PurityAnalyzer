@@ -272,10 +272,34 @@ namespace PurityAnalyzer
         {
             if (propertyDeclarationSyntax.AccessorList != null)
             {
-                foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
+                bool isAutoReadWriteProperty =
+                    propertyDeclarationSyntax.AccessorList.Accessors.Count == 2
+                    && propertyDeclarationSyntax.AccessorList.Accessors.Any(x =>
+                        x.Keyword.Kind() == SyntaxKind.GetKeyword)
+                    && propertyDeclarationSyntax.AccessorList.Accessors.Any(x =>
+                        x.Keyword.Kind() == SyntaxKind.SetKeyword)
+                    && propertyDeclarationSyntax.AccessorList.Accessors.All(x =>
+                        x.Body == null && x.ExpressionBody == null);
+
+                if (isAutoReadWriteProperty)
                 {
-                    ProcessImpuritiesForMethod(
-                        context, accessor, knownSymbols, purityType);
+                    if (purityType == PurityType.Pure || purityType == PurityType.PureExceptReadLocally)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            ImpurityRule,
+                            propertyDeclarationSyntax.AccessorList.GetLocation(),
+                            "Impure auto property");
+
+                        context.ReportDiagnostic(diagnostic);
+                    }
+                }
+                else
+                {
+                    foreach (var accessor in propertyDeclarationSyntax.AccessorList.Accessors)
+                    {
+                        ProcessImpuritiesForMethod(
+                            context, accessor, knownSymbols, purityType);
+                    }
                 }
             }
             else if (propertyDeclarationSyntax.ExpressionBody != null)

@@ -283,5 +283,47 @@ public class Class1
             dignostics.Length.Should().BePositive();
 
         }
+
+        [Test]
+        public void TestIsPureAttributeOnStaticAutomaticReadWriteProperty()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPure]
+    public static int Prop1 {get; set;}
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void TestIsPureAttributeOnInstanceAutomaticReadWriteProperty()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPure]
+    public int Prop1 {get; set;}
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
     }
 }

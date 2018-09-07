@@ -1139,7 +1139,7 @@ namespace PurityAnalyzer
             return IsMethodPure(knownSymbols, semanticModel, method, recursiveState, PurityType.PureExceptReadLocally);
         }
 
-        private static bool IsMethodPure(
+        public static bool IsMethodPure(
             KnownSymbols knownSymbols1,
             SemanticModel semanticModel1,
             IMethodSymbol method,

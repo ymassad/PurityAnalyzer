@@ -941,5 +941,26 @@ public class MyClass
 
         }
 
+        [Test]
+        public void TestIsPureExceptLocallyAttributeOnInstanceAutomaticReadWriteProperty()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptLocallyAttribute]
+    public int Prop1 {get; set;}
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

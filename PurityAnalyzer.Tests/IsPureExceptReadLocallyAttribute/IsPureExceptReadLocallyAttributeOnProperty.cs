@@ -121,6 +121,28 @@ public class Class1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
         }
-        
+
+        [Test]
+        public void TestIsPureExceptReadLocallyAttributeOnInstanceAutomaticReadWriteProperty()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocallyAttribute]
+    public int Prop1 {get; set;}
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
     }
 }
