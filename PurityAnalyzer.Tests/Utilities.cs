@@ -55,7 +55,13 @@ namespace PurityAnalyzer.Tests
             return RunPurityAnalyzer(content, Maybe.NoValue, additionalReferences);
         }
 
-        public static Diagnostic[] RunPurityAnalyzer(string content, Maybe<string> secondFileContent, params MetadataReference[] additionalReferences)
+        public static Diagnostic[] RunPurityAnalyzer(string content, Maybe<string> secondFileContent,
+            params MetadataReference[] additionalReferences)
+        {
+            return RunPurityAnalyzer(content, secondFileContent, false, additionalReferences);
+        }
+
+        public static Diagnostic[] RunPurityAnalyzer(string content, Maybe<string> secondFileContent, bool secondFileIsInDifferentProject, params MetadataReference[] additionalReferences)
         {
             var workspace = new AdhocWorkspace();
 
@@ -71,7 +77,24 @@ namespace PurityAnalyzer.Tests
 
             if (secondFileContent.HasValue)
             {
-                var secondDocumentId = DocumentId.CreateNewId(projectId);
+                DocumentId secondDocumentId;
+
+                if (secondFileIsInDifferentProject)
+                {
+                    var secondProjectId = ProjectId.CreateNewId();
+
+                    solution = AddNewProjectToWorkspace(solution, "NewProject2", secondProjectId, additionalReferences);
+
+                    secondDocumentId = DocumentId.CreateNewId(secondProjectId);
+
+                    solution = solution.AddProjectReference(projectId, new ProjectReference(secondProjectId));
+
+                }
+                else
+                {
+                    secondDocumentId = DocumentId.CreateNewId(projectId);
+                }
+                
 
                 solution = AddNewSourceFile(solution, secondFileContent.GetValue(), "NewFile2.cs", secondDocumentId);
             }
