@@ -295,6 +295,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForList()) yield return c;
 
+            foreach (var c in GetPureCasesForDateTime()) yield return c;
+
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
 
@@ -968,6 +970,21 @@ public static class Module1
             yield return @"var a = new List<char>(1)";
             yield return @"var a = new List<char>((IEnumerable<char>)new []{'a'})";
         }
+
+
+        public static IEnumerable<string> GetPureCasesForDateTime()
+        {
+            yield return @"var a = new DateTime(2018,1,1)";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1)";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Year";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Month";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Day";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Hour";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Minute";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Second";
+            yield return @"var a = new DateTime(2018,1,1,1,1,1).Millisecond";
+        }
+
 
         public static IEnumerable<string> GetImpureCases()
         {

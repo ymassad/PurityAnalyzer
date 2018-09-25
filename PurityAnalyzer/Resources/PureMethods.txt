@@ -334,3 +334,12 @@ System.Double, IsInfinity
 System.Double, IsPositiveInfinity
 System.Double, IsNegativeInfinity
 System.Double, IsNaN
+System.DateTime, .ctor(System.Int32, System.Int32, System.Int32)
+System.DateTime, .ctor(System.Int32, System.Int32, System.Int32, System.Int32, System.Int32, System.Int32)
+System.DateTime, get_Year
+System.DateTime, get_Month
+System.DateTime, get_Day
+System.DateTime, get_Hour
+System.DateTime, get_Minute
+System.DateTime, get_Second
+System.DateTime, get_Millisecond
