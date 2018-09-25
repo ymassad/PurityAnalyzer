@@ -278,39 +278,6 @@ namespace PurityAnalyzer
             }
         }
 
-        private bool IsPureData(ITypeSymbol type)
-        {
-            var pureTypes = new[]
-            {
-                SpecialType.System_Boolean,
-                SpecialType.System_Byte,
-                SpecialType.System_Char,
-                SpecialType.System_DateTime,
-                SpecialType.System_Decimal,
-                SpecialType.System_Double,
-                SpecialType.System_Int16,
-                SpecialType.System_Int32,
-                SpecialType.System_Int64,
-                SpecialType.System_UInt16,
-                SpecialType.System_UInt32,
-                SpecialType.System_Int64,
-                SpecialType.System_String,
-                SpecialType.System_SByte,
-                SpecialType.System_Single
-            };
-
-            if (pureTypes.Contains(type.SpecialType))
-                return true;
-
-            if (type is IArrayTypeSymbol array)
-                return IsPureData(array.ElementType);
-
-            return false;
-
-            //TODO: maybe I should have a special attribute for pure data
-            //TODO: include KeyValuePair, Tuple, ValueTuple
-            //TODO: include ImmutableArray and ImmutableList
-        }
 
         private bool IsInstanceField(SyntaxNode syntaxNode)
         {
@@ -410,7 +377,7 @@ namespace PurityAnalyzer
 
                     bool IsOkAsReturnTypeFromMethodThatTakesInCastedNewObjectOrParameter(ITypeSymbol type)
                     {
-                        return type.SpecialType == SpecialType.System_Void || IsPureData(type);
+                        return type.SpecialType == SpecialType.System_Void || Utils.IsPureData(type);
                     }
 
 

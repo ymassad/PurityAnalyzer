@@ -245,7 +245,15 @@ namespace PurityAnalyzer
                         GetValuesPossiblyInjectedInto(semanticModel, local, methodBody.GetValue(), knownSymbols, recursiveState1);
 
                     if (!valuesInjectedIntoObject.All(x =>
-                        IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState.Add(local), recursiveState1)))
+                    {
+                        var typeSymbol = semanticModel.GetTypeInfo(x).Type;
+
+                        if (typeSymbol != null && IsImmutablePureData(typeSymbol))
+                            return true;
+
+                        return IsNewlyCreatedObject(semanticModel, x, knownSymbols, recursiveState.Add(local),
+                                   recursiveState1);
+                    }))
                         return false;
 
                     return FindValuesAssignedToVariable(semanticModel, local, methodBody.GetValue()).All(x =>
@@ -895,5 +903,68 @@ namespace PurityAnalyzer
             return PurityAnalyzerAnalyzer.GetSemanticModelForSyntaxTreeAsync(tree).Result;
         }
 
+        public static bool IsPureData(ITypeSymbol type)
+        {
+            var pureTypes = new[]
+            {
+                SpecialType.System_Boolean,
+                SpecialType.System_Byte,
+                SpecialType.System_Char,
+                SpecialType.System_DateTime,
+                SpecialType.System_Decimal,
+                SpecialType.System_Double,
+                SpecialType.System_Int16,
+                SpecialType.System_Int32,
+                SpecialType.System_Int64,
+                SpecialType.System_UInt16,
+                SpecialType.System_UInt32,
+                SpecialType.System_Int64,
+                SpecialType.System_String,
+                SpecialType.System_SByte,
+                SpecialType.System_Single
+            };
+
+            if (pureTypes.Contains(type.SpecialType))
+                return true;
+
+            if (type is IArrayTypeSymbol array)
+                return IsPureData(array.ElementType);
+
+            return false;
+
+            //TODO: maybe I should have a special attribute for pure data
+            //TODO: include KeyValuePair, Tuple, ValueTuple
+            //TODO: include ImmutableArray and ImmutableList
+        }
+
+        public static bool IsImmutablePureData(ITypeSymbol type)
+        {
+            var pureTypes = new[]
+            {
+                SpecialType.System_Boolean,
+                SpecialType.System_Byte,
+                SpecialType.System_Char,
+                SpecialType.System_DateTime,
+                SpecialType.System_Decimal,
+                SpecialType.System_Double,
+                SpecialType.System_Int16,
+                SpecialType.System_Int32,
+                SpecialType.System_Int64,
+                SpecialType.System_UInt16,
+                SpecialType.System_UInt32,
+                SpecialType.System_Int64,
+                SpecialType.System_String,
+                SpecialType.System_SByte,
+                SpecialType.System_Single
+            };
+
+            if (pureTypes.Contains(type.SpecialType))
+                return true;
+
+            return false;
+
+            //TODO: maybe I should have a special attribute for pure immutable data
+            //TODO: include ImmutableArray and ImmutableList
+        }
     }
 }
