@@ -348,3 +348,4 @@ System.Linq.ImmutableArrayExtensions, Select
 System.Linq.ImmutableArrayExtensions, Where
 System.Linq.ImmutableArrayExtensions, All
 System.Linq.ImmutableArrayExtensions, Any
+System.Collections.Immutable.ImmutableArray`1, GetEnumerator

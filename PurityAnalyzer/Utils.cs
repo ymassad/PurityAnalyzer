@@ -966,5 +966,45 @@ namespace PurityAnalyzer
             //TODO: maybe I should have a special attribute for pure immutable data
             //TODO: include ImmutableArray and ImmutableList
         }
+
+        public static PurityType
+            ChangeAcceptedPurityTypeBasedOnWhetherExpressionRepresentsAccessOnNewObjectOrParameterBasedAccess(
+                PurityType currentAcceptedPurityType,
+                ExpressionSyntax node,
+                KnownSymbols knownSymbols,
+                SemanticModel semanticModel,
+                RecursiveState recursiveState)
+        {
+            if (Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState))
+            {
+                return PurityType.PureExceptLocally;
+            }
+            else if (ImpuritiesFinder.IsParameterBasedAccess(semanticModel, node))
+            {
+                return PurityType.PureExceptReadLocally;
+            }
+
+            return currentAcceptedPurityType;
+        }
+
+        public static PurityType
+            ChangeAcceptedPurityTypeBasedOnWhetherExpressionRepresentsANewObjectOrParameterBasedExpression(
+                PurityType currentAcceptedPurityType,
+                ExpressionSyntax node,
+                KnownSymbols knownSymbols,
+                SemanticModel semanticModel,
+                RecursiveState recursiveState)
+        {
+            if (Utils.IsNewlyCreatedObject(semanticModel, node, knownSymbols, RecursiveIsNewlyCreatedObjectState.Empty(), recursiveState))
+            {
+                return PurityType.PureExceptLocally;
+            }
+            else if (ImpuritiesFinder.IsParameter(semanticModel, node))
+            {
+                return PurityType.PureExceptReadLocally;
+            }
+
+            return currentAcceptedPurityType;
+        }
     }
 }

@@ -26,3 +26,5 @@ System.Array, GetEnumerator
 System.Array, System.Collections.Generic.IEnumerable<T>.GetEnumerator
 System.Array, System.Collections.IEnumerable.GetEnumerator
 System.Text.StringBuilder, ToString()
+System.Collections.Immutable.ImmutableArray`1.Enumerator, get_Current
+System.Collections.Immutable.ImmutableArray`1.Enumerator, MoveNext

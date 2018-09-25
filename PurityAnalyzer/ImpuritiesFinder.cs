@@ -195,7 +195,8 @@ namespace PurityAnalyzer
             }
         }
 
-        public IEnumerable<Impurity> GetImpurities7(CommonForEachStatementSyntax forEachStatement,
+        public IEnumerable<Impurity> GetImpurities7(
+            CommonForEachStatementSyntax forEachStatement,
             RecursiveState recursiveState)
         {
             var expressionType = semanticModel.GetTypeInfo(forEachStatement.Expression);
@@ -224,6 +225,11 @@ namespace PurityAnalyzer
 
                     var returnType = getEnumeratorMethod.GetValue().ReturnType;
 
+                    var acceptedPurityType =
+                        Utils
+                            .ChangeAcceptedPurityTypeBasedOnWhetherExpressionRepresentsANewObjectOrParameterBasedExpression(
+                                PurityType.Pure, forEachStatement.Expression, knownSymbols, semanticModel, recursiveState);
+
                     var currentPropertyGetter =
                         returnType.GetMembers("Current")
                             .OfType<IPropertySymbol>()
@@ -232,7 +238,7 @@ namespace PurityAnalyzer
 
                     if (currentPropertyGetter.HasValue)
                     {
-                        if (!IsMethodPure(knownSymbols, semanticModel, currentPropertyGetter.GetValue(), recursiveState))
+                        if (!IsMethodPure(knownSymbols, semanticModel, currentPropertyGetter.GetValue(), recursiveState, acceptedPurityType))
                             yield return new Impurity(forEachStatement, "Current property is impure");
                     }
 
@@ -246,7 +252,7 @@ namespace PurityAnalyzer
 
                     if (moveNextMethod.HasValue)
                     {
-                        if (!IsMethodPure(knownSymbols, semanticModel, moveNextMethod.GetValue(), recursiveState))
+                        if (!IsMethodPure(knownSymbols, semanticModel, moveNextMethod.GetValue(), recursiveState,acceptedPurityType))
                             yield return new Impurity(forEachStatement, "MoveNext method is impure");
                     }
 
@@ -257,7 +263,7 @@ namespace PurityAnalyzer
                                 .FindImplementationForInterfaceMember(
                                     idisposableType.GetMembers("Dispose").First()) is IMethodSymbol disposeMethod)
                         {
-                            if (!IsMethodPure(knownSymbols, semanticModel, disposeMethod, recursiveState))
+                            if (!IsMethodPure(knownSymbols, semanticModel, disposeMethod, recursiveState, acceptedPurityType))
                                 yield return new Impurity(forEachStatement, "Dispose method is impure");
                         }
                     }
@@ -337,7 +343,7 @@ namespace PurityAnalyzer
 
                     bool IsSourceNodeAParameter()
                     {
-                        return IsParameter(sourceNode);
+                        return IsParameter(semanticModel, sourceNode);
                     }
 
                     bool IsSourceNodeAccessToLocalState()
@@ -696,20 +702,20 @@ namespace PurityAnalyzer
                         instanceStaticCombination));
         }
 
-        private bool IsParameter(SyntaxNode node)
+        public static bool IsParameter(SemanticModel semanticModel1, SyntaxNode node)
         {
-            var accessedSymbol = semanticModel.GetSymbolInfo(node).Symbol;
+            var accessedSymbol = semanticModel1.GetSymbolInfo(node).Symbol;
 
             if (accessedSymbol is IParameterSymbol)
                 return true;
 
             if (node is MemberAccessExpressionSyntax parentExpression)
-                return IsParameter(parentExpression.Expression);
+                return IsParameter(semanticModel1, parentExpression.Expression);
 
             if (!(node is IdentifierNameSyntax identifier))
                 return false;
 
-            var identifierSymbol = semanticModel.GetSymbolInfo(identifier).Symbol;
+            var identifierSymbol = semanticModel1.GetSymbolInfo(identifier).Symbol;
 
             if (!(identifierSymbol is ILocalSymbol local))
                 return false;
@@ -720,19 +726,19 @@ namespace PurityAnalyzer
                 return false;
 
             return Utils.FindValuesAssignedToVariable(
-                semanticModel, local, method.GetValue().Body)
-                .All(IsParameter);
+                semanticModel1, local, method.GetValue().Body)
+                .All(node1 => IsParameter(semanticModel1, node1));
         }
 
-        private bool IsParameterBasedAccess(ExpressionSyntax node)
+        public static bool IsParameterBasedAccess(SemanticModel semanticModel1, ExpressionSyntax node)
         {
             if (node.Parent is MemberAccessExpressionSyntax memberAccess
                 && memberAccess.Name == node
-                && IsParameter(memberAccess.Expression))
+                && IsParameter(semanticModel1, memberAccess.Expression))
                 return true;
 
             if (node is ElementAccessExpressionSyntax elementAccess
-                && IsParameter(elementAccess.Expression))
+                && IsParameter(semanticModel1, elementAccess.Expression))
                 return true;
 
             return false;
@@ -833,7 +839,7 @@ namespace PurityAnalyzer
                         }
                         else
                         {
-                            if (!IsParameterBasedAccess(node))
+                            if (!IsParameterBasedAccess(semanticModel, node))
                             {
                                 yield return
                                     new Impurity(node, "Read access to non-readonly and non-const and non-input parameter based field");
@@ -882,7 +888,9 @@ namespace PurityAnalyzer
             return Enumerable.Empty<Impurity>();
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(ExpressionSyntax node, IMethodSymbol method,
+        private IEnumerable<Impurity> GetImpuritiesForMethodAccess(
+            ExpressionSyntax node,
+            IMethodSymbol method,
             RecursiveState recursiveState)
         {
             bool IsAccessingLocalMethod(ExpressionSyntax node1)
@@ -916,21 +924,17 @@ namespace PurityAnalyzer
 
             PurityType acceptedPurityType = PurityType.Pure;
 
-            if (purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
+            if ((purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
+                && IsAccessingLocalMethod(node))
             {
-                if (IsAccessingLocalMethod(node))
-                    acceptedPurityType = purityType;
+                acceptedPurityType = purityType;
             }
             else
             {
-                if (Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState))
-                {
-                    acceptedPurityType = PurityType.PureExceptLocally;
-                }
-                else if (IsParameterBasedAccess(node))
-                {
-                    acceptedPurityType = PurityType.PureExceptReadLocally;
-                }
+                acceptedPurityType =
+                    Utils
+                        .ChangeAcceptedPurityTypeBasedOnWhetherExpressionRepresentsAccessOnNewObjectOrParameterBasedAccess(
+                            acceptedPurityType, node, knownSymbols, semanticModel, recursiveState);
             }
 
             if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState, acceptedPurityType))

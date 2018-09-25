@@ -3020,5 +3020,41 @@ public class Class2
 
         }
 
+
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnNewObject_IsPureExceptLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    private int state = 0;
+
+    public void Do() => state++;
+}
+
+public class Class1
+{
+    [IsPureExceptLocally]
+    public int DoSomething()
+    {
+        var class2 = new Class2();
+
+        class2.Do();
+
+        return 1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
