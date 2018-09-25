@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -43,6 +45,8 @@ namespace PurityAnalyzer
         public static Maybe<string> CustomPureExceptLocallyMethodsFilename { get; set; }
         public static Maybe<string> CustomPureExceptReadLocallyMethodsFilename { get; set; }
         public static Maybe<string> CustomReturnsNewObjectMethodsFilename { get; set; }
+
+        public static Func<SyntaxTree, Task<SemanticModel>> GetSemanticModelForSyntaxTreeAsync { get; set; }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule);
 

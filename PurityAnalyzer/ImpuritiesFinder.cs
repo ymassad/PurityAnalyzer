@@ -1230,7 +1230,7 @@ namespace PurityAnalyzer
                 }
 
                 var semanticModelForType =
-                    semanticModel1.Compilation.GetSemanticModel(method.ContainingType.Locations.First().SourceTree);
+                    Utils.GetSemanticModel(semanticModel1, method.ContainingType.Locations.First().SourceTree);
 
                 var modifiedRecursiveState = recursiveState.AddMethod(method, purityType);
 
@@ -1301,7 +1301,8 @@ namespace PurityAnalyzer
                 {
                     return Utils.GetImpurities(
                         methodNode,
-                        semanticModel1.Compilation.GetSemanticModel(locationSourceTree), knownSymbols1,
+                        Utils.GetSemanticModel(semanticModel1, locationSourceTree),
+                        knownSymbols1,
                         recursiveState.AddMethod(method, purityType),
                         purityType).Any();
                 }

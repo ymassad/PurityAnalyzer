@@ -99,6 +99,13 @@ namespace PurityAnalyzer.Tests
                 solution = AddNewSourceFile(solution, secondFileContent.GetValue(), "NewFile2.cs", secondDocumentId);
             }
 
+            PurityAnalyzerAnalyzer.GetSemanticModelForSyntaxTreeAsync = async tree =>
+            {
+                var document = solution.GetDocument(tree);
+
+                return await document.GetSemanticModelAsync();
+            };
+
             var result = solution.GetProject(projectId).GetCompilationAsync().Result
                 .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new PurityAnalyzerAnalyzer()));
 

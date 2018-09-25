@@ -282,7 +282,7 @@ namespace PurityAnalyzer
                 {
                     if (ReturnsNewObject(
                         methodNode,
-                        semanticModel.Compilation.GetSemanticModel(methodNode.SyntaxTree),
+                        Utils.GetSemanticModel(semanticModel, methodNode.SyntaxTree),
                         knownSymbols, recursiveState))
                         return true;
                 }
@@ -290,7 +290,7 @@ namespace PurityAnalyzer
                 {
                     if (ReturnsNewObject(
                         propertyDeclaration,
-                        semanticModel.Compilation.GetSemanticModel(propertyDeclaration.SyntaxTree),
+                        Utils.GetSemanticModel(semanticModel, propertyDeclaration.SyntaxTree),
                         knownSymbols, recursiveState))
                         return true;
                 }
@@ -879,5 +879,21 @@ namespace PurityAnalyzer
 
             return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel1.Compilation.GetTypeByMetadataName(x)));
         }
+
+        public static SemanticModel GetSemanticModel(
+            SemanticModel currentSemanticModel,
+            SyntaxTree tree)
+        {
+            if (currentSemanticModel.SyntaxTree.Equals(tree))
+                return currentSemanticModel;
+
+            var currentCompilation = currentSemanticModel.Compilation;
+
+            if (currentCompilation.ContainsSyntaxTree(tree))
+                return currentCompilation.GetSemanticModel(tree);
+
+            return PurityAnalyzerAnalyzer.GetSemanticModelForSyntaxTreeAsync(tree).Result;
+        }
+
     }
 }

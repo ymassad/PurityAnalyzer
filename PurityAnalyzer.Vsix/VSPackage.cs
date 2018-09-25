@@ -7,7 +7,9 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -83,6 +85,17 @@ namespace PurityAnalyzer.Vsix
             PurityAnalyzerAnalyzer.CustomPureExceptReadLocallyMethodsFilename = CustomPureExceptReadLocallyMethodsFilename.ToMaybe().If(x => x != "");
             PurityAnalyzerAnalyzer.CustomPureTypesFilename = CustomPureTypesFilename.ToMaybe().If(x => x != "");
             PurityAnalyzerAnalyzer.CustomReturnsNewObjectMethodsFilename = CustomReturnsNewObjectMethodsFilename.ToMaybe().If(x => x != "");
+
+
+            var componentModel = (IComponentModel) await this.GetServiceAsync(typeof(SComponentModel));
+            var workspace = componentModel.GetService<Microsoft.VisualStudio.LanguageServices.VisualStudioWorkspace>();
+
+            PurityAnalyzerAnalyzer.GetSemanticModelForSyntaxTreeAsync = async tree =>
+            {
+                var document  = workspace.CurrentSolution.GetDocument(tree);
+
+                return await document.GetSemanticModelAsync();
+            };
         }
 
         #endregion
