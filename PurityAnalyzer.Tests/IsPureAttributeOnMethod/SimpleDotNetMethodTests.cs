@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class IsPureAttribute : Attribute
 {{
@@ -33,7 +35,7 @@ public static class Module1
     }}
 }}";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetAllReferencesNeededForType(typeof(ImmutableArray<>)));
             dignostics.Length.Should().Be(0);
         }
 
@@ -296,6 +298,8 @@ public static class Module1
             foreach (var c in GetPureCasesForList()) yield return c;
 
             foreach (var c in GetPureCasesForDateTime()) yield return c;
+
+            foreach (var c in GetPureCasesForImmutableArray()) yield return c;
 
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
@@ -983,6 +987,17 @@ public static class Module1
             yield return @"var a = new DateTime(2018,1,1,1,1,1).Minute";
             yield return @"var a = new DateTime(2018,1,1,1,1,1).Second";
             yield return @"var a = new DateTime(2018,1,1,1,1,1).Millisecond";
+        }
+
+        public static IEnumerable<string> GetPureCasesForImmutableArray()
+        {
+            yield return @"var a = System.Collections.Immutable.ImmutableArray<char>.Empty";
+            yield return @"var a = System.Collections.Immutable.ImmutableArray<char>.Empty.Add('c')";
+            yield return @"var a = System.Collections.Immutable.ImmutableArray<char>.Empty.AddRange(new []{'c', 'd'})";
+            yield return @"var a = System.Collections.Immutable.ImmutableArray<char>.Empty.Add('c').Select(x => x.ToString())";
+            yield return @"var a = System.Collections.Immutable.ImmutableArray<char>.Empty.Add('c').Where(x => x == 'c')";
+
+            //TODO: continue working on ImmutableArray
         }
 
 

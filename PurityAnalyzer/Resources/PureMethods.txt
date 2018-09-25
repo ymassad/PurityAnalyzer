@@ -83,8 +83,6 @@ System.Text.StringBuilder, .ctor
 System.Xml.XmlDocument, .ctor
 System.Globalization.NumberFormatInfo, get_InvariantInfo
 System.Globalization.NumberFormatInfo, GetFormat(System.Type)
-System.Linq.ImmutableArrayExtensions, All
-System.Linq.ImmutableArrayExtensions, Any
 System.ValueType, .ctor
 System.Int32, op_Addition
 System.Int32, op_Subtraction
@@ -343,3 +341,10 @@ System.DateTime, get_Hour
 System.DateTime, get_Minute
 System.DateTime, get_Second
 System.DateTime, get_Millisecond
+System.Collections.Immutable.ImmutableArray`1, get_Empty
+System.Collections.Immutable.ImmutableArray`1, Add
+System.Collections.Immutable.ImmutableArray`1, AddRange
+System.Linq.ImmutableArrayExtensions, Select
+System.Linq.ImmutableArrayExtensions, Where
+System.Linq.ImmutableArrayExtensions, All
+System.Linq.ImmutableArrayExtensions, Any

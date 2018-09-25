@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -116,7 +117,7 @@ namespace PurityAnalyzer.Tests
 
             if (compilationErrors.Any())
             {
-                throw new Exception("Error in compilation" + Environment.NewLine + string.Join(Environment.NewLine, compilationErrors.Select(x => x.GetMessage())));
+                throw new Exception("Error in compilation" + Environment.NewLine + String.Join(Environment.NewLine, compilationErrors.Select(x => x.GetMessage())));
             }
 
             var ad0001Results = results.Where(x => x.Descriptor.Id == "AD0001").ToArray();
@@ -180,5 +181,19 @@ namespace PurityAnalyzer.Tests
                         }.Concat(additionalReferences).ToArray()));
         }
 
+        public static MetadataReference[] GetAllReferencesNeededForType(Type type)
+        {
+            var immutableCollectionsAssembly = type.Assembly;
+
+            var files =
+                immutableCollectionsAssembly.GetReferencedAssemblies()
+                    .Select(x => Assembly.Load(x.FullName))
+                    .Select(x => x.Location)
+                    .ToList();
+
+            files.Add(immutableCollectionsAssembly.Location);
+
+            return files.Select(x => MetadataReference.CreateFromFile(x)).Cast<MetadataReference>().ToArray();
+        }
     }
 }

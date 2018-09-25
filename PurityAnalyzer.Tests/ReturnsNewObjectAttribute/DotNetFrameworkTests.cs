@@ -36,26 +36,10 @@ public static class Module1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(
-                code,
-                GetAllReferencesNeededForType(typeof(ImmutableArray<>)));
+                code, Utilities.GetAllReferencesNeededForType(typeof(ImmutableArray<>)));
 
             dignostics.Length.Should().Be(0);
 
-        }
-
-        private static MetadataReference[] GetAllReferencesNeededForType(Type type)
-        {
-            var immutableCollectionsAssembly = type.Assembly;
-
-            var files =
-                immutableCollectionsAssembly.GetReferencedAssemblies()
-                    .Select(x => Assembly.Load(x.FullName))
-                    .Select(x => x.Location)
-                    .ToList();
-
-            files.Add(immutableCollectionsAssembly.Location);
-
-            return files.Select(x => MetadataReference.CreateFromFile(x)).Cast<MetadataReference>().ToArray();
         }
     }
 }
