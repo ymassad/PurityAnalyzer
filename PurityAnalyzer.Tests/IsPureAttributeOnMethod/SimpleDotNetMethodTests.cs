@@ -223,6 +223,7 @@ public static class Module1
             yield return ("List<char>", "()", "obj.TrimExcess()");
 
             yield return ("System.Text.StringBuilder", "()", "obj.Append(string.Empty)");
+            yield return ("System.Text.StringBuilder", "()", @"obj.Append("""")");
         }
 
         public static IEnumerable<(string objectType, string constructionArguments, string invocation)>
