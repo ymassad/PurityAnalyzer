@@ -25,3 +25,4 @@ System.Collections.Generic.List`1, TrueForAll(System.Predicate`1)
 System.Array, GetEnumerator
 System.Array, System.Collections.Generic.IEnumerable<T>.GetEnumerator
 System.Array, System.Collections.IEnumerable.GetEnumerator
+System.Text.StringBuilder, ToString()

@@ -221,6 +221,8 @@ public static class Module1
             yield return ("List<char>", "()", "obj.Reverse(0, 2)");
             yield return ("List<char>", "()", "obj.Sort((x,y) => 0)");
             yield return ("List<char>", "()", "obj.TrimExcess()");
+
+            yield return ("System.Text.StringBuilder", "()", "obj.Append(string.Empty)");
         }
 
         public static IEnumerable<(string objectType, string constructionArguments, string invocation)>
@@ -250,6 +252,9 @@ public static class Module1
 
             yield return ("char[]", "{'a'}", "var a = (IEnumerable<char>) obj");
             yield return ("char[]", "{'a'}", "var a = (IEnumerable) obj");
+
+
+            yield return ("System.Text.StringBuilder", "()", "var a = obj.ToString()");
 
         }
 
@@ -980,6 +985,8 @@ public static class Module1
             yield return @"var a = string.Concat<int>(new List<int> {1,2,3})";
 
             yield return @"var guid = Guid.NewGuid()";
+
+            yield return "new System.Text.StringBuilder().AppendLine()"; //Environment.NewLine is not pure!?
         }
     }
 }

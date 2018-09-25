@@ -1869,5 +1869,292 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void MethodThatReturnsResultOfInvokingStaticExpressionBodiedPropertyInAnotherClassThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public static Class1 Prop1 => new Class1();
+}
+
+public static class Module1
+{
+
+    [ReturnsNewObject]
+    public static Class1 DoSomething()
+    {
+        return Class1.Prop1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsResultOfInvokingStaticExpressionBodiedPropertyGetterInAnotherClassThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public static Class1 Prop1 {get => new Class1();}
+}
+
+public static class Module1
+{
+
+    [ReturnsNewObject]
+    public static Class1 DoSomething()
+    {
+        return Class1.Prop1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatReturnsResultOfInvokingStaticPropertyGetterInAnotherClassThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public static Class1 Prop1
+    {
+        get
+        {
+            return new Class1();
+        }
+    }
+}
+
+public static class Module1
+{
+
+    [ReturnsNewObject]
+    public static Class1 DoSomething()
+    {
+        return Class1.Prop1;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
+        public void ExpressionBodiedPropertyThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [ReturnsNewObject]
+    public static Class1 Prop1 => new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void ExpressionBodiedPropertyThatReturnsExistingObject_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private static Class1 existing = new Class1();
+
+    [ReturnsNewObject]
+    public static Class1 Prop1 => existing;
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void AutoReadonlyPropertyGetter_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [ReturnsNewObject]
+    public static Class1 Prop1 {get;} = new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void AutoReadWritePropertyGetter_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [ReturnsNewObject]
+    public static Class1 Prop1 {get; set;} = new Class1();
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void PropertyGetterThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [ReturnsNewObject]
+    public static Class1 Prop1 
+    {
+        get
+        {
+            return new Class1();
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void PropertyGetterThatReturnsExistingObject_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private static Class1 existing = new Class1();
+
+    [ReturnsNewObject]
+    public static Class1 Prop1 
+    {
+        get
+        {
+            return existing;
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void ExpressionBodiedPropertyGetterThatReturnsNewObject_ReturnsNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    [ReturnsNewObject]
+    public static Class1 Prop1 
+    {
+        get => new Class1();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void ExpressionBodiedPropertyGetterThatReturnsExistingObject_DoesNotReturnNewObject()
+        {
+            string code = @"
+using System;
+
+public class ReturnsNewObjectAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    private static Class1 existing = new Class1();
+
+    [ReturnsNewObject]
+    public static Class1 Prop1 
+    {
+        get => existing;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

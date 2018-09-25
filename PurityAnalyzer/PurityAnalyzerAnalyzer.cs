@@ -131,7 +131,8 @@ namespace PurityAnalyzer
 
         }
 
-        private void ProcessNonNewObjectReturnsForMethod(SyntaxNodeAnalysisContext context,
+        private void ProcessNonNewObjectReturnsForMethod(
+            SyntaxNodeAnalysisContext context,
             BaseMethodDeclarationSyntax methodDeclaration,
             KnownSymbols knownSymbols,
             IMethodSymbol methodSymbol)
@@ -140,6 +141,45 @@ namespace PurityAnalyzer
                 return;
 
             foreach (var expression in Utils.GetNonNewObjectReturnsForMethod(methodDeclaration, context.SemanticModel, knownSymbols, RecursiveState.Empty))
+            {
+                var diagnostic = Diagnostic.Create(
+                    ReturnsNewObjectRule,
+                    expression.Parent.GetLocation(),
+                    "non-new object return");
+
+                context.ReportDiagnostic(diagnostic);
+            }
+        }
+
+        private void ProcessNonNewObjectReturnsForProperty(
+            SyntaxNodeAnalysisContext context,
+            PropertyDeclarationSyntax propertyDeclaration,
+            KnownSymbols knownSymbols,
+            IPropertySymbol propertySymbol)
+        {
+            if (propertySymbol.IsAbstract)
+                return;
+
+            bool isAutoPropertyWithGetAccessor =
+                propertyDeclaration.AccessorList != null 
+                && propertyDeclaration.AccessorList.Accessors.Any(x =>
+                    x.Keyword.Kind() == SyntaxKind.GetKeyword)
+                && propertyDeclaration.AccessorList.Accessors.All(x =>
+                    x.Body == null && x.ExpressionBody == null);
+
+            if (isAutoPropertyWithGetAccessor)
+            {
+                var diagnostic = Diagnostic.Create(
+                    ReturnsNewObjectRule,
+                    propertyDeclaration.GetLocation(),
+                    "Auto properties do not return new objects");
+
+                context.ReportDiagnostic(diagnostic);
+
+                return;
+            }
+
+            foreach (var expression in Utils.GetNonNewObjectReturnsForPropertyGet(propertyDeclaration, context.SemanticModel, knownSymbols, RecursiveState.Empty))
             {
                 var diagnostic = Diagnostic.Create(
                     ReturnsNewObjectRule,
@@ -261,6 +301,19 @@ namespace PurityAnalyzer
                     purityType: PurityType.PureExceptReadLocally);
             });
 
+            attributes.FirstOrNoValue(Utils.IsReturnsNewObjectAttribute).ExecuteIfHasValue(attribute =>
+            {
+                var propertySymbol = context.SemanticModel.GetDeclaredSymbol(propertyDeclarationSyntax);
+
+                if (propertySymbol != null)
+                {
+                    ProcessNonNewObjectReturnsForProperty(
+                        context,
+                        propertyDeclarationSyntax,
+                        knownSymbols,
+                        propertySymbol);
+                }
+            });
 
         }
 

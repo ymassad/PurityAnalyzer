@@ -202,38 +202,17 @@ namespace PurityAnalyzer
             {
                 if (semanticModel.GetSymbolInfo(invocationExpression.Expression).Symbol is IMethodSymbol invokedMethod)
                 {
-                    if (invokedMethod.IsInCode() && !invokedMethod.IsAbstract)
-                    {
-                        var location = invokedMethod.Locations.First();
+                    if (MethodReturnsNewObject(semanticModel, knownSymbols, recursiveState1, invokedMethod))
+                        return true;
+                }
+            }
 
-                        var locationSourceTree = location.SourceTree;
-
-                        var node = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
-
-                        if (node is BaseMethodDeclarationSyntax methodNode)
-                        {
-                            if (ReturnsNewObject(
-                                methodNode,
-                                semanticModel.Compilation.GetSemanticModel(methodNode.SyntaxTree),
-                                knownSymbols, recursiveState1))
-                                return true;
-                        }
-                    }
-                    else
-                    {
-                        if (GetAllAttributes(invokedMethod)
-                            .Any(x => IsReturnsNewObjectAttribute(x.AttributeClass.Name)))
-                        {
-                            return true;
-                        }
-
-                        if (knownSymbols.KnownReturnsNewObjectMethods.TryGetValue(
-                                Utils.GetFullMetaDataName(invokedMethod.ContainingType), out var methods) &&
-                            methods.AnyMatches(invokedMethod))
-                        {
-                            return true;
-                        }
-                    }
+            if (expression is MemberAccessExpressionSyntax memberAccessExpression)
+            {
+                if (semanticModel.GetSymbolInfo(memberAccessExpression.Name).Symbol is IPropertySymbol propertySymbol && !GetUsage(memberAccessExpression.Name).IsWrite())
+                {
+                    if (MethodReturnsNewObject(semanticModel, knownSymbols, recursiveState1, propertySymbol.GetMethod))
+                        return true;
                 }
             }
 
@@ -277,6 +256,57 @@ namespace PurityAnalyzer
             if (semanticModel.GetTypeInfo(expression).Type is ITypeSymbol type)
             {
                 if (IsCompleteValueType(type))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool MethodReturnsNewObject(
+            SemanticModel semanticModel,
+            KnownSymbols knownSymbols,
+            RecursiveState recursiveState,
+            IMethodSymbol invokedMethod)
+        {
+            if (invokedMethod.IsInCode() && !invokedMethod.IsAbstract)
+            {
+                var location = invokedMethod.Locations.First();
+
+                var locationSourceTree = location.SourceTree;
+
+                var node = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
+                
+                if (node is BaseMethodDeclarationSyntax methodNode)
+                {
+                    if (ReturnsNewObject(
+                        methodNode,
+                        semanticModel.Compilation.GetSemanticModel(methodNode.SyntaxTree),
+                        knownSymbols, recursiveState))
+                        return true;
+                }
+                else if (node.Parent.Parent is PropertyDeclarationSyntax propertyDeclaration)
+                {
+                    if (ReturnsNewObject(
+                        propertyDeclaration,
+                        semanticModel.Compilation.GetSemanticModel(propertyDeclaration.SyntaxTree),
+                        knownSymbols, recursiveState))
+                        return true;
+                }
+            
+            }
+            else
+            {
+                if (GetAllAttributes(invokedMethod)
+                    .Any(x => IsReturnsNewObjectAttribute(x.AttributeClass.Name)))
+                {
+                    return true;
+                }
+
+                if (knownSymbols.KnownReturnsNewObjectMethods.TryGetValue(
+                        Utils.GetFullMetaDataName(invokedMethod.ContainingType), out var methods) &&
+                    methods.AnyMatches(invokedMethod))
                 {
                     return true;
                 }
@@ -382,6 +412,14 @@ namespace PurityAnalyzer
             return !GetNonNewObjectReturnsForMethod(methodDeclaration, semanticModel, knownSymbols, recursiveState1).Any();
         }
 
+        public static bool ReturnsNewObject(PropertyDeclarationSyntax propertyDeclaration,
+            SemanticModel semanticModel,
+            KnownSymbols knownSymbols,
+            RecursiveState recursiveState1)
+        {
+            return !GetNonNewObjectReturnsForPropertyGet(propertyDeclaration, semanticModel, knownSymbols, recursiveState1).Any();
+        }
+
         public static bool IsCompleteValueType(ITypeSymbol type)
         {
             if (!type.IsValueType)
@@ -421,6 +459,59 @@ namespace PurityAnalyzer
                 }
             }
         }
+
+        public static IEnumerable<ExpressionSyntax> GetNonNewObjectReturnsForPropertyGet(
+            PropertyDeclarationSyntax propertyDeclaration,
+            SemanticModel semanticModel,
+            KnownSymbols knownSymbols,
+            RecursiveState recursiveState1)
+        {
+            var propertySymbol = semanticModel.GetDeclaredSymbol(propertyDeclaration);
+
+            if (propertySymbol.GetMethod == null)
+                yield break;
+
+            if (!propertySymbol.ReturnsByRef && IsCompleteValueType(propertySymbol.Type))
+                yield break;
+
+            List<ExpressionSyntax> returnExpressions;
+
+            if (propertyDeclaration.AccessorList != null)
+            {
+                var getAccessor =
+                    propertyDeclaration.AccessorList.Accessors.FirstOrNoValue(x =>
+                        x.Keyword.Kind() == SyntaxKind.GetKeyword);
+
+                if (getAccessor.HasNoValue)
+                    yield break;
+
+                var getAccessorValue = getAccessor.GetValue();
+
+                returnExpressions =
+                    getAccessorValue.ExpressionBody != null
+                        ? new List<ExpressionSyntax>() { getAccessorValue.ExpressionBody.Expression }
+                        : getAccessor.GetValue()
+                            .DescendantNodes()
+                            .OfType<ReturnStatementSyntax>()
+                            .Select(x => x.Expression)
+                            .ToList();
+
+            }
+            else if (propertyDeclaration.ExpressionBody != null)
+            {
+                returnExpressions = new List<ExpressionSyntax>() {propertyDeclaration.ExpressionBody.Expression};
+            }
+            else yield break;
+
+            foreach (var expression in returnExpressions)
+            {
+                if (!Utils.IsNewlyCreatedObject(semanticModel, expression, knownSymbols, RecursiveIsNewlyCreatedObjectState.Empty(), recursiveState1))
+                {
+                    yield return expression;
+                }
+            }
+        }
+
 
         public static AttributeData[] GetAllAttributes(ISymbol symbol)
         {
