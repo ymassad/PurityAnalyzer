@@ -301,6 +301,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForImmutableArray()) yield return c;
 
+            foreach (var c in GetPureCasesForDecimal()) yield return c;
+
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
 
@@ -988,6 +990,51 @@ public static class Module1
             yield return @"var a = new DateTime(2018,1,1,1,1,1).Second";
             yield return @"var a = new DateTime(2018,1,1,1,1,1).Millisecond";
         }
+
+        public static IEnumerable<string> GetPureCasesForDecimal()
+        {
+            yield return @"var a = 1m + 1m";
+            yield return @"var a = 1m - 1m";
+            yield return @"var a = 1m * 1m";
+            yield return @"var a = 1m / 1m";
+            yield return @"var a = 1m % 1m";
+            yield return @"var a = 1m > 1m";
+            yield return @"var a = 1m < 1m";
+            yield return @"var a = 1m >= 1m";
+            yield return @"var a = 1m <= 1m";
+            yield return @"var a = 1m == 1m";
+            yield return @"var a = 1m != 1m";
+
+            yield return @"var b = 1m; var a = +b";
+            yield return @"var b = 1m; var a = -b";
+            yield return @"var b = 1m; var a = --b";
+            yield return @"var b = 1m; var a = ++b";
+            yield return @"var b = 1m; var a = b++";
+            yield return @"var b = 1m; var a = b--";
+    
+            yield return @"var a = 1m; a += 1m";
+            yield return @"var a = 1m; a *= 1m";
+            yield return @"var a = 1m; a /= 1m";
+            yield return @"var a = 1m; a %= 1m";
+            yield return @"var a = 1m; a -= 1m";
+      
+            yield return @"var a = 1m.GetTypeCode()";
+
+            yield return @"var a = new decimal(1)";
+            yield return @"var a = new decimal(1u)";
+            yield return @"var a = new decimal(1L)";
+            yield return @"var a = new decimal(1UL)";
+            yield return @"var a = new decimal(1f)";
+            yield return @"var a = new decimal(1d)";
+
+            //TODO: continue working on decimal
+            //yield return @"var a = 1m.CompareTo(1m)";
+            //yield return @"var a = 1m.CompareTo(new object())";
+            //yield return @"var a = 1m.GetHashCode()";
+            //yield return @"var a = 1m.Equals(1m)";
+            //yield return @"var a = 1m.Equals(new object())";
+        }
+
 
         public static IEnumerable<string> GetPureCasesForImmutableArray()
         {
