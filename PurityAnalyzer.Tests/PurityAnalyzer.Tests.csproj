@@ -217,6 +217,7 @@
     <Compile Include="IsPureExceptReadLocallyAttribute\IsPureExceptReadLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnMethod.cs" />
+    <Compile Include="PureLambdaTests\Tests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\DotNetFrameworkTests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\ReturnsNewObjectAttributeTests.cs" />
     <Compile Include="Utilities.cs" />

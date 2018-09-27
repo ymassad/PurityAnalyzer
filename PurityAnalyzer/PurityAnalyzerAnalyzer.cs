@@ -29,6 +29,16 @@ namespace PurityAnalyzer
                 isEnabledByDefault: true,
                 description: "Impurity error");
 
+        private static DiagnosticDescriptor NotALambdaRule =
+            new DiagnosticDescriptor(
+                PurityDiagnosticId,
+                "Not a Lambda error",
+                "{0}",
+                Category,
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true,
+                description: "Not a Lambda error");
+
         private static DiagnosticDescriptor ReturnsNewObjectRule =
             new DiagnosticDescriptor(
                 ReturnsNewObjectDiagnosticId,
@@ -46,9 +56,11 @@ namespace PurityAnalyzer
         public static Maybe<string> CustomPureExceptReadLocallyMethodsFilename { get; set; }
         public static Maybe<string> CustomReturnsNewObjectMethodsFilename { get; set; }
 
+        public static Maybe<(string fullClassName, string methodName)> PureLambdaMethod { get; set; }
+
         public static Func<SyntaxTree, Task<SemanticModel>> GetSemanticModelForSyntaxTreeAsync { get; set; }
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule, NotALambdaRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -57,6 +69,60 @@ namespace PurityAnalyzer
             context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.OperatorDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeClassSyntaxNode, SyntaxKind.ClassDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzePropertySyntaxNode, SyntaxKind.PropertyDeclaration);
+
+
+            PureLambdaMethod.ExecuteIfHasValue(value =>
+            {
+                context.RegisterSyntaxNodeAction(c => AnalyzePureLambdaMethod(c , value), SyntaxKind.InvocationExpression);
+            });
+
+        }
+
+        private void AnalyzePureLambdaMethod(
+            SyntaxNodeAnalysisContext context,
+            (string fullClassName, string methodName) pureLambdaMethod)
+        {
+
+            var knownSymbols =
+                new KnownSymbols(
+                    Utils.GetKnownPureMethods(),
+                    Utils.GetKnownPureExceptLocallyMethods(),
+                    Utils.GetKnownPureExceptReadLocallyMethods(),
+                    Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
+                    Utils.GetKnownPureTypes(context.SemanticModel));
+
+            InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
+
+            if (!(context.SemanticModel.GetSymbolInfo(expression).Symbol is IMethodSymbol method))
+                return;
+
+            if (method.Name != pureLambdaMethod.methodName)
+                return;
+
+            if (Utils.GetFullMetaDataName(method.ContainingType) != pureLambdaMethod.fullClassName)
+                return;
+
+            var arguments = expression.ArgumentList.Arguments.Select(x => x.Expression).ToList();
+
+            
+            foreach (var argument in arguments)
+            {
+                if (!(argument is LambdaExpressionSyntax lambda))
+                {
+                    var diagnostic = Diagnostic.Create(
+                        NotALambdaRule,
+                        argument.GetLocation(),
+                        "Only lambda arguments can be used with Pure Lambda methods");
+
+                    context.ReportDiagnostic(diagnostic);
+
+                    continue;
+                }
+
+                ProcessImpuritiesForMethod(context, lambda, knownSymbols, acceptedScopeOfLocalVariablesAndParameters: lambda);
+
+            }
+
         }
 
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
@@ -378,18 +444,21 @@ namespace PurityAnalyzer
 
         }
 
-        private static void ProcessImpuritiesForMethod(SyntaxNodeAnalysisContext context,
+        private static void ProcessImpuritiesForMethod(
+            SyntaxNodeAnalysisContext context,
             SyntaxNode methodLikeNode,
             KnownSymbols knownSymbols,
-            PurityType purityType = PurityType.Pure)
+            PurityType purityType = PurityType.Pure,
+            Maybe<SyntaxNode> acceptedScopeOfLocalVariablesAndParameters = default)
         {
             var impurities =
                 Utils.GetImpurities(
-                    GetBodyIfDeclaration(methodLikeNode),
+                    GetBodyOfDeclaration(methodLikeNode),
                     context.SemanticModel,
                     knownSymbols,
                     RecursiveState.Empty,
-                    purityType)
+                    purityType,
+                    acceptedScopeOfLocalVariablesAndParameters)
                     .ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)
@@ -428,7 +497,7 @@ namespace PurityAnalyzer
             }
         }
 
-        public static SyntaxNode GetBodyIfDeclaration(SyntaxNode method)
+        public static SyntaxNode GetBodyOfDeclaration(SyntaxNode method)
         {
             if (method is BaseMethodDeclarationSyntax declarationSyntax)
                 return GetMethodBody(declarationSyntax);

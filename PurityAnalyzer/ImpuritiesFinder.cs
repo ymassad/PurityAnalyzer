@@ -81,7 +81,10 @@ namespace PurityAnalyzer
             this.knownSymbols = knownSymbols;
         }
 
-        public IEnumerable<Impurity> GetImpurities(SyntaxNode node, RecursiveState recursiveState)
+        public IEnumerable<Impurity> GetImpurities(
+            SyntaxNode node,
+            RecursiveState recursiveState,
+            Maybe<SyntaxNode> acceptedScopeOfVariablesAndParameters)
         {
             var allNodes = node.DescendantNodesAndSelf();
 
@@ -106,6 +109,17 @@ namespace PurityAnalyzer
                 {
                     foreach (var impurity in GetImpurities3(identifierName, recursiveState))
                         yield return impurity;
+
+                    if(acceptedScopeOfVariablesAndParameters.HasValue)
+                    {
+                        var potentialIssue =
+                            GetPotentialScopeRelatedVariableOrParameterIssue(
+                                identifierName,
+                                acceptedScopeOfVariablesAndParameters.GetValue());
+
+                        if (potentialIssue.HasValue)
+                            yield return potentialIssue.GetValue();
+                    }
                 }
                 else if (subNode is BinaryExpressionSyntax binaryExpression)
                 {
@@ -154,6 +168,30 @@ namespace PurityAnalyzer
                     }
                 }
             }
+        }
+
+        private Maybe<Impurity> GetPotentialScopeRelatedVariableOrParameterIssue(
+            IdentifierNameSyntax identifierName,
+            SyntaxNode scope)
+        {
+            var symbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+
+            if (symbol is ILocalSymbol variable)
+            {
+                if (variable.DeclaringSyntaxReferences.Any(x => !scope.Contains(x.GetSyntax())))
+                {
+                    return new Impurity(identifierName, "Unacceptable access to variable");
+                }
+            }
+            else if (symbol is IParameterSymbol parameter)
+            {
+                if (parameter.DeclaringSyntaxReferences.Any(x => !scope.Contains(x.GetSyntax())))
+                {
+                    return new Impurity(identifierName, "Unacceptable access to parameter");
+                }
+            }
+
+            return Maybe.NoValue;
         }
 
         private IEnumerable<Impurity> GetConditionalOperationImpurities(

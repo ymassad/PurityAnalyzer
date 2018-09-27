@@ -86,6 +86,11 @@ namespace PurityAnalyzer.Vsix
             PurityAnalyzerAnalyzer.CustomPureTypesFilename = CustomPureTypesFilename.ToMaybe().If(x => x != "");
             PurityAnalyzerAnalyzer.CustomReturnsNewObjectMethodsFilename = CustomReturnsNewObjectMethodsFilename.ToMaybe().If(x => x != "");
 
+            if (!string.IsNullOrWhiteSpace(PureLambdaFullClassName) &&
+                !string.IsNullOrWhiteSpace(PureLambdaMethodName))
+            {
+                PurityAnalyzerAnalyzer.PureLambdaMethod = (PureLambdaFullClassName, PureLambdaMethodName);
+            }
 
             var componentModel = (IComponentModel) await this.GetServiceAsync(typeof(SComponentModel));
             var workspace = componentModel.GetService<Microsoft.VisualStudio.LanguageServices.VisualStudioWorkspace>();
@@ -144,6 +149,24 @@ namespace PurityAnalyzer.Vsix
                 return page.CustomReturnsNewObjectMethodsFilename;
             }
         }
+
+        public string PureLambdaFullClassName
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.PureLambdaFullClassName;
+            }
+        }
+
+        public string PureLambdaMethodName
+        {
+            get
+            {
+                OptionPageGrid page = (OptionPageGrid)GetDialogPage(typeof(OptionPageGrid));
+                return page.PureLambdaMethodName;
+            }
+        }
     }
 
     public class OptionPageGrid : DialogPage
@@ -173,6 +196,16 @@ namespace PurityAnalyzer.Vsix
         [DisplayName("Custom Returns New Object Methods Filename")]
         [Description("Full filename that contains custom methods that return new objects")]
         public string CustomReturnsNewObjectMethodsFilename { get; set; } = "";
+
+        [Category("Purity Analyzer")]
+        [DisplayName("Pure Lambda Full Class Name")]
+        [Description("Full name of the class that contains the Pure Lmabda Method")]
+        public string PureLambdaFullClassName { get; set; } = "";
+
+        [Category("Purity Analyzer")]
+        [DisplayName("Pure Lambda Method Name")]
+        [Description("Name of the Pure Lambda Method. Purity Analyzer would check that the lambda passed to this method is pure")]
+        public string PureLambdaMethodName { get; set; } = "";
     }
 
 }
