@@ -84,7 +84,7 @@ namespace PurityAnalyzer
         public IEnumerable<Impurity> GetImpurities(
             SyntaxNode node,
             RecursiveState recursiveState,
-            Maybe<SyntaxNode> acceptedScopeOfVariablesAndParameters)
+            Maybe<PureLambdaConfig> pureLambdaConfig)
         {
             var allNodes = node.DescendantNodesAndSelf();
 
@@ -110,12 +110,12 @@ namespace PurityAnalyzer
                     foreach (var impurity in GetImpurities3(identifierName, recursiveState))
                         yield return impurity;
 
-                    if(acceptedScopeOfVariablesAndParameters.HasValue)
+                    if(pureLambdaConfig.HasValue)
                     {
                         var potentialIssue =
-                            GetPotentialScopeRelatedVariableOrParameterIssue(
+                            GetPotentialLambdaRelatedIssue(
                                 identifierName,
-                                acceptedScopeOfVariablesAndParameters.GetValue());
+                                pureLambdaConfig.GetValue());
 
                         if (potentialIssue.HasValue)
                             yield return potentialIssue.GetValue();
@@ -170,17 +170,43 @@ namespace PurityAnalyzer
             }
         }
 
-        private Maybe<Impurity> GetPotentialScopeRelatedVariableOrParameterIssue(
+        private Maybe<Impurity> GetPotentialLambdaRelatedIssue(
             IdentifierNameSyntax identifierName,
-            SyntaxNode scope)
+            PureLambdaConfig pureLambdaConfig)
         {
+            var scope = pureLambdaConfig.LambdaScope;
+
             var symbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
 
             if (symbol is ILocalSymbol variable)
             {
-                if (variable.DeclaringSyntaxReferences.Any(x => !scope.Contains(x.GetSyntax())))
+                foreach (var variableReference in variable.DeclaringSyntaxReferences)
                 {
-                    return new Impurity(identifierName, "Unacceptable access to variable");
+                    var variableSyntax = variableReference.GetSyntax();
+
+                    if (!scope.Contains(variableSyntax))
+                    {
+                        if (!Utils.GetUsage(identifierName).IsWrite())
+                        {
+                            var methodBody =
+                                Utils.GetBodyOfMethodThatContainsExpression(variableSyntax);
+                            if (methodBody.HasValue)
+                            {
+                                var valuesAssignedToVariable = Utils.FindValuesAssignedToVariable(semanticModel, variable, methodBody.GetValue());
+
+                                if (valuesAssignedToVariable.All(x =>
+                                    x is InvocationExpressionSyntax invocation &&
+                                    Utils.IsPureLambdaMethodInvocation(
+                                        semanticModel, pureLambdaConfig.PureLambdaMethodFullClassName,
+                                        pureLambdaConfig.PureLambdaMethodName, invocation)))
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        return new Impurity(identifierName, "Unacceptable access to variable");
+                    }
                 }
             }
             else if (symbol is IParameterSymbol parameter)
@@ -465,23 +491,10 @@ namespace PurityAnalyzer
                             else if (node.Parent is EqualsValueClauseSyntax equalsValueClause
                                      && equalsValueClause.Parent is VariableDeclaratorSyntax variableDeclarator)
                             {
-                                var variableName = variableDeclarator.Identifier.Text;
-
                                 var scope = node
                                     .Ancestors().First(x => x is BlockSyntax || x is ArrowExpressionClauseSyntax);
 
-                                var usagesOfVariable = scope.DescendantNodes()
-                                    .OfType<IdentifierNameSyntax>()
-                                    .Where(x => x.Identifier.Text == variableName)
-                                    .Select(x => new
-                                    {
-                                        Identifier = x,
-                                        Symbol = semanticModel.GetSymbolInfo(x).Symbol as ILocalSymbol
-                                    })
-                                    .Where(x => x.Symbol != null)
-                                    .Where(x => x.Symbol.DeclaringSyntaxReferences.Length == 1 && x.Symbol.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax variableDeclarator1 && variableDeclarator1.Equals(variableDeclarator))
-                                    .Select(x => x.Identifier)
-                                    .ToImmutableArray();
+                                var usagesOfVariable = GetUsagesOfVariable(variableDeclarator, scope);
 
                                 return usagesOfVariable.All(IsOnlyUsedAsArgumentToPureOrPureExceptReadLocallyMethods);
                             }
@@ -635,6 +648,24 @@ namespace PurityAnalyzer
                 return method.OverriddenMethod.Equals(overridden) ||
                        UltimatlyOverrides(method.OverriddenMethod, overridden);
             }
+        }
+
+        private ImmutableArray<IdentifierNameSyntax> GetUsagesOfVariable(VariableDeclaratorSyntax variableDeclarator, SyntaxNode scope)
+        {
+            var variableName = variableDeclarator.Identifier.Text;
+
+            return scope.DescendantNodes()
+                .OfType<IdentifierNameSyntax>()
+                .Where(x => x.Identifier.Text == variableName)
+                .Select(x => new
+                {
+                    Identifier = x,
+                    Symbol = semanticModel.GetSymbolInfo(x).Symbol as ILocalSymbol
+                })
+                .Where(x => x.Symbol != null)
+                .Where(x => x.Symbol.DeclaringSyntaxReferences.Length == 1 && x.Symbol.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax variableDeclarator1 && variableDeclarator1.Equals(variableDeclarator))
+                .Select(x => x.Identifier)
+                .ToImmutableArray();
         }
 
         private bool IsAPropertyWithAnInstancePureExceptReadLocallyGetter(SyntaxNode syntaxNode,

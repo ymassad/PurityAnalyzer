@@ -93,18 +93,10 @@ namespace PurityAnalyzer
 
             InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
 
-            if (!(context.SemanticModel.GetSymbolInfo(expression).Symbol is IMethodSymbol method))
-                return;
-
-            if (method.Name != pureLambdaMethod.methodName)
-                return;
-
-            if (Utils.GetFullMetaDataName(method.ContainingType) != pureLambdaMethod.fullClassName)
-                return;
+            if (!Utils.IsPureLambdaMethodInvocation(context.SemanticModel, pureLambdaMethod.fullClassName, pureLambdaMethod.methodName, expression)) return;
 
             var arguments = expression.ArgumentList.Arguments.Select(x => x.Expression).ToList();
 
-            
             foreach (var argument in arguments)
             {
                 if (!(argument is LambdaExpressionSyntax lambda))
@@ -119,7 +111,7 @@ namespace PurityAnalyzer
                     continue;
                 }
 
-                ProcessImpuritiesForMethod(context, lambda, knownSymbols, acceptedScopeOfLocalVariablesAndParameters: lambda);
+                ProcessImpuritiesForMethod(context, lambda, knownSymbols, pureLambdaConfig: new PureLambdaConfig(lambda, pureLambdaMethod.fullClassName, pureLambdaMethod.methodName));
 
             }
 
@@ -449,7 +441,7 @@ namespace PurityAnalyzer
             SyntaxNode methodLikeNode,
             KnownSymbols knownSymbols,
             PurityType purityType = PurityType.Pure,
-            Maybe<SyntaxNode> acceptedScopeOfLocalVariablesAndParameters = default)
+            Maybe<PureLambdaConfig> pureLambdaConfig = default)
         {
             var impurities =
                 Utils.GetImpurities(
@@ -458,7 +450,7 @@ namespace PurityAnalyzer
                     knownSymbols,
                     RecursiveState.Empty,
                     purityType,
-                    acceptedScopeOfLocalVariablesAndParameters)
+                    pureLambdaConfig)
                     .ToList();
 
             if (methodLikeNode is ConstructorDeclarationSyntax constructor)

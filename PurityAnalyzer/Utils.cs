@@ -57,11 +57,11 @@ namespace PurityAnalyzer
             KnownSymbols knownSymbols,
             RecursiveState recursiveState,
             PurityType purityType = PurityType.Pure,
-            Maybe<SyntaxNode> acceptedScopeOfLocalVariablesAndParameters = default)
+            Maybe<PureLambdaConfig> pureLambdaConfig = default)
         {
             var impuritiesFinder = new ImpuritiesFinder(semanticModel, purityType, knownSymbols);
 
-            return impuritiesFinder.GetImpurities(methodDeclaration, recursiveState, acceptedScopeOfLocalVariablesAndParameters);
+            return impuritiesFinder.GetImpurities(methodDeclaration, recursiveState, pureLambdaConfig);
         }
 
         public static bool AnyImpurePropertyInitializer(TypeDeclarationSyntax typeDeclaration,
@@ -232,14 +232,7 @@ namespace PurityAnalyzer
                         return true;
 
                     var methodBody =
-                        expression
-                            .Ancestors()
-                            .OfType<MethodDeclarationSyntax>()
-                            .FirstOrNoValue()
-                            .ChainValue(x => x.Body)
-                            .ValueOrMaybe(() =>
-                                expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue()
-                                    .ChainValue(x => x.Body));
+                        GetBodyOfMethodThatContainsExpression(expression);
 
                     if (methodBody.HasNoValue)
                         return false;
@@ -273,6 +266,18 @@ namespace PurityAnalyzer
             }
 
             return false;
+        }
+
+        public static Maybe<BlockSyntax> GetBodyOfMethodThatContainsExpression(SyntaxNode expression)
+        {
+            return expression
+                .Ancestors()
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrNoValue()
+                .ChainValue(x => x.Body)
+                .ValueOrMaybe(() =>
+                    expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue()
+                        .ChainValue(x => x.Body));
         }
 
         private static bool MethodReturnsNewObject(
@@ -1008,6 +1013,23 @@ namespace PurityAnalyzer
             }
 
             return currentAcceptedPurityType;
+        }
+
+        public static bool IsPureLambdaMethodInvocation(
+            SemanticModel semanticModel,
+            string pureLambdaMethodFullClassName,
+            string pureLambdaMethodName,
+            InvocationExpressionSyntax expression)
+        {
+            if (!(semanticModel.GetSymbolInfo(expression).Symbol is IMethodSymbol method))
+                return false;
+
+            if (method.Name != pureLambdaMethodName)
+                return false;
+
+            if (Utils.GetFullMetaDataName(method.ContainingType) != pureLambdaMethodFullClassName)
+                return false;
+            return true;
         }
     }
 }
