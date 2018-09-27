@@ -225,5 +225,120 @@ public static class Module1
 
         }
 
+        [Test]
+        public void PureLambdaCanInvokeAnotherPureLambdaThatIsOutOfScope()
+        {
+            PurityAnalyzerAnalyzer.PureLambdaMethod = ("PureLambdaClass", "Pure");
+
+            string code = @"
+using System;
+
+public static class PureLambdaClass
+{
+    public static Func<T> Pure<T>(Func<T> func) => func;
+}
+
+public static class Module1
+{
+    public static void DoSomething()
+    {
+        var func1 = PureLambdaClass.Pure(() => 1);
+
+        var func2 = PureLambdaClass.Pure(() => func1());
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PureLambdaCanInvokeAnotherPureLambdaThatIsOutOfScopeAfterStoringItInLocalVariable()
+        {
+            PurityAnalyzerAnalyzer.PureLambdaMethod = ("PureLambdaClass", "Pure");
+
+            string code = @"
+using System;
+
+public static class PureLambdaClass
+{
+    public static Func<T> Pure<T>(Func<T> func) => func;
+}
+
+public static class Module1
+{
+    public static void DoSomething()
+    {
+        var func1 = PureLambdaClass.Pure(() => 1);
+
+        var func2 = PureLambdaClass.Pure(() => { var myfunc1 = func1; return myfunc1();});
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void PureLambdaCannotModifyAnotherPureLambdaThatIsOutOfScope()
+        {
+            PurityAnalyzerAnalyzer.PureLambdaMethod = ("PureLambdaClass", "Pure");
+
+            string code = @"
+using System;
+
+public static class PureLambdaClass
+{
+    public static Func<T> Pure<T>(Func<T> func) => func;
+}
+
+public static class Module1
+{
+    public static void DoSomething()
+    {
+        var func1 = PureLambdaClass.Pure(() => 1);
+
+        var func2 = PureLambdaClass.Pure(() => { func1 = PureLambdaClass.Pure(() => 2); return 1;});
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void PureLambdaCanModifyAnotherPureLambdaThatIsInScope()
+        {
+            PurityAnalyzerAnalyzer.PureLambdaMethod = ("PureLambdaClass", "Pure");
+
+            string code = @"
+using System;
+
+public static class PureLambdaClass
+{
+    public static Func<T> Pure<T>(Func<T> func) => func;
+}
+
+public static class Module1
+{
+    public static void DoSomething()
+    {
+        var func2 = PureLambdaClass.Pure(() =>
+        {
+            var func1 = PureLambdaClass.Pure(() => 1);
+            func1 = PureLambdaClass.Pure(() => 2);
+            return 1;
+        });
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }
