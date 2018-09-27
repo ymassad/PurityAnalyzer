@@ -69,19 +69,14 @@ namespace PurityAnalyzer
             context.RegisterSyntaxNodeAction(AnalyzeMethodSyntaxNode, SyntaxKind.OperatorDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeClassSyntaxNode, SyntaxKind.ClassDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzePropertySyntaxNode, SyntaxKind.PropertyDeclaration);
-
-
-            PureLambdaMethod.ExecuteIfHasValue(value =>
-            {
-                context.RegisterSyntaxNodeAction(c => AnalyzePureLambdaMethod(c , value), SyntaxKind.InvocationExpression);
-            });
-
+            context.RegisterSyntaxNodeAction(AnalyzePureLambdaMethod, SyntaxKind.InvocationExpression);
         }
 
         private void AnalyzePureLambdaMethod(
-            SyntaxNodeAnalysisContext context,
-            (string fullClassName, string methodName) pureLambdaMethod)
+            SyntaxNodeAnalysisContext context)
         {
+            if (PureLambdaMethod.HasNoValue)
+                return;
 
             var knownSymbols =
                 new KnownSymbols(
@@ -93,7 +88,12 @@ namespace PurityAnalyzer
 
             InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
 
-            if (!Utils.IsPureLambdaMethodInvocation(context.SemanticModel, pureLambdaMethod.fullClassName, pureLambdaMethod.methodName, expression)) return;
+            if (!Utils.IsPureLambdaMethodInvocation(
+                context.SemanticModel,
+                PureLambdaMethod.GetValue().fullClassName,
+                PureLambdaMethod.GetValue().methodName,
+                expression))
+                return;
 
             var arguments = expression.ArgumentList.Arguments.Select(x => x.Expression).ToList();
 
@@ -111,10 +111,15 @@ namespace PurityAnalyzer
                     continue;
                 }
 
-                ProcessImpuritiesForMethod(context, lambda, knownSymbols, pureLambdaConfig: new PureLambdaConfig(lambda, pureLambdaMethod.fullClassName, pureLambdaMethod.methodName));
-
+                ProcessImpuritiesForMethod(
+                    context,
+                    lambda,
+                    knownSymbols,
+                    pureLambdaConfig: new PureLambdaConfig(
+                        lambda,
+                        PureLambdaMethod.GetValue().fullClassName,
+                        PureLambdaMethod.GetValue().methodName));
             }
-
         }
 
         private void AnalyzeMethodSyntaxNode(SyntaxNodeAnalysisContext context)
