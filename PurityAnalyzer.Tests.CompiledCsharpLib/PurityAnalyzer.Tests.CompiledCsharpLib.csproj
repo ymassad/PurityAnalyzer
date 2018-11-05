@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClassWithGenericMethods.cs" />
     <Compile Include="IFactoryThatDoesNotReturnNewObject.cs" />
     <Compile Include="IFactoryThatReturnsNewObject.cs" />
     <Compile Include="ImmutableDto1WithIsPureAttributeOnClass.cs" />
@@ -50,6 +51,7 @@
     <Compile Include="ImmutableDto1.cs" />
     <Compile Include="ImmutableDto1WithPureAttribute.cs" />
     <Compile Include="MutableClassWithPurePropertiesExceptLocally.cs" />
+    <Compile Include="NotUsedAsObjectAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReturnsNewObjectAttribute.cs" />
     <Compile Include="StaticClass.cs" />

@@ -235,6 +235,7 @@ public static class Module1
             yield return ("List<char>", "()", "var a = obj.Count");
             yield return ("List<char>", "()", "var a = obj[0]");
             yield return ("List<char>", "()", "var a = obj.ConvertAll(x => (int)x)");
+            yield return ("List<char>", "()", "var a = obj.ConvertAll(x => x.ToString())");
             yield return ("List<char>", "()", "var a = obj.Exists(x => x == 'a')");
             yield return ("List<char>", "()", "var a = obj.Find(x => x == 'a')");
             yield return ("List<char>", "()", "var a = obj.FindAll(x => x == 'a')");

@@ -278,6 +278,9 @@ System.UIntPtr, ToUInt32
 System.UIntPtr, ToUInt64
 System.UIntPtr, ToString()
 System.Object, .ctor
+System.Object, ToString()
+System.Object, GetHashCode()
+System.Object, GetType()
 System.Attribute, .ctor
 System.Collections.Generic.List`1, .ctor()
 System.Collections.Generic.List`1, .ctor(System.Int32)

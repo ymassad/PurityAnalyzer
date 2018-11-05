@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
@@ -15,6 +16,8 @@ namespace PurityAnalyzer
     {
         public const string PurityDiagnosticId = "PurityAnalyzer";
         public const string ReturnsNewObjectDiagnosticId = "ReturnsNewObjectAnalyzer";
+        public const string GenericParameterNotUsedAsObjectDiagnosticId = "GenericParameterNotUsedAsObjectDiagnostic";
+
 
         private const string Category = "Purity";
 
@@ -49,6 +52,16 @@ namespace PurityAnalyzer
                 isEnabledByDefault: true,
                 description: "Returns new object error");
 
+        private static DiagnosticDescriptor GenericParameterNotUsedAsObjectRule =
+            new DiagnosticDescriptor(
+                GenericParameterNotUsedAsObjectDiagnosticId,
+                "Not used as object error",
+                "{0}",
+                Category,
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true,
+                description: "Not used as object error");
+
         public static Maybe<string> CustomPureTypesFilename { get; set; }
         public static Maybe<string> CustomPureMethodsFilename { get; set; }
 
@@ -60,7 +73,7 @@ namespace PurityAnalyzer
 
         public static Func<SyntaxTree, Task<SemanticModel>> GetSemanticModelForSyntaxTreeAsync { get; set; }
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule, NotALambdaRule);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ImpurityRule, ReturnsNewObjectRule, NotALambdaRule, GenericParameterNotUsedAsObjectRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -196,6 +209,41 @@ namespace PurityAnalyzer
                 }
             });
 
+            
+
+            if (methodDeclaration is MethodDeclarationSyntax method && (method.TypeParameterList?.Parameters.Any() ?? false))
+            {
+                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel);
+            }
+
+        }
+
+        private static void ProcessNotUsedAsObjectAttribute(
+            SyntaxNodeAnalysisContext context,
+            MethodDeclarationSyntax method, SemanticModel semanticModel)
+        {
+            var relevantObjectMethods = TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
+
+            var typeParameters = method.TypeParameterList.Parameters.ToList();
+
+            foreach (var typeParameter in typeParameters)
+            {
+                if (!typeParameter.AttributeLists.SelectMany(x => x.Attributes)
+                    .Any(Utils.IsNotUsedAsObjectAttribute)) continue;
+
+                var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(method, semanticModel, relevantObjectMethods, semanticModel.GetDeclaredSymbol(typeParameter));
+
+                foreach (var node in nodes)
+                {
+                    var diagnostic = Diagnostic.Create(
+                        GenericParameterNotUsedAsObjectRule,
+                        node.GetLocation(),
+                        "Type parameter is used as an object");
+
+                    context.ReportDiagnostic(diagnostic);
+                }
+
+            }
         }
 
         private void ProcessNonNewObjectReturnsForMethod(

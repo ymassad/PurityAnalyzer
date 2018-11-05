@@ -156,7 +156,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IsPureAttributeOnMethod\CallingGenericMethods.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CallingGenericMethodsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DifferentProjectsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingStaticMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />
@@ -218,6 +218,7 @@
     <Compile Include="IsPureExceptReadLocallyAttribute\IsPureExceptReadLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnProperty.cs" />
     <Compile Include="IsPureExceptLocallyAttribute\IsPureExceptLocallyAttributeOnMethod.cs" />
+    <Compile Include="NotUsedAsObjectAttributeTests\Tests.cs" />
     <Compile Include="PureLambdaTests\Tests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\DotNetFrameworkTests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\ReturnsNewObjectAttributeTests.cs" />

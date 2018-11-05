@@ -28,7 +28,7 @@ public class EnumerableClass
 
 public class EnumeratorClass
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 }
@@ -73,7 +73,7 @@ public class EnumerableClass
 
 public class EnumeratorClass
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 }
@@ -118,7 +118,15 @@ public class EnumeratorClass
 {
     static int state = 0;
 
-    public int Current => state++;
+    public char Current
+    {
+        get
+        {
+            state++;
+
+            return '1';
+        }
+    }
 
     public bool MoveNext() => true;
 }
@@ -163,7 +171,7 @@ public class EnumeratorClass
 {
     static int state = 0;
 
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => (state++) == 1;
 }
@@ -203,7 +211,7 @@ public class EnumerableClass
 
 public class EnumeratorClass : IDisposable
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 
@@ -245,7 +253,7 @@ public class EnumerableClass
 
 public class EnumeratorClass : IDisposable
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 
@@ -292,7 +300,7 @@ public class EnumerableClass
 
 public class EnumeratorClass : IDisposable
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 
@@ -342,7 +350,7 @@ public class EnumerableClass : IEnumerable
 
 public class EnumeratorClass : IEnumerator
 {
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => true;
 
@@ -393,7 +401,7 @@ public class EnumerableClass : IEnumerable
 
 public class EnumeratorClass : IEnumerator
 {
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => true;
 
@@ -444,7 +452,15 @@ public class EnumeratorClass : IEnumerator
 {
     static int state = 0;
 
-    public object Current => state++;
+    public object Current
+    {
+        get
+        {
+            state++;
+
+            return '1';
+        }
+    }
 
     public bool MoveNext() => true;
 
@@ -495,7 +511,7 @@ public class EnumeratorClass : IEnumerator
 {
     static int state = 0;
 
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => (state++) == 1;
 
@@ -541,7 +557,7 @@ public class EnumerableClass : IEnumerable
 
 public class EnumeratorClass : IEnumerator, IDisposable
 {
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => true;
 
@@ -589,7 +605,7 @@ public class EnumerableClass : IEnumerable
 
 public class EnumeratorClass : IEnumerator, IDisposable
 {
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => true;
 
@@ -642,7 +658,7 @@ public class EnumerableClass : IEnumerable
 
 public class EnumeratorClass : IEnumerator, IDisposable
 {
-    public object Current => 1;
+    public object Current => '1';
 
     public bool MoveNext() => true;
 
@@ -692,9 +708,9 @@ public class IsPureAttribute : Attribute
 
 
 
-public class EnumerableClass : IEnumerable<int>
+public class EnumerableClass : IEnumerable<char>
 {
-    public IEnumerator<int> GetEnumerator()
+    public IEnumerator<char> GetEnumerator()
     {
         return new EnumeratorClass();
     }
@@ -705,9 +721,9 @@ public class EnumerableClass : IEnumerable<int>
     }
 }
 
-public class EnumeratorClass : IEnumerator<int>
+public class EnumeratorClass : IEnumerator<char>
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 
@@ -754,11 +770,11 @@ public class IsPureAttribute : Attribute
 }
 
 
-public class EnumerableClass : IEnumerable<int>
+public class EnumerableClass : IEnumerable<char>
 {
     static int state = 0;
 
-    public IEnumerator<int> GetEnumerator()
+    public IEnumerator<char> GetEnumerator()
     {
         state++;
         return new EnumeratorClass();
@@ -770,9 +786,9 @@ public class EnumerableClass : IEnumerable<int>
     }
 }
 
-public class EnumeratorClass : IEnumerator<int>
+public class EnumeratorClass : IEnumerator<char>
 {
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 
@@ -818,9 +834,9 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class EnumerableClass : IEnumerable<int>
+public class EnumerableClass : IEnumerable<char>
 {
-    public IEnumerator<int> GetEnumerator()
+    public IEnumerator<char> GetEnumerator()
     {
         return new EnumeratorClass();
     }
@@ -831,11 +847,19 @@ public class EnumerableClass : IEnumerable<int>
     }
 }
 
-public class EnumeratorClass : IEnumerator<int>
+public class EnumeratorClass : IEnumerator<char>
 {
     static int state = 0;
 
-    public int Current => state++;
+    public char Current
+    {
+        get
+        {
+            state++;
+
+            return '1';
+        }
+    }
 
     public bool MoveNext() => true;
 
@@ -881,9 +905,9 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class EnumerableClass : IEnumerable<int>
+public class EnumerableClass : IEnumerable<char>
 {
-    public IEnumerator<int> GetEnumerator()
+    public IEnumerator<char> GetEnumerator()
     {
         return new EnumeratorClass();
     }
@@ -894,11 +918,11 @@ public class EnumerableClass : IEnumerable<int>
     }
 }
 
-public class EnumeratorClass : IEnumerator<int>
+public class EnumeratorClass : IEnumerator<char>
 {
     static int state = 0;
 
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => (state++) == 1;
 
@@ -944,9 +968,9 @@ public class IsPureAttribute : Attribute
 {
 }
 
-public class EnumerableClass : IEnumerable<int>
+public class EnumerableClass : IEnumerable<char>
 {
-    public IEnumerator<int> GetEnumerator()
+    public IEnumerator<char> GetEnumerator()
     {
         return new EnumeratorClass();
     }
@@ -957,11 +981,11 @@ public class EnumerableClass : IEnumerable<int>
     }
 }
 
-public class EnumeratorClass : IEnumerator<int>
+public class EnumeratorClass : IEnumerator<char>
 {
     static int state = 0;
 
-    public int Current => 1;
+    public char Current => '1';
 
     public bool MoveNext() => true;
 

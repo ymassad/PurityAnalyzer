@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod
@@ -35,7 +36,6 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
-
         }
 
         [Test]

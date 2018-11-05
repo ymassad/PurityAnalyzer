@@ -129,7 +129,7 @@ namespace PurityAnalyzer.Tests
 
             bool IsFromPurityAnalyzer(Diagnostic x)
             {
-                return x.Descriptor.Id == PurityAnalyzerAnalyzer.PurityDiagnosticId || x.Descriptor.Id == PurityAnalyzerAnalyzer.ReturnsNewObjectDiagnosticId;
+                return x.Descriptor.Id == PurityAnalyzerAnalyzer.PurityDiagnosticId || x.Descriptor.Id == PurityAnalyzerAnalyzer.ReturnsNewObjectDiagnosticId || x.Descriptor.Id == PurityAnalyzerAnalyzer.GenericParameterNotUsedAsObjectDiagnosticId;
             }
 
             var diagnostics = results.Where(IsFromPurityAnalyzer).ToArray();

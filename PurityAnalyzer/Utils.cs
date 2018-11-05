@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace PurityAnalyzer
 {
@@ -49,6 +50,16 @@ namespace PurityAnalyzer
         public static bool IsIsPureExceptReadLocallyAttribute(string attributeName)
         {
             return attributeName == "IsPureExceptReadLocally" || attributeName == "IsPureExceptReadLocally" + "Attribute";
+        }
+
+        public static bool IsNotUsedAsObjectAttribute(AttributeSyntax attribute)
+        {
+            return attribute.Name is IdentifierNameSyntax name && IsNotUsedAsObjectAttribute(name.Identifier.Text);
+        }
+
+        public static bool IsNotUsedAsObjectAttribute(string attributeName)
+        {
+            return attributeName == "NotUsedAsObject" || attributeName == "NotUsedAsObject" + "Attribute";
         }
 
         public static IEnumerable<Impurity> GetImpurities(
@@ -1030,6 +1041,24 @@ namespace PurityAnalyzer
             if (Utils.GetFullMetaDataName(method.ContainingType) != pureLambdaMethodFullClassName)
                 return false;
             return true;
+        }
+
+        public static List<(SyntaxNode node, ITypeSymbol from, ITypeSymbol to)> GetConversions(
+            MethodDeclarationSyntax method,
+            SemanticModel semanticModel)
+        {
+            return method.DescendantNodes()
+                .Select(x => (node: x, typeInfo: semanticModel.GetTypeInfo(x)))
+                .Where(
+                    x => x.typeInfo.Type != null && x.typeInfo.ConvertedType != null && !x.typeInfo.Type.Equals(x.typeInfo.ConvertedType))
+
+                .Select(x => (node: x.node, from: x.typeInfo.Type, to: x.typeInfo.ConvertedType))
+                .Concat(
+                    method.DescendantNodes().OfType<CastExpressionSyntax>()
+                        .Select(x => (node: (SyntaxNode)x, from: semanticModel.GetTypeInfo(x.Expression).Type,
+                            to: semanticModel.GetTypeInfo(x.Type).Type))
+                        .Where(x => x.@from != null && x.to != null && !x.@from.Equals(x.to)))
+                .ToList();
         }
     }
 }

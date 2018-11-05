@@ -105,7 +105,7 @@ namespace PurityAnalyzer
                     foreach (var impurity in GetImpurities2(objectCreation, recursiveState))
                         yield return impurity;
                 }
-                else if (subNode is IdentifierNameSyntax identifierName)
+                else if (subNode is SimpleNameSyntax identifierName)
                 {
                     foreach (var impurity in GetImpurities3(identifierName, recursiveState))
                         yield return impurity;
@@ -171,7 +171,7 @@ namespace PurityAnalyzer
         }
 
         private Maybe<Impurity> GetPotentialLambdaRelatedIssue(
-            IdentifierNameSyntax identifierName,
+            SimpleNameSyntax identifierName,
             PureLambdaConfig pureLambdaConfig)
         {
             var scope = pureLambdaConfig.LambdaScope;
@@ -623,6 +623,11 @@ namespace PurityAnalyzer
                     return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();
                 }
 
+                if (method.ContainingType.Equals(objectType) && type.TypeKind == TypeKind.Interface)
+                {
+                    return method.ToMaybe();
+                }
+
                 var typeMostDerivedMethods = Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type).ToArray());
 
                 foreach (var typeMethod in typeMostDerivedMethods)
@@ -830,7 +835,7 @@ namespace PurityAnalyzer
             return new CastPurityResult.Pure();
         }
 
-        private IEnumerable<Impurity> GetImpurities3(IdentifierNameSyntax node,
+        private IEnumerable<Impurity> GetImpurities3(SimpleNameSyntax node,
             RecursiveState recursiveState)
         {
             var symbol = semanticModel.GetSymbolInfo(node);
@@ -858,7 +863,7 @@ namespace PurityAnalyzer
             return Enumerable.Empty<Impurity>();
         }
 
-        private IEnumerable<Impurity> GetImpuritiesForFieldAccess(IdentifierNameSyntax node, IFieldSymbol fieldSymbol,
+        private IEnumerable<Impurity> GetImpuritiesForFieldAccess(SimpleNameSyntax node, IFieldSymbol fieldSymbol,
             RecursiveState recursiveState1)
         {
             if (!(fieldSymbol.IsReadOnly || fieldSymbol.IsConst))
@@ -991,6 +996,10 @@ namespace PurityAnalyzer
                 return false;
             }
 
+            foreach (var impurity in HandleTypeParameters(node, method, recursiveState))
+                yield return impurity;
+
+
             PurityType acceptedPurityType = PurityType.Pure;
 
             if ((purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
@@ -1012,7 +1021,47 @@ namespace PurityAnalyzer
             }
         }
 
-        private bool IsDirectAccessToInstanceFieldOrAccessOfThisOrASeriesOfFieldAccesses(IdentifierNameSyntax node1, IFieldSymbol fieldSymbol)
+        private IEnumerable<Impurity> HandleTypeParameters(
+            ExpressionSyntax node,
+            IMethodSymbol method,
+            RecursiveState recursiveState)
+        {
+            if (method.TypeParameters.Length > 0)
+            {
+                var objectMethodsRelevantToCastingFromGenericTypeParameters =
+                    TypeParametersUsedAsObjectsModule
+                        .GetObjectMethodsRelevantToCastingFromGenericTypeParameters(
+                            semanticModel);
+
+                for (int i = 0; i < method.TypeParameters.Length; i++)
+                {
+                    var param = method.TypeParameters[i];
+
+                    var arg = method.TypeArguments[i];
+
+                    var constraintTypes = param.ConstraintTypes;
+
+                    var isUsedAsObject = TypeParametersUsedAsObjectsModule.IsTIsUsedAsObject(method, semanticModel,
+                        param,
+                        objectMethodsRelevantToCastingFromGenericTypeParameters);
+
+                    if (constraintTypes.IsEmpty && isUsedAsObject)
+                        constraintTypes = constraintTypes.Add(objectType);
+
+                    foreach (var constraintType in constraintTypes)
+                    {
+                        if (IsImpureCast(arg, constraintType, recursiveState, node) is CastPurityResult.Impure impure)
+                        {
+                            yield return new Impurity(node,
+                                "Cast from generic argument type " + arg.Name + " to constraint type " + constraintType.Name +
+                                " is impure" + Environment.NewLine + impure.Reason);
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsDirectAccessToInstanceFieldOrAccessOfThisOrASeriesOfFieldAccesses(SimpleNameSyntax node1, IFieldSymbol fieldSymbol)
         {
             if (fieldSymbol.IsStatic)
                 return false;
