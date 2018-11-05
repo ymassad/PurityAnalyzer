@@ -97,7 +97,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptLocallyMethods(),
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
-                    Utils.GetKnownPureTypes(context.SemanticModel));
+                    Utils.GetKnownPureTypes(context.SemanticModel),
+                    Utils.GetKnownNotUsedAsObjectTypeParameters());
 
             InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
 
@@ -143,7 +144,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptLocallyMethods(),
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
-                    Utils.GetKnownPureTypes(context.SemanticModel));
+                    Utils.GetKnownPureTypes(context.SemanticModel),
+                    Utils.GetKnownNotUsedAsObjectTypeParameters());
 
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
@@ -213,14 +215,13 @@ namespace PurityAnalyzer
 
             if (methodDeclaration is MethodDeclarationSyntax method && (method.TypeParameterList?.Parameters.Any() ?? false))
             {
-                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel);
+                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel, knownSymbols);
             }
 
         }
 
-        private static void ProcessNotUsedAsObjectAttribute(
-            SyntaxNodeAnalysisContext context,
-            MethodDeclarationSyntax method, SemanticModel semanticModel)
+        private static void ProcessNotUsedAsObjectAttribute(SyntaxNodeAnalysisContext context,
+            MethodDeclarationSyntax method, SemanticModel semanticModel, KnownSymbols knownSymbols)
         {
             var relevantObjectMethods = TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
 
@@ -231,7 +232,7 @@ namespace PurityAnalyzer
                 if (!typeParameter.AttributeLists.SelectMany(x => x.Attributes)
                     .Any(Utils.IsNotUsedAsObjectAttribute)) continue;
 
-                var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(method, semanticModel, relevantObjectMethods, semanticModel.GetDeclaredSymbol(typeParameter));
+                var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(method, semanticModel, relevantObjectMethods, semanticModel.GetDeclaredSymbol(typeParameter), knownSymbols);
 
                 foreach (var node in nodes)
                 {
@@ -320,7 +321,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptLocallyMethods(),
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
-                    Utils.GetKnownPureTypes(context.SemanticModel));
+                    Utils.GetKnownPureTypes(context.SemanticModel),
+                    Utils.GetKnownNotUsedAsObjectTypeParameters());
 
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
@@ -365,7 +367,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptLocallyMethods(),
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
-                    Utils.GetKnownPureTypes(context.SemanticModel));
+                    Utils.GetKnownPureTypes(context.SemanticModel),
+                    Utils.GetKnownNotUsedAsObjectTypeParameters());
 
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
 

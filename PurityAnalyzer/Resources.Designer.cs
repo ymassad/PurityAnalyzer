@@ -62,9 +62,25 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to System.Text.StringBuilder, AppendLine
-        ///System.Xml.XmlDocument, CreateElement
-        ///System.Xml.XmlElement, SetAttribute.
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string NotUsedAsObjectsTypeParameters {
+            get {
+                return ResourceManager.GetString("NotUsedAsObjectsTypeParameters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System.Xml.XmlDocument, CreateElement
+        ///System.Xml.XmlElement, SetAttribute
+        ///System.Array, System.Collections.IList.set_Item(System.Int32, System.Object)
+        ///System.Collections.Generic.List`1, set_Item(System.Int32, T)
+        ///System.Collections.Generic.List`1, set_Capacity
+        ///System.Collections.Generic.List`1, Add(T)
+        ///System.Collections.Generic.List`1, AddRange(System.Collections.Generic.IEnumerable`1)
+        ///System.Collections.Generic.List`1, Clear()
+        ///System.Collections.Generic.List`1, Insert(System.Int32, T)
+        ///System.Collec [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string PureExceptLocallyMethods {
             get {
@@ -73,7 +89,16 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to System.Xml.XmlNode, get_OuterXml.
+        ///   Looks up a localized string similar to System.Xml.XmlNode, get_OuterXml
+        ///System.Array, System.Collections.IList.get_Item
+        ///System.Array, GetEnumerator
+        ///System.Collections.Generic.List`1, GetEnumerator
+        ///System.Collections.Generic.List`1, System.Collections.Generic.IEnumerable&lt;T&gt;.GetEnumerator
+        ///System.Collections.Generic.List`1, System.Collections.IEnumerable.GetEnumerator
+        ///System.Collections.Generic.List`1, get_Capacity
+        ///System.Collections.Generic.List`1, get_Count
+        ///System.Collections.Generic.List`1, get_Item
+        ///System.Collections.Generic.List`1, Co [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string PureExceptReadLocallyMethods {
             get {
@@ -82,19 +107,17 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to System.Int32, ToString
-        ///System.Boolean, ToString
-        ///System.Double, ToString
-        ///System.Single, ToString
-        ///System.Decimal, ToString
-        ///System.String, ToString
-        ///System.Guid, ToString
-        ///System.Guid, Parse
-        ///System.String, Join
-        ///System.String, Equals
-        ///System.Array, GetEnumerator
-        ///System.Text.StringBuilder, .ctor
-        ///System.Xml.XmlDocument, .ctor.
+        ///   Looks up a localized string similar to System.String, ToString
+        ///System.String, Equals(System.String)
+        ///System.String, Equals(System.String, System.String)
+        ///System.String, Equals(System.Object)
+        ///System.String, Join(System.String, System.String[])
+        ///System.String, Join(System.String, System.Object[])
+        ///System.String, Join(System.String, System.Collections.Generic.IEnumerable`1)
+        ///System.String, Join(System.String, System.String[], System.Int32, System.Int32)
+        ///System.String, ToCharArray()
+        ///System.String, ToCharArray(System.Int32, System.Int32)
+        ///System. [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string PureMethods {
             get {
@@ -105,7 +128,9 @@ namespace PurityAnalyzer {
         /// <summary>
         ///   Looks up a localized string similar to System.Linq.Enumerable
         ///System.Linq.IGrouping`2
-        ///.
+        ///System.Nullable`1
+        ///System.Collections.Immutable.ImmutableArray`1
+        ///System.Collections.Immutable.ImmutableArray.
         /// </summary>
         internal static string PureTypes {
             get {
@@ -114,8 +139,8 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///System.Xml.XmlDocument, CreateElement.
+        ///   Looks up a localized string similar to System.Xml.XmlDocument, CreateElement
+        ///System.Collections.Immutable.ImmutableArray`1, SetItem(System.Int32, T).
         /// </summary>
         internal static string ReturnsNewObjectMethods {
             get {

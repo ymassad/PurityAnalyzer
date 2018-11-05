@@ -813,6 +813,17 @@ namespace PurityAnalyzer
             return false;
         }
 
+        public static (string Type, MethodDescriptor Method, string[] typeParams) ParseMethodDescriptorAndTypeParametersLine(string line)
+        {
+            var seperatedByColumn = line.Split(new []{":"}, StringSplitOptions.RemoveEmptyEntries);
+
+            (var type, var method) = ParseMethodDescriptorLine(seperatedByColumn[0]);
+
+            var typeParams = seperatedByColumn[1].Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
+
+            return (type, method, typeParams);
+        }
+
         public static (string Type, MethodDescriptor Method) ParseMethodDescriptorLine(string line)
         {
             var partsSeparatedByComma = line.Split(new []{','}, 2);
@@ -1059,6 +1070,20 @@ namespace PurityAnalyzer
                             to: semanticModel.GetTypeInfo(x.Type).Type))
                         .Where(x => x.@from != null && x.to != null && !x.@from.Equals(x.to)))
                 .ToList();
+        }
+
+        public static Dictionary<string, Dictionary<MethodDescriptor, string[]>> GetKnownNotUsedAsObjectTypeParameters()
+        {
+            var notUsedAsObjectsTypeParametersFileContents =
+                Resources.NotUsedAsObjectsTypeParameters;
+
+            return notUsedAsObjectsTypeParametersFileContents
+                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(Utils.ParseMethodDescriptorAndTypeParametersLine)
+                .GroupBy(x => x.Type, x => x)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.ToDictionary(y => y.Method, y=> y.typeParams));
         }
     }
 }

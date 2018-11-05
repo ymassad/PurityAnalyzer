@@ -33,7 +33,6 @@ public static class Module1
                 .First();
     }
 }";
-
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }

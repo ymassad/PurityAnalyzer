@@ -31,7 +31,8 @@ namespace PurityAnalyzer
             IMethodSymbol method,
             SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter,
-            IMethodSymbol[] relevantObjectMethods)
+            IMethodSymbol[] relevantObjectMethods,
+            KnownSymbols knownSymbols)
         {
             if (method.IsInCode())
             {
@@ -41,18 +42,27 @@ namespace PurityAnalyzer
 
                 var methodSyntax = (MethodDeclarationSyntax) locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
-                return Enumerable.Any<SyntaxNode>(GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter));
-
+                return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter, knownSymbols).Any<SyntaxNode>();
             }
 
-            return !typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name));
+            if (typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name)))
+                return false;
+
+            if (knownSymbols.KnownNotUsedAsObjectTypeParameters.TryGetValue(
+                    Utils.GetFullMetaDataName(method.ContainingType),
+                    out var methods) &&
+                methods.Keys.FirstOrNoValue(x => x.Matches(method)).HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(
-            MethodDeclarationSyntax method,
+        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(MethodDeclarationSyntax method,
             SemanticModel semanticModel,
             IMethodSymbol[] relevantObjectMethods,
-            ITypeParameterSymbol typeParameterSymbol)
+            ITypeParameterSymbol typeParameterSymbol, KnownSymbols knownSymbols)
         {
             var objectType = semanticModel.Compilation.ObjectType;
 
@@ -100,7 +110,7 @@ namespace PurityAnalyzer
             {
                 foreach (var tp in invokedMethod.typeParams)
                 {
-                    if (IsTIsUsedAsObject(invokedMethod.method, semanticModel, tp, relevantObjectMethods))
+                    if (IsTIsUsedAsObject(invokedMethod.method, semanticModel, tp, relevantObjectMethods, knownSymbols))
                     {
                         yield return invokedMethod.node;
                         break;

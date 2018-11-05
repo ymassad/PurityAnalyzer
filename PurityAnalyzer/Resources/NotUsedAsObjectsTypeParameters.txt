@@ -1,0 +1,7 @@
+System.Linq.Enumerable, Where: TSource
+System.Linq.Enumerable, Select: TSource, TResult
+System.Linq.Enumerable, SelectMany: TSource,TCollection,TResult
+System.Linq.Enumerable, First: TSource
+System.Linq.Enumerable, GroupBy: TSource,TElement,TResult
+System.Collections.Generic.List`1, ConvertAll(System.Converter`2): TOutput
+System.Linq.ImmutableArrayExtensions, Select: T, TResult

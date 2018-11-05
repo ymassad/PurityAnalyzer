@@ -16,13 +16,20 @@ namespace PurityAnalyzer
 {
     public class KnownSymbols
     {
-        public KnownSymbols(Dictionary<string, HashSet<MethodDescriptor>> knownPureMethods, Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptLocallyMethods, Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods, Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods, HashSet<INamedTypeSymbol> knownPureTypes)
+        public KnownSymbols(
+            Dictionary<string, HashSet<MethodDescriptor>> knownPureMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptLocallyMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods,
+            Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
+            HashSet<INamedTypeSymbol> knownPureTypes,
+            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectTypeParameters)
         {
             KnownPureMethods = knownPureMethods;
             KnownPureExceptLocallyMethods = knownPureExceptLocallyMethods;
             KnownPureExceptReadLocallyMethods = knownPureExceptReadLocallyMethods;
             KnownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
             KnownPureTypes = knownPureTypes;
+            KnownNotUsedAsObjectTypeParameters = knownNotUsedAsObjectTypeParameters;
         }
 
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureMethods { get; }
@@ -30,8 +37,7 @@ namespace PurityAnalyzer
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureExceptReadLocallyMethods { get; }
         public Dictionary<string, HashSet<MethodDescriptor>> KnownReturnsNewObjectMethods { get; }
         public HashSet<INamedTypeSymbol> KnownPureTypes { get; }
-
-
+        public Dictionary<string, Dictionary<MethodDescriptor, string[]>> KnownNotUsedAsObjectTypeParameters { get; }
     }
 
     public class ImpuritiesFinder
@@ -1041,9 +1047,13 @@ namespace PurityAnalyzer
 
                     var constraintTypes = param.ConstraintTypes;
 
-                    var isUsedAsObject = TypeParametersUsedAsObjectsModule.IsTIsUsedAsObject(method, semanticModel,
-                        param,
-                        objectMethodsRelevantToCastingFromGenericTypeParameters);
+                    var isUsedAsObject =
+                        TypeParametersUsedAsObjectsModule.IsTIsUsedAsObject(
+                            method,
+                            semanticModel,
+                            param,
+                            objectMethodsRelevantToCastingFromGenericTypeParameters,
+                            knownSymbols);
 
                     if (constraintTypes.IsEmpty && isUsedAsObject)
                         constraintTypes = constraintTypes.Add(objectType);
