@@ -367,7 +367,7 @@ namespace PurityAnalyzer
             if (sourceType.Equals(destinationType))
                 return new CastPurityResult.Pure();
 
-            var allDestinationMethods = Utils.GetAllMethods(destinationType).ToArray();
+            var allDestinationMethods = Utils.GetAllMethods(destinationType, semanticModel.Compilation).ToArray();
 
             var nonInterfaceMethodsToCheck =
                 Utils.RemoveOverriddenMethods(allDestinationMethods)
@@ -634,7 +634,7 @@ namespace PurityAnalyzer
                     return method.ToMaybe();
                 }
 
-                var typeMostDerivedMethods = Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type).ToArray());
+                var typeMostDerivedMethods = Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type, semanticModel.Compilation).ToArray());
 
                 foreach (var typeMethod in typeMostDerivedMethods)
                 {

@@ -666,6 +666,7 @@ namespace PurityAnalyzer
 
         public static IEnumerable<IMethodSymbol> GetAllMethods(
             ITypeSymbol typeSymbol,
+            Compilation compilation,
             Maybe<ITypeSymbol> upUntilBefore = default)
         {
 
@@ -687,9 +688,15 @@ namespace PurityAnalyzer
 
                 current = current.BaseType;
             }
+
+            if (typeSymbol.TypeKind == TypeKind.Interface)
+            {
+                foreach (var objectMethod in compilation.ObjectType.GetMembers().OfType<IMethodSymbol>())
+                    yield return objectMethod;
+            }
         }
 
-        public static IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
+        private static IMethodSymbol[] GetAllMethods(INamedTypeSymbol symbol)
         {
             return
                 symbol

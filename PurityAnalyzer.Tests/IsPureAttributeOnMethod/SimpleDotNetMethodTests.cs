@@ -859,7 +859,6 @@ public static class Module1
             yield return @"var a = string.Concat(string.Empty, string.Empty, string.Empty, string.Empty)";
             yield return @"var a = string.Concat(new string[]{string.Empty, string.Empty})";
             yield return @"var a = ""1"".GetTypeCode()";
-            yield return @"var a = (IEnumerable<char>) ""1""";
             yield return @"var a = ""1"".GetEnumerator()";
         }
 
@@ -1068,6 +1067,8 @@ public static class Module1
             yield return @"var guid = Guid.NewGuid()";
 
             yield return "new System.Text.StringBuilder().AppendLine()"; //Environment.NewLine is not pure!?
+
+            yield return @"var a = (IEnumerable<char>) ""1"""; //this is impure because string.GetHashCode is impure while IEnumerable<char>.GetHashCode = Object.GetHashCode is pure
         }
     }
 }

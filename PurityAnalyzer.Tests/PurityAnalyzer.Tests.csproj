@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IsPureAttributeOnMethod\CallingGenericMethodsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToObjectMethods\Tests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DifferentProjectsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingStaticMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />
