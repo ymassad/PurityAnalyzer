@@ -342,5 +342,120 @@ public static class Module1
 
         }
 
+
+        [Test]
+        public void GenericMethodThatCallsAMethodInAnotherGenericClassThatUsesTAsObjectPassingATObjectAsTheClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.DoSomething2(input);
+    }
+}
+
+public static class Module2<T>
+{
+    public static void DoSomething2(T obj)
+    {
+        var s = obj.ToString();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void GenericMethodThatCallsAMethodInAGenericClassThatDoesNotUseTAsObjectPassingATObjectAsTheOtherClassT_DoesNotUseTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.DoSomething2(input);
+    }
+
+}
+
+public static class Module2<T>
+{
+    public static void DoSomething2(T obj)
+    {
+
+    }
+}
+
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+
+        [Test]
+        public void GenericMethodThatCallsACompiledMethodInAnotherGenericClassThatUsesTAsObjectPassingATObjectAsTheClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        GenericClassAndTIsUsedAsObject<T>.MethodThatUsesTAsObject(input);
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void GenericMethodThatCallsACompiledMethodInAGenericClassThatDoesNotUseTAsObjectPassingATObjectAsTheOtherClassT_DoesNotUseTAsObject()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        GenericClassAndTIsNotUsedAsObject<T>.MethodThatDoesNotUseTAsObject(input);
+    }
+
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
