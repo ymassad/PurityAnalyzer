@@ -98,7 +98,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
-                    Utils.GetKnownNotUsedAsObjectTypeParameters());
+                    Utils.GetKnownNotUsedAsObjectTypeParameters(),
+                    new Dictionary<string, string[]>()); //TODO: get from file
 
             InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
 
@@ -145,7 +146,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
-                    Utils.GetKnownNotUsedAsObjectTypeParameters());
+                    Utils.GetKnownNotUsedAsObjectTypeParameters(),
+                    new Dictionary<string, string[]>()); //TODO: get from file
 
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
@@ -211,28 +213,36 @@ namespace PurityAnalyzer
                 }
             });
 
-            
-
             if (methodDeclaration is MethodDeclarationSyntax method && (method.TypeParameterList?.Parameters.Any() ?? false))
             {
-                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel, knownSymbols);
+                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel, knownSymbols, method.TypeParameterList);
             }
 
         }
 
-        private static void ProcessNotUsedAsObjectAttribute(SyntaxNodeAnalysisContext context,
-            MethodDeclarationSyntax method, SemanticModel semanticModel, KnownSymbols knownSymbols)
+        private static void ProcessNotUsedAsObjectAttribute(
+            SyntaxNodeAnalysisContext context,
+            SyntaxNode scope,
+            SemanticModel semanticModel,
+            KnownSymbols knownSymbols,
+            TypeParameterListSyntax typeParameterList)
         {
-            var relevantObjectMethods = TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
+            var relevantObjectMethods =
+                TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
 
-            var typeParameters = method.TypeParameterList.Parameters.ToList();
+            var typeParameters = typeParameterList.Parameters.ToList();
 
             foreach (var typeParameter in typeParameters)
             {
                 if (!typeParameter.AttributeLists.SelectMany(x => x.Attributes)
                     .Any(Utils.IsNotUsedAsObjectAttribute)) continue;
 
-                var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(method, semanticModel, relevantObjectMethods, semanticModel.GetDeclaredSymbol(typeParameter), knownSymbols);
+                var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(
+                    scope,
+                    semanticModel,
+                    relevantObjectMethods,
+                    semanticModel.GetDeclaredSymbol(typeParameter),
+                    knownSymbols);
 
                 foreach (var node in nodes)
                 {
@@ -243,7 +253,6 @@ namespace PurityAnalyzer
 
                     context.ReportDiagnostic(diagnostic);
                 }
-
             }
         }
 
@@ -322,7 +331,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
-                    Utils.GetKnownNotUsedAsObjectTypeParameters());
+                    Utils.GetKnownNotUsedAsObjectTypeParameters(),
+                    new Dictionary<string, string[]>()); //TODO: get from file
 
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
@@ -356,6 +366,11 @@ namespace PurityAnalyzer
                     }
                 }
             }
+
+            if (classDeclarationSyntax.TypeParameterList?.Parameters.Any() ?? false)
+            {
+                ProcessNotUsedAsObjectAttribute(context, classDeclarationSyntax, context.SemanticModel, knownSymbols, classDeclarationSyntax.TypeParameterList);
+            }
         }
 
         private void AnalyzePropertySyntaxNode(
@@ -368,7 +383,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownPureExceptReadLocallyMethods(),
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
-                    Utils.GetKnownNotUsedAsObjectTypeParameters());
+                    Utils.GetKnownNotUsedAsObjectTypeParameters(),
+                    new Dictionary<string, string[]>()); //TODO: get from file
 
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
 

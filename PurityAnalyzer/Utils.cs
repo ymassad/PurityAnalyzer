@@ -1062,17 +1062,17 @@ namespace PurityAnalyzer
         }
 
         public static List<(SyntaxNode node, ITypeSymbol from, ITypeSymbol to)> GetConversions(
-            MethodDeclarationSyntax method,
+            SyntaxNode scope,
             SemanticModel semanticModel)
         {
-            return method.DescendantNodes()
+            return scope.DescendantNodes()
                 .Select(x => (node: x, typeInfo: semanticModel.GetTypeInfo(x)))
                 .Where(
                     x => x.typeInfo.Type != null && x.typeInfo.ConvertedType != null && !x.typeInfo.Type.Equals(x.typeInfo.ConvertedType))
 
                 .Select(x => (node: x.node, from: x.typeInfo.Type, to: x.typeInfo.ConvertedType))
                 .Concat(
-                    method.DescendantNodes().OfType<CastExpressionSyntax>()
+                    scope.DescendantNodes().OfType<CastExpressionSyntax>()
                         .Select(x => (node: (SyntaxNode)x, from: semanticModel.GetTypeInfo(x.Expression).Type,
                             to: semanticModel.GetTypeInfo(x.Type).Type))
                         .Where(x => x.@from != null && x.to != null && !x.@from.Equals(x.to)))

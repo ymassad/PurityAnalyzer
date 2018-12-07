@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace PurityAnalyzer.Tests.NotUsedAsObjectAttributeTests

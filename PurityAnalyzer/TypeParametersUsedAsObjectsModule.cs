@@ -27,7 +27,7 @@ namespace PurityAnalyzer
             return relevantObjectMethods;
         }
 
-        public static bool IsTIsUsedAsObject(
+        public static bool DoesMethodUseTAsObject(
             IMethodSymbol method,
             SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter,
@@ -40,36 +40,55 @@ namespace PurityAnalyzer
 
                 var locationSourceTree = location.SourceTree;
 
-                var methodSyntax = (MethodDeclarationSyntax) locationSourceTree.GetRoot().FindNode(location.SourceSpan);
+                var methodSyntax = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
-                return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter, knownSymbols).Any<SyntaxNode>();
+                return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter, knownSymbols).Any();
             }
+
+            //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
 
             if (typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name)))
                 return false;
 
-            if (knownSymbols.KnownNotUsedAsObjectTypeParameters.TryGetValue(
-                    Utils.GetFullMetaDataName(method.ContainingType),
-                    out var methods) &&
-                methods.Keys.FirstOrNoValue(x => x.Matches(method)).HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
+            if (typeParameter.DeclaringMethod != null)
             {
-                return false;
+                if (knownSymbols.KnownNotUsedAsObjectMethodTypeParameters.TryGetValue(
+                        Utils.GetFullMetaDataName(typeParameter.DeclaringMethod.ContainingType),
+                        out var methods) &&
+                    methods.Keys.FirstOrNoValue(x => x.Matches(typeParameter.DeclaringMethod)).HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
+                {
+                    return false;
+                }
+
+            }
+            else
+            {
+                if (knownSymbols.KnownNotUsedAsObjectClassTypeParameters.TryGetValue(
+                        Utils.GetFullMetaDataName(typeParameter.DeclaringType),
+                        out var methods) &&
+                    methods.Contains(typeParameter.Name))
+                {
+                    return false;
+                }
             }
 
             return true;
         }
 
-        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(MethodDeclarationSyntax method,
+        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(
+            SyntaxNode scope,
             SemanticModel semanticModel,
             IMethodSymbol[] relevantObjectMethods,
-            ITypeParameterSymbol typeParameterSymbol, KnownSymbols knownSymbols)
+            ITypeParameterSymbol typeParameterSymbol,
+            KnownSymbols knownSymbols)
         {
             var objectType = semanticModel.Compilation.ObjectType;
 
-            var invocationOperations = method.DescendantNodes()
+            var invocationOperations = scope.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
                 .Select(x => semanticModel.GetOperation(x))
                 .OfType<IInvocationOperation>()
+                .Where(x => x.TargetMethod.ContainingType.TypeKind != TypeKind.Delegate)
                 .ToList();
 
             var invocationsOfObjectMethodsOnExpressionsOfTypeT =
@@ -85,7 +104,7 @@ namespace PurityAnalyzer
 
 
             var conversions =
-                Utils.GetConversions(method, semanticModel);
+                Utils.GetConversions(scope, semanticModel);
 
 
             var conversionsFromTToObject =
@@ -99,23 +118,59 @@ namespace PurityAnalyzer
                 yield return conv;
             }
 
+
             var invokedMethodWithRelevantTypeParameters =
                 invocationOperations
-                    .Select(x => (node: x.Syntax, method: x.TargetMethod, typeParams: x.TargetMethod.TypeParameters
-                        .Where((_, i) =>
-                            x.TargetMethod.TypeArguments[i].Equals(typeParameterSymbol)).ToList()))
+                    .Select(x => (
+                        node: x.Syntax,
+                        method: x.TargetMethod,
+                        typeParamsAndArgs:
+                            GetTypeParametersAndMatchingArguments(x.TargetMethod)
+                                .Where(p =>
+                                    p.argument.Equals(typeParameterSymbol)).ToList()))
                     .ToList();
 
             foreach (var invokedMethod in invokedMethodWithRelevantTypeParameters)
             {
-                foreach (var tp in invokedMethod.typeParams)
+                foreach (var tp in invokedMethod.typeParamsAndArgs)
                 {
-                    if (IsTIsUsedAsObject(invokedMethod.method, semanticModel, tp, relevantObjectMethods, knownSymbols))
+                    if (DoesMethodUseTAsObject(invokedMethod.method, semanticModel, tp.typeParameter, relevantObjectMethods, knownSymbols))
                     {
                         yield return invokedMethod.node;
                         break;
                     }
                 }
+            }
+        }
+
+        public static IEnumerable<(ITypeParameterSymbol typeParameter, ITypeSymbol argument)> GetTypeParametersAndMatchingArguments(IMethodSymbol method)
+        {
+            IEnumerable<(ITypeParameterSymbol typeParameter, ITypeSymbol argument)>
+            GetTypeParametersAndMatchingArgumentsForClass(INamedTypeSymbol @class)
+            {
+                for (int i = 0; i < @class.TypeParameters.Length; i++)
+                {
+                    yield return (@class.TypeParameters[i], @class.TypeArguments[i]);
+                }
+
+                //if (@class.ContainingType != null)
+                //{
+                //    foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(@class.ContainingType))
+                //    {
+
+                //    }
+                //}
+            }
+
+            for (int i = 0; i < method.TypeParameters.Length; i++)
+            {
+                yield return (method.TypeParameters[i], method.TypeArguments[i]);
+            }
+
+
+            foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(method.ContainingType))
+            {
+                yield return item;
             }
         }
     }

@@ -22,14 +22,15 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             HashSet<INamedTypeSymbol> knownPureTypes,
-            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectTypeParameters)
+            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters, Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters)
         {
             KnownPureMethods = knownPureMethods;
             KnownPureExceptLocallyMethods = knownPureExceptLocallyMethods;
             KnownPureExceptReadLocallyMethods = knownPureExceptReadLocallyMethods;
             KnownReturnsNewObjectMethods = knownReturnsNewObjectMethods;
             KnownPureTypes = knownPureTypes;
-            KnownNotUsedAsObjectTypeParameters = knownNotUsedAsObjectTypeParameters;
+            KnownNotUsedAsObjectMethodTypeParameters = knownNotUsedAsObjectMethodTypeParameters;
+            KnownNotUsedAsObjectClassTypeParameters = knownNotUsedAsObjectClassTypeParameters;
         }
 
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureMethods { get; }
@@ -37,7 +38,8 @@ namespace PurityAnalyzer
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureExceptReadLocallyMethods { get; }
         public Dictionary<string, HashSet<MethodDescriptor>> KnownReturnsNewObjectMethods { get; }
         public HashSet<INamedTypeSymbol> KnownPureTypes { get; }
-        public Dictionary<string, Dictionary<MethodDescriptor, string[]>> KnownNotUsedAsObjectTypeParameters { get; }
+        public Dictionary<string, Dictionary<MethodDescriptor, string[]>> KnownNotUsedAsObjectMethodTypeParameters { get; }
+        public Dictionary<string, string[]> KnownNotUsedAsObjectClassTypeParameters { get; }
     }
 
     public class ImpuritiesFinder
@@ -173,6 +175,18 @@ namespace PurityAnalyzer
                             yield return impurity;
                     }
                 }
+
+                var operation = semanticModel.GetOperation(subNode);
+
+                if (operation is IInvocationOperation invocationOperation && invocationOperation.TargetMethod.ContainingType.TypeKind != TypeKind.Delegate)
+                {
+                    foreach (var impurity in HandleTypeParametersForMethodInvocation(
+                        invocationOperation,
+                        recursiveState))
+                        yield return impurity;
+
+                }
+
             }
         }
 
@@ -1002,10 +1016,6 @@ namespace PurityAnalyzer
                 return false;
             }
 
-            foreach (var impurity in HandleTypeParameters(node, method, recursiveState))
-                yield return impurity;
-
-
             PurityType acceptedPurityType = PurityType.Pure;
 
             if ((purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
@@ -1027,36 +1037,45 @@ namespace PurityAnalyzer
             }
         }
 
-        private IEnumerable<Impurity> HandleTypeParameters(
-            ExpressionSyntax node,
-            IMethodSymbol method,
+        private IEnumerable<Impurity> HandleTypeParametersForMethodInvocation(
+            IInvocationOperation operation,
             RecursiveState recursiveState)
         {
-            if (method.TypeParameters.Length > 0)
+            var method = operation.TargetMethod;
+
+            var node = operation.Syntax;
+            
+            var typeParametersAndMatchingArguments = TypeParametersUsedAsObjectsModule.GetTypeParametersAndMatchingArguments(method).ToList();
+
+
+            if (typeParametersAndMatchingArguments.Count > 0)
             {
                 var objectMethodsRelevantToCastingFromGenericTypeParameters =
                     TypeParametersUsedAsObjectsModule
                         .GetObjectMethodsRelevantToCastingFromGenericTypeParameters(
                             semanticModel);
 
-                for (int i = 0; i < method.TypeParameters.Length; i++)
+                for (int i = 0; i < typeParametersAndMatchingArguments.Count; i++)
                 {
-                    var param = method.TypeParameters[i];
+                    var param = typeParametersAndMatchingArguments[i].typeParameter;
 
-                    var arg = method.TypeArguments[i];
+                    var arg = typeParametersAndMatchingArguments[i].argument;
 
                     var constraintTypes = param.ConstraintTypes;
 
-                    var isUsedAsObject =
-                        TypeParametersUsedAsObjectsModule.IsTIsUsedAsObject(
+                    if (constraintTypes.IsEmpty)
+                    {
+                        //TODO: are static constructors checked when we have Class1<T>.Method1()?
+                        if (TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
                             method,
                             semanticModel,
                             param,
                             objectMethodsRelevantToCastingFromGenericTypeParameters,
-                            knownSymbols);
-
-                    if (constraintTypes.IsEmpty && isUsedAsObject)
-                        constraintTypes = constraintTypes.Add(objectType);
+                            knownSymbols))
+                        {
+                            constraintTypes = constraintTypes.Add(objectType);
+                        }
+                    }
 
                     foreach (var constraintType in constraintTypes)
                     {
