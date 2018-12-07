@@ -527,6 +527,126 @@ public static class Module2<T>
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void GenericMethodThatCallsAMethodInAnotherClassNestedInAGenericClass_AndCalledMethodDoesNotUseTAsObject_ButWhereTheClassHasAStaticConstructorThatUsesTAsObject_PassingATObjectAsTheOtherClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.SomeClass.DoSomething2(input);
+    }
+
+}
+
+public static class Module2<T>
+{
+    public static class SomeClass
+    {
+        static SomeClass()
+        {
+            var a = default(T).ToString();
+        }
+
+        public static void DoSomething2(T obj)
+        {
+
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void GenericMethodThatCallsAMethodInAnotherClassNestedInAGenericClass_AndCalledMethodDoesNotUseTAsObject_ButWhereTheParentClassHasAStaticConstructorThatUsesTAsObject_PassingATObjectAsTheOtherClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.SomeClass.DoSomething2(input);
+    }
+
+}
+
+public static class Module2<T>
+{
+    static Module2()
+    {
+        var a = default(T).ToString();
+    }
+
+    public static class SomeClass
+    {
+        public static void DoSomething2(T obj)
+        {
+
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void GenericMethodThatCallsAConstructorInAnotherClassNestedInAGenericClass_AndCalledConstructorDoesNotUseTAsObject_ButWhereTheParentClassHasAStaticConstructorThatUsesTAsObject_PassingATObjectAsTheOtherClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        var a = new Module2<T>.SomeClass(input);
+    }
+
+}
+
+public static class Module2<T>
+{
+    static Module2()
+    {
+        var a = default(T).ToString();
+    }
+
+    public class SomeClass
+    {
+        public SomeClass(T obj)
+        {
+
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }
 
