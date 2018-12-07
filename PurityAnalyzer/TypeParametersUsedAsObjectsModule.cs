@@ -153,13 +153,13 @@ namespace PurityAnalyzer
                     yield return (@class.TypeParameters[i], @class.TypeArguments[i]);
                 }
 
-                //if (@class.ContainingType != null)
-                //{
-                //    foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(@class.ContainingType))
-                //    {
-
-                //    }
-                //}
+                if (@class.ContainingType != null)
+                {
+                    foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(@class.ContainingType))
+                    {
+                        yield return item;
+                    }
+                }
             }
 
             for (int i = 0; i < method.TypeParameters.Length; i++)

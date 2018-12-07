@@ -457,5 +457,76 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+
+        [Test]
+        public void GenericMethodThatCallsAMethodInAnotherClassNestedInAGenericClassThatUsesTAsObjectPassingATObjectAsTheClassT_UsesTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.SomeClass.DoSomething2(input);
     }
 }
+
+public static class Module2<T>
+{
+    public static class SomeClass
+    {
+        public static void DoSomething2(T obj)
+        {
+            var s = obj.ToString();
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void GenericMethodThatCallsAMethodInAnotherClassNestedInAGenericClassThatDoesNotUseTAsObjectPassingATObjectAsTheOtherClassT_DoesNotUseTAsObject()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        Module2<T>.SomeClass.DoSomething2(input);
+    }
+
+}
+
+public static class Module2<T>
+{
+    public static class SomeClass
+    {
+        public static void DoSomething2(T obj)
+        {
+
+        }
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+    }
+}
+
