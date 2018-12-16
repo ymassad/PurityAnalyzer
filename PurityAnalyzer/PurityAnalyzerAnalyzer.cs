@@ -151,6 +151,11 @@ namespace PurityAnalyzer
 
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
+            if (methodDeclaration is MethodDeclarationSyntax method && (method.TypeParameterList?.Parameters.Any() ?? false))
+            {
+                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel, knownSymbols, method.TypeParameterList);
+            }
+
             var attributes = GetAttributes(methodDeclaration.AttributeLists);
 
             if (attributes.Any(Utils.IsIsPureAttribute))
@@ -212,12 +217,6 @@ namespace PurityAnalyzer
                         methodSymbol);
                 }
             });
-
-            if (methodDeclaration is MethodDeclarationSyntax method && (method.TypeParameterList?.Parameters.Any() ?? false))
-            {
-                ProcessNotUsedAsObjectAttribute(context, method, context.SemanticModel, knownSymbols, method.TypeParameterList);
-            }
-
         }
 
         private static void ProcessNotUsedAsObjectAttribute(

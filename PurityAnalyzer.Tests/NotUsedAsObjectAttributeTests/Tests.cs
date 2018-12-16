@@ -681,6 +681,36 @@ public class SomeClass<T>
             dignostics.Length.Should().BePositive();
         }
 
+        [Test]
+        public void GenericMethodThatCallsToStringMethodOnT_UsesTAsObject_AnalysisIsDoneEvenIfMethodIsMarkedAsPure()
+        {
+            string code = @"
+using System;
+
+public class NotUsedAsObjectAttribute : Attribute
+{
+}
+
+public class IsPureAttribute : Attribute
+{
+}
+
+
+public static class Module1
+{
+    [IsPure]
+    public static void DoSomething<[NotUsedAsObject] T>(T input)
+    {
+        var str = input.ToString();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
     }
 }
 

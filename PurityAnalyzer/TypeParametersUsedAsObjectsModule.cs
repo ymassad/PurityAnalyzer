@@ -65,6 +65,14 @@ namespace PurityAnalyzer
         private static bool DoesMethodUseTAsObject(IMethodSymbol method, SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter, IMethodSymbol[] relevantObjectMethods, KnownSymbols knownSymbols)
         {
+
+
+            //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
+
+            if (typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name)))
+                return false;
+
+
             if (method.IsInCode())
             {
                 var location = method.Locations.First();
@@ -76,11 +84,6 @@ namespace PurityAnalyzer
                 return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter,
                     knownSymbols).Any();
             }
-
-            //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
-
-            if (typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name)))
-                return false;
 
             if (typeParameter.DeclaringMethod != null)
             {
