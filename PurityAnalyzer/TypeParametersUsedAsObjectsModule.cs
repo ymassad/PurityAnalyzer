@@ -27,12 +27,43 @@ namespace PurityAnalyzer
             return relevantObjectMethods;
         }
 
-        public static bool DoesMethodUseTAsObject(
+        public static bool DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(
             IMethodSymbol method,
             SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter,
             IMethodSymbol[] relevantObjectMethods,
             KnownSymbols knownSymbols)
+        {
+
+            IEnumerable<INamedTypeSymbol> GetAllContainingTypes()
+            {
+                var containingType = method.ContainingType;
+
+                while (containingType != null)
+                {
+                    yield return containingType;
+
+                    containingType = containingType.ContainingType;
+                }
+            }
+
+            if (method.IsStatic || method.MethodKind == MethodKind.Constructor)
+            {
+                var containingTypes = GetAllContainingTypes().ToList();
+
+                var staticConstructors = containingTypes.SelectMany(x => x.StaticConstructors).ToList();
+
+                if (staticConstructors
+                    .Any(c =>
+                        DoesMethodUseTAsObject(c, semanticModel, typeParameter, relevantObjectMethods, knownSymbols)))
+                    return true;
+            }
+
+            return DoesMethodUseTAsObject(method, semanticModel, typeParameter, relevantObjectMethods, knownSymbols);
+        }
+
+        private static bool DoesMethodUseTAsObject(IMethodSymbol method, SemanticModel semanticModel,
+            ITypeParameterSymbol typeParameter, IMethodSymbol[] relevantObjectMethods, KnownSymbols knownSymbols)
         {
             if (method.IsInCode())
             {
@@ -42,7 +73,8 @@ namespace PurityAnalyzer
 
                 var methodSyntax = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
-                return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter, knownSymbols).Any();
+                return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter,
+                    knownSymbols).Any();
             }
 
             //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
@@ -55,11 +87,11 @@ namespace PurityAnalyzer
                 if (knownSymbols.KnownNotUsedAsObjectMethodTypeParameters.TryGetValue(
                         Utils.GetFullMetaDataName(typeParameter.DeclaringMethod.ContainingType),
                         out var methods) &&
-                    methods.Keys.FirstOrNoValue(x => x.Matches(typeParameter.DeclaringMethod)).HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
+                    methods.Keys.FirstOrNoValue(x => x.Matches(typeParameter.DeclaringMethod))
+                        .HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
                 {
                     return false;
                 }
-
             }
             else
             {
@@ -102,7 +134,6 @@ namespace PurityAnalyzer
                 yield return inv.Syntax;
             }
 
-
             var conversions =
                 Utils.GetConversions(scope, semanticModel);
 
@@ -119,24 +150,37 @@ namespace PurityAnalyzer
             }
 
 
-            var invokedMethodWithRelevantTypeParameters =
+
+            var constructionOperations =
+                scope.DescendantNodes()
+                    .OfType<ObjectCreationExpressionSyntax>()
+                    .Select(x => semanticModel.GetOperation(x))
+                    .OfType<IObjectCreationOperation>()
+                    .Where(x => x.Constructor.ContainingType.TypeKind != TypeKind.Delegate)
+                    .ToList();
+
+
+
+            var invokedMethodsAndConstructorsWithRelevantTypeParameters =
                 invocationOperations
+                    .Select(x => (Method: x.TargetMethod, x.Syntax))
+                    .Concat(constructionOperations.Select(x => (Method: x.Constructor, x.Syntax)))
                     .Select(x => (
                         node: x.Syntax,
-                        method: x.TargetMethod,
+                        method: x.Method,
                         typeParamsAndArgs:
-                            GetTypeParametersAndMatchingArguments(x.TargetMethod)
+                            GetTypeParametersAndMatchingArguments(x.Method)
                                 .Where(p =>
                                     p.argument.Equals(typeParameterSymbol)).ToList()))
                     .ToList();
 
-            foreach (var invokedMethod in invokedMethodWithRelevantTypeParameters)
+            foreach (var invokedMethodOrConstructor in invokedMethodsAndConstructorsWithRelevantTypeParameters)
             {
-                foreach (var tp in invokedMethod.typeParamsAndArgs)
+                foreach (var tp in invokedMethodOrConstructor.typeParamsAndArgs)
                 {
-                    if (DoesMethodUseTAsObject(invokedMethod.method, semanticModel, tp.typeParameter, relevantObjectMethods, knownSymbols))
+                    if (DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(invokedMethodOrConstructor.method, semanticModel, tp.typeParameter, relevantObjectMethods, knownSymbols))
                     {
-                        yield return invokedMethod.node;
+                        yield return invokedMethodOrConstructor.node;
                         break;
                     }
                 }

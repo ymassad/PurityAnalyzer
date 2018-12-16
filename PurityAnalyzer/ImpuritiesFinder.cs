@@ -1066,7 +1066,7 @@ namespace PurityAnalyzer
                     if (constraintTypes.IsEmpty)
                     {
                         //TODO: are static constructors checked when we have Class1<T>.Method1()?
-                        if (TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
+                        if (TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(
                             method,
                             semanticModel,
                             param,
@@ -1076,6 +1076,8 @@ namespace PurityAnalyzer
                             constraintTypes = constraintTypes.Add(objectType);
                         }
                     }
+
+                    //TODO: what if there is a constraint of type say ISomething. What happens if T is marked with [NotUsedAsObject]? Should we take that into account when we check the cast?
 
                     foreach (var constraintType in constraintTypes)
                     {
