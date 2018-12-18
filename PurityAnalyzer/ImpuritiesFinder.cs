@@ -638,10 +638,14 @@ namespace PurityAnalyzer
                     }
                 }
 
-                if (type.TypeKind == TypeKind.TypeParameter)
+                if (type is ITypeParameterSymbol typeParameter)
                 {
-                    //TODO: handle cases where type parameter is constrained?
-                    return GetMatchingMethod(method, objectType);
+                    if (typeParameter.ConstraintTypes.IsEmpty)
+                        return GetMatchingMethod(method, objectType);
+                    else
+                        //TODO: should I also include "object"? Only when !NotUsedAsObject?
+                        return typeParameter.ConstraintTypes.Select(x => GetMatchingMethod(method, x))
+                            .GetItemsWithValues().FirstOrNoValue();
                 }
 
                 if (method.ContainingType.TypeKind == TypeKind.Interface)

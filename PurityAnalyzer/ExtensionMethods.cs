@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -73,6 +74,13 @@ namespace PurityAnalyzer
                 throw new Exception(errorMessage);
 
             return value;
+        }
+
+        public static IEnumerable<T> GetItemsWithValues<T>(this IEnumerable<Maybe<T>> enumerable)
+        {
+            foreach(var item in enumerable)
+                if (item.HasValue)
+                    yield return item.GetValue();
         }
     }
 }

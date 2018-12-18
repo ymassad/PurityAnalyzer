@@ -224,5 +224,88 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
         }
+
+        [Test]
+        public void CallingGenericMethodThatInvokesToStringOnAGenericTypeParameter_FromAGenericMethodPassingCallingMethodTAsArgumentToCalledMethodT_CalledMethodTypeParameterHasAConstraintWhichIsAnInterface_CallerMethodConstraintIsAClassWhichImplementationOfTheInterfaceIsImpure_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface1
+{
+    void DoSomething();
+}
+
+public class Class1 : IInterface1
+{
+    private static int state;
+
+    public void DoSomething()
+    {
+        state++;
+    }
+}
+
+public static class Module1
+{
+    public static void Do<T>(T input) where T:IInterface1
+    {
+        input.DoSomething();
+    }
+
+    [IsPure]
+    public static void Do2<T>(T input) where T: Class1
+    {
+        Do(input);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void CallingGenericMethodThatInvokesToStringOnAGenericTypeParameter_FromAGenericMethodPassingCallingMethodTAsArgumentToCalledMethodT_CalledMethodTypeParameterHasAConstraintWhichIsAnInterface_CallerMethodConstraintIsAClassWhichImplementationOfTheInterfaceIsPure_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public interface IInterface1
+{
+    void DoSomething();
+}
+
+public class Class1 : IInterface1
+{
+    public void DoSomething()
+    {
+    }
+}
+
+public static class Module1
+{
+    public static void Do<T>(T input) where T:IInterface1
+    {
+        input.DoSomething();
+    }
+
+    [IsPure]
+    public static void Do2<T>(T input) where T: Class1
+    {
+        Do(input);
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
     }
 }
