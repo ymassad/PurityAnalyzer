@@ -641,11 +641,16 @@ namespace PurityAnalyzer
                 if (type is ITypeParameterSymbol typeParameter)
                 {
                     if (typeParameter.ConstraintTypes.IsEmpty)
+                    {
                         return GetMatchingMethod(method, objectType);
+                    }
                     else
-                        //TODO: should I also include "object"? Only when !NotUsedAsObject?
+                    {
+                        //TODO: should I also include "object"? Only when !NotUsedAsObject?. Seems not. In one if the tests, the constraint is a class and therefore the GetMatchingMethod called below will include methods form Object
                         return typeParameter.ConstraintTypes.Select(x => GetMatchingMethod(method, x))
                             .GetItemsWithValues().FirstOrNoValue();
+
+                    }
                 }
 
                 if (method.ContainingType.TypeKind == TypeKind.Interface)
