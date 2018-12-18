@@ -198,7 +198,7 @@ public static class Module1
 
 
         [Test]
-        public void CallingGenericMethodThatInvokesToStringOnAGenericTypeParameter_KeepsMethodPure()
+        public void CallingGenericMethodThatInvokesToStringOnAGenericTypeParameter_FromAGenericMethodPassingCallingMethodTAsArgumentToCalledMethodT_KeepsMethodPure()
         {
             string code = @"
 using System;
