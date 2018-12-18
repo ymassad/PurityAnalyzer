@@ -195,5 +195,34 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
             dignostics.Length.Should().Be(0);
         }
+
+
+        [Test]
+        public void CallingGenericMethodThatInvokesToStringOnAGenericTypeParameter_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    public static string Do<T>()
+    {
+        return default(T).ToString();
+    }
+
+    [IsPure]
+    public static string Do2<T>()
+    {
+        return Do<T>();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
     }
 }
