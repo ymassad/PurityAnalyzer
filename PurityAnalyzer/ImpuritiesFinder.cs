@@ -638,6 +638,12 @@ namespace PurityAnalyzer
                     }
                 }
 
+                if (type.TypeKind == TypeKind.TypeParameter)
+                {
+                    //TODO: handle cases where type parameter is constrained?
+                    return GetMatchingMethod(method, objectType);
+                }
+
                 if (method.ContainingType.TypeKind == TypeKind.Interface)
                 {
                     return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();
