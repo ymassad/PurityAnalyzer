@@ -156,6 +156,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DoesNotUseClassTypeParameterAsObjectAttributeTests\Tests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CallingMethodsOnGenericClassesTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CallingGenericMethodsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToObjectMethods\Tests.cs" />

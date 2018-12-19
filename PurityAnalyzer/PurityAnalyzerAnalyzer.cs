@@ -217,7 +217,64 @@ namespace PurityAnalyzer
                         methodSymbol);
                 }
             });
+
+            foreach (var attribute in attributes)
+            {
+                if(!Utils.IsDoesNotUseClassTypeParameterAsObjectAttribute(attribute, out var typeParameterIdentifier))
+                    continue;
+
+                var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
+
+                if (methodSymbol != null)
+                {
+                    ProcessDoesNotUseClassTypeParameterAsObjectAttributeForMethod(
+                        context,
+                        methodDeclaration,
+                        knownSymbols,
+                        typeParameterIdentifier);
+                }
+            }
+
         }
+
+        private void ProcessDoesNotUseClassTypeParameterAsObjectAttributeForMethod(
+            SyntaxNodeAnalysisContext context,
+            BaseMethodDeclarationSyntax methodDeclaration,
+            KnownSymbols knownSymbols,
+            IdentifierNameSyntax typeParameterIdentifier)
+        {
+            var typeParameterSymbol =
+                context.SemanticModel.GetSymbolInfo(typeParameterIdentifier).Symbol as ITypeParameterSymbol;
+
+
+            if (typeParameterSymbol == null)
+            {
+                //TODO: handle this case
+                return;
+            }
+
+            var relevantObjectMethods =
+                TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(context.SemanticModel);
+
+            var nodes = TypeParametersUsedAsObjectsModule.GetNodesWhereTIsUsedAsObject(
+                methodDeclaration,
+                context.SemanticModel,
+                relevantObjectMethods,
+                typeParameterSymbol,
+                knownSymbols);
+
+            foreach (var node in nodes)
+            {
+                var diagnostic = Diagnostic.Create(
+                    GenericParameterNotUsedAsObjectRule,
+                    node.GetLocation(),
+                    "Type parameter is used as an object");
+
+                context.ReportDiagnostic(diagnostic);
+            }
+
+        }
+
 
         private static void ProcessNotUsedAsObjectAttribute(
             SyntaxNodeAnalysisContext context,

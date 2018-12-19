@@ -62,6 +62,43 @@ namespace PurityAnalyzer
             return attributeName == "NotUsedAsObject" || attributeName == "NotUsedAsObject" + "Attribute";
         }
 
+        public static bool IsDoesNotUseClassTypeParameterAsObjectAttribute(AttributeSyntax attribute, out IdentifierNameSyntax typeParameterIdentifier)
+        {
+            typeParameterIdentifier = null;
+
+            if (!(attribute.Name is IdentifierNameSyntax name)) return false;
+
+            if (!IsDoesNotUseClassTypeParameterAsObjectAttribute(name.Identifier.Text)) return false;
+
+            if (attribute.ArgumentList.Arguments.Count != 1)
+                return false;
+
+            var argument = attribute.ArgumentList.Arguments[0];
+            if (!(argument.Expression is InvocationExpressionSyntax invocation))
+                return false;
+
+            if (!(invocation.Expression is IdentifierNameSyntax identifier))
+                return false;
+
+            if (identifier.Identifier.Text != "nameof")
+                return false;
+
+            if (!(invocation.ArgumentList.Arguments[0].Expression is IdentifierNameSyntax typeParameterIdentifier1))
+                return false;
+
+            typeParameterIdentifier = typeParameterIdentifier1;
+
+            return true;
+        }
+
+
+
+        public static bool IsDoesNotUseClassTypeParameterAsObjectAttribute(string attributeName)
+        {
+            return attributeName == "DoesNotUseClassTypeParameterAsObject" || attributeName == "DoesNotUseClassTypeParameterAsObject" + "Attribute";
+        }
+
+
         public static IEnumerable<Impurity> GetImpurities(
             SyntaxNode methodDeclaration,
             SemanticModel semanticModel,
