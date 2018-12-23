@@ -1086,7 +1086,9 @@ namespace PurityAnalyzer
                             semanticModel,
                             param,
                             objectMethodsRelevantToCastingFromGenericTypeParameters,
-                            knownSymbols))
+                            knownSymbols,
+                            //TODO: should I merge RecursiveStateForNotUsedAsObject and RecursiveState, what test will require this?
+                            RecursiveStateForNotUsedAsObject.Empty))
                         {
                             constraintTypes = constraintTypes.Add(objectType);
                         }

@@ -32,9 +32,9 @@ namespace PurityAnalyzer
             SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter,
             IMethodSymbol[] relevantObjectMethods,
-            KnownSymbols knownSymbols)
+            KnownSymbols knownSymbols,
+            RecursiveStateForNotUsedAsObject recursiveStateForNotUsedAsObject)
         {
-
             IEnumerable<INamedTypeSymbol> GetAllContainingTypes()
             {
                 var containingType = method.ContainingType;
@@ -55,17 +55,21 @@ namespace PurityAnalyzer
 
                 if (staticConstructors
                     .Any(c =>
-                        DoesMethodUseTAsObject(c, semanticModel, typeParameter, relevantObjectMethods, knownSymbols)))
+                        DoesMethodUseTAsObject(c, semanticModel, typeParameter, relevantObjectMethods, knownSymbols, recursiveStateForNotUsedAsObject)))
                     return true;
             }
 
-            return DoesMethodUseTAsObject(method, semanticModel, typeParameter, relevantObjectMethods, knownSymbols);
+            return DoesMethodUseTAsObject(method, semanticModel, typeParameter, relevantObjectMethods, knownSymbols, recursiveStateForNotUsedAsObject);
         }
 
         private static bool DoesMethodUseTAsObject(IMethodSymbol method, SemanticModel semanticModel,
-            ITypeParameterSymbol typeParameter, IMethodSymbol[] relevantObjectMethods, KnownSymbols knownSymbols)
+            ITypeParameterSymbol typeParameter, IMethodSymbol[] relevantObjectMethods, KnownSymbols knownSymbols,
+            RecursiveStateForNotUsedAsObject recursiveStateForNotUsedAsObject)
         {
+            if (recursiveStateForNotUsedAsObject.ItemsInStack.Contains((method, typeParameter)))
+                return false;
 
+            recursiveStateForNotUsedAsObject = recursiveStateForNotUsedAsObject.Add(method, typeParameter);
 
             //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
 
@@ -82,7 +86,7 @@ namespace PurityAnalyzer
                 var methodSyntax = locationSourceTree.GetRoot().FindNode(location.SourceSpan);
 
                 return GetNodesWhereTIsUsedAsObject(methodSyntax, semanticModel, relevantObjectMethods, typeParameter,
-                    knownSymbols).Any();
+                    knownSymbols, recursiveStateForNotUsedAsObject).Any();
             }
 
             if (typeParameter.DeclaringMethod != null)
@@ -110,12 +114,12 @@ namespace PurityAnalyzer
             return true;
         }
 
-        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(
-            SyntaxNode scope,
+        public static IEnumerable<SyntaxNode> GetNodesWhereTIsUsedAsObject(SyntaxNode scope,
             SemanticModel semanticModel,
             IMethodSymbol[] relevantObjectMethods,
             ITypeParameterSymbol typeParameterSymbol,
-            KnownSymbols knownSymbols)
+            KnownSymbols knownSymbols,
+            RecursiveStateForNotUsedAsObject recursiveStateForNotUsedAsObject)
         {
             var objectType = semanticModel.Compilation.ObjectType;
 
@@ -181,7 +185,13 @@ namespace PurityAnalyzer
             {
                 foreach (var tp in invokedMethodOrConstructor.typeParamsAndArgs)
                 {
-                    if (DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(invokedMethodOrConstructor.method, semanticModel, tp.typeParameter, relevantObjectMethods, knownSymbols))
+                    if (DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(
+                        invokedMethodOrConstructor.method,
+                        semanticModel,
+                        tp.typeParameter,
+                        relevantObjectMethods,
+                        knownSymbols,
+                        recursiveStateForNotUsedAsObject))
                     {
                         yield return invokedMethodOrConstructor.node;
                         break;

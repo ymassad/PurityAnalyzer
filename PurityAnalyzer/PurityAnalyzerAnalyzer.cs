@@ -261,7 +261,7 @@ namespace PurityAnalyzer
                 context.SemanticModel,
                 relevantObjectMethods,
                 typeParameterSymbol,
-                knownSymbols);
+                knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
 
             foreach (var node in nodes)
             {
@@ -298,7 +298,7 @@ namespace PurityAnalyzer
                     semanticModel,
                     relevantObjectMethods,
                     semanticModel.GetDeclaredSymbol(typeParameter),
-                    knownSymbols);
+                    knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
 
                 foreach (var node in nodes)
                 {
