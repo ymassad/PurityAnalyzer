@@ -57,6 +57,7 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol genericIenumerableType;
         private readonly INamedTypeSymbol genericListType;
         private readonly KnownSymbols knownSymbols;
+        private IMethodSymbol[] objectMethodsRelevantToNotUsedAsObject;
 
         public ImpuritiesFinder(
             SemanticModel semanticModel,
@@ -85,6 +86,9 @@ namespace PurityAnalyzer
             genericGetEnumeratorMethod = genericIenumerableType.GetMembers("GetEnumerator").OfType<IMethodSymbol>().Single(x => x.ReturnType.OriginalDefinition?.Equals(genericIenumeratorType) ?? false);
 
             genericListType = semanticModel.Compilation.GetTypeByMetadataName(typeof(List<>).FullName);
+
+            objectMethodsRelevantToNotUsedAsObject = TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
+
 
             this.knownSymbols = knownSymbols;
         }
@@ -417,6 +421,12 @@ namespace PurityAnalyzer
                 }
                 else
                 {
+                    if (IsThereAnIssueCastingAsItRelatesToUsingTypeParametersAsObject(
+                        matchingMethodInSourceType.GetValue(), destMethod, objectMethodsRelevantToNotUsedAsObject))
+                    {
+                        problems.Add(destMethod);
+                    }
+
                     var srcPurity = GetMethodPurityType(semanticModel, knownSymbols, matchingMethodInSourceType.GetValue(), recursiveState);
                     var destPurity = GetMethodPurityType(semanticModel, knownSymbols, destMethod, recursiveState);
 
@@ -688,6 +698,39 @@ namespace PurityAnalyzer
                 return method.OverriddenMethod.Equals(overridden) ||
                        UltimatlyOverrides(method.OverriddenMethod, overridden);
             }
+        }
+
+        private bool IsThereAnIssueCastingAsItRelatesToUsingTypeParametersAsObject(IMethodSymbol srcMethod,
+            IMethodSymbol destMethod, IMethodSymbol[] relevantObjectMethods)
+        {
+            for (int i = 0; i < destMethod.TypeParameters.Length ; i++)
+            {
+                var dstTypeParameter = destMethod.TypeParameters[i];
+
+                var srcTypeParameter = srcMethod.TypeParameters[i];
+
+       
+                var srcMethodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
+                    srcMethod,
+                    semanticModel,
+                    srcTypeParameter, relevantObjectMethods, knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
+
+                if (srcMethodUsesTypeParameterAsObject)
+                {
+                    var dstMethodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
+                        destMethod,
+                        semanticModel,
+                        dstTypeParameter, relevantObjectMethods, knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
+
+                    if (!dstMethodUsesTypeParameterAsObject)
+                    {
+                        return true;
+                    }
+                }
+
+            }
+
+            return false;
         }
 
         private ImmutableArray<IdentifierNameSyntax> GetUsagesOfVariable(VariableDeclaratorSyntax variableDeclarator, SyntaxNode scope)

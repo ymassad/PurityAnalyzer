@@ -62,7 +62,7 @@ namespace PurityAnalyzer
             return DoesMethodUseTAsObject(method, semanticModel, typeParameter, relevantObjectMethods, knownSymbols, recursiveStateForNotUsedAsObject);
         }
 
-        private static bool DoesMethodUseTAsObject(IMethodSymbol method, SemanticModel semanticModel,
+        public static bool DoesMethodUseTAsObject(IMethodSymbol method, SemanticModel semanticModel,
             ITypeParameterSymbol typeParameter, IMethodSymbol[] relevantObjectMethods, KnownSymbols knownSymbols,
             RecursiveStateForNotUsedAsObject recursiveStateForNotUsedAsObject)
         {
