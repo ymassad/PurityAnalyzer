@@ -210,5 +210,78 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+
+        [Test]
+        public void CallingCompiledMethodOnGenericClass_MethodHasAttributeToIndicateItDoesNotUseTAsObject_PassingClassWithImpureToString_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1 
+{
+    public static int state = 0;
+
+    public override string ToString()
+    {
+        state++;
+        return """";
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        GenericClassWithSomeMethodsThatUseTAsObjectAndSomeDoNot<Class1>.MethodThatDoesNotUseTAsObject(new Class1());
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void CallingCompiledMethodOnGenericClass_MethodDoesNotHaveAttributeToIndicateItDoesNotUseTAsObject_PassingClassWithImpureToString_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+using PurityAnalyzer.Tests.CompiledCsharpLib;
+
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1 
+{
+    public static int state = 0;
+
+    public override string ToString()
+    {
+        state++;
+        return """";
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        GenericClassWithSomeMethodsThatUseTAsObjectAndSomeDoNot<Class1>.MethodThatUsesTAsObject(new Class1());
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
+            dignostics.Length.Should().BePositive();
+        }
+
     }
 }

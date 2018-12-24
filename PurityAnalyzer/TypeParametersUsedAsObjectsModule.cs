@@ -71,11 +71,14 @@ namespace PurityAnalyzer
 
             recursiveStateForNotUsedAsObject = recursiveStateForNotUsedAsObject.Add(method, typeParameter);
 
-            //TODO: for class-level type parameters, a method should be able to declare that it does not use T via a method level attribute even if T does not have NotUsedAsObject
-
             if (typeParameter.GetAttributes().Any(x => Utils.IsNotUsedAsObjectAttribute(x.AttributeClass.Name)))
                 return false;
 
+            if (method.GetAttributes().Any(x =>
+                Utils.IsDoesNotUseClassTypeParameterAsObjectAttributeForTypeParameter(x, typeParameter.Name)))
+            {
+                return false;
+            }
 
             if (method.IsInCode())
             {

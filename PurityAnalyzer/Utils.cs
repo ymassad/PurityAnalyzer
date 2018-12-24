@@ -91,6 +91,33 @@ namespace PurityAnalyzer
             return true;
         }
 
+        public static bool IsDoesNotUseClassTypeParameterAsObjectAttribute(AttributeData attribute, out string typeParameterName)
+        {
+            typeParameterName = null;
+
+            if (!IsDoesNotUseClassTypeParameterAsObjectAttribute(attribute.AttributeClass.Name)) return false;
+
+            if (attribute.ConstructorArguments.Length != 1)
+                return false;
+
+            var argument = attribute.ConstructorArguments.First();
+
+            if (argument.Value is string parameterName)
+            {
+                typeParameterName = parameterName;
+
+                return true;
+            }
+
+            return false;
+        }
+
+
+        public static bool IsDoesNotUseClassTypeParameterAsObjectAttributeForTypeParameter(AttributeData attribute, string typeParameterName)
+        {
+            return IsDoesNotUseClassTypeParameterAsObjectAttribute(attribute, out var paramName) &&
+                   paramName.Equals(typeParameterName);
+        }
 
 
         public static bool IsDoesNotUseClassTypeParameterAsObjectAttribute(string attributeName)
