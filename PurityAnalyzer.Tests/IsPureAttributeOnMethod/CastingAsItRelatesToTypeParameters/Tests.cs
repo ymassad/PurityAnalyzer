@@ -86,6 +86,46 @@ public static class Class1
 
         }
 
+        [Test]
+        public void CastingFromDerivedToBaseWhereBaseMethodUsesTAsObjectAndDerivedMethodAlsoUsesTAsObject_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => input.ToString();
+}
+
+public class Derived : Base
+{
+    public override string Method1<T>(T input) => input.ToString();
+}
+
+public class SomeClass
+{
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        Base x = new Derived();
+
+        var result = x.Method1(new SomeClass());
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
 
     }
 }
