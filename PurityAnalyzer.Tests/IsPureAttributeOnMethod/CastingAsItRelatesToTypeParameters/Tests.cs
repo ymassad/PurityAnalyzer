@@ -127,5 +127,146 @@ public static class Class1
 
         }
 
+        [Test]
+        public void CastingFromBaseToDerivedWhereBaseMethodDoesNotUseTAsObjectAndDerivedMethodAlsoDoesNotUseTAsObject_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => string.Empty;
+}
+
+public class Derived : Base
+{
+    public override string Method1<T>(T input) => string.Empty;
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        Derived x = (Derived) new Base();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingFromBaseToDerivedWhereBaseMethodDoesNotUseTAsObjectAndDerivedMethodUsesTAsObject_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => string.Empty;
+}
+
+public class Derived : Base
+{
+    public override string Method1<T>(T input) => input.ToString();
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        Derived x = (Derived)new Base();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingFromBaseToDerivedWhereBaseMethodUsesTAsObjectAndDerivedMethodAlsoUsesTAsObject_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => input.ToString();
+}
+
+public class Derived : Base
+{
+    public override string Method1<T>(T input) => input.ToString();
+}
+
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        Derived x = (Derived)new Base();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingFromBaseToDerivedWhereBaseMethodUsesTAsObjectAndDerivedMethodDoesNotUseTAsObject_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => input.ToString();
+}
+
+public class Derived : Base
+{
+    public override string Method1<T>(T input) => string.Empty;
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        Derived x = (Derived)new Base();
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }
