@@ -268,5 +268,128 @@ public static class Class1
 
         }
 
+        [Test]
+        public void CastingFromObjectToDerivedWhereDerivedMethodDoesNotUseTAsObject_MakesMethodImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => string.Empty;
+}
+
+public class Derived : Base
+{
+    private static int state = 0;
+
+    public override string Method1<T>(T input)
+    {
+        state++;
+        return string.Empty;
+    }
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething(object input)
+    {
+        Derived x = (Derived) input;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CastingFromObjectToDerivedWhereDerivedMethodUsesTAsObject_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => string.Empty;
+}
+
+public class Derived : Base
+{
+    private static int state = 0;
+
+    public override string Method1<T>(T input)
+    {
+        state++;
+        return input.ToString();
+    }
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething(object input)
+    {
+        Derived x = (Derived)input;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void CastingFromObjectToDerivedWhereDerivedMethodDoesNotUseTAsObject_AndDerivedMethodIsSealed_KeepsMethodPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Base
+{
+    public virtual string Method1<T>(T input) => string.Empty;
+}
+
+public class Derived : Base
+{
+    private static int state = 0;
+
+    public sealed override string Method1<T>(T input)
+    {
+        state++;
+        return string.Empty;
+    }
+}
+
+public static class Class1
+{
+    [IsPure]
+    public static void DoSomething(object input)
+    {
+        Derived x = (Derived) input;
+    }
+}
+";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }
