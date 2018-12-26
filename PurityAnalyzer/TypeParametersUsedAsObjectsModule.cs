@@ -205,32 +205,30 @@ namespace PurityAnalyzer
 
         public static IEnumerable<(ITypeParameterSymbol typeParameter, ITypeSymbol argument)> GetTypeParametersAndMatchingArguments(IMethodSymbol method)
         {
-            IEnumerable<(ITypeParameterSymbol typeParameter, ITypeSymbol argument)>
-            GetTypeParametersAndMatchingArgumentsForClass(INamedTypeSymbol @class)
-            {
-                for (int i = 0; i < @class.TypeParameters.Length; i++)
-                {
-                    yield return (@class.TypeParameters[i], @class.TypeArguments[i]);
-                }
-
-                if (@class.ContainingType != null)
-                {
-                    foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(@class.ContainingType))
-                    {
-                        yield return item;
-                    }
-                }
-            }
-
             for (int i = 0; i < method.TypeParameters.Length; i++)
             {
                 yield return (method.TypeParameters[i], method.TypeArguments[i]);
             }
 
-
             foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(method.ContainingType))
             {
                 yield return item;
+            }
+        }
+
+        public static IEnumerable<(ITypeParameterSymbol typeParameter, ITypeSymbol argument)> GetTypeParametersAndMatchingArgumentsForClass(INamedTypeSymbol @class)
+        {
+            for (int i = 0; i < @class.TypeParameters.Length; i++)
+            {
+                yield return (@class.TypeParameters[i], @class.TypeArguments[i]);
+            }
+
+            if (@class.ContainingType != null)
+            {
+                foreach (var item in GetTypeParametersAndMatchingArgumentsForClass(@class.ContainingType))
+                {
+                    yield return item;
+                }
             }
         }
     }

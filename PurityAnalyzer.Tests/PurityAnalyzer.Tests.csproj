@@ -160,7 +160,8 @@
     <Compile Include="IsPureAttributeOnMethod\CallingMethodsOnGenericClassesTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CallingGenericMethodsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToObjectMethods\Tests.cs" />
-    <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToTypeParameters\Tests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToTypeParameters\ClassTypeParameterTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToTypeParameters\MethodTypeParameterTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DifferentProjectsTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingStaticMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />

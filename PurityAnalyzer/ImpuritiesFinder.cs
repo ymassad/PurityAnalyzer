@@ -414,7 +414,8 @@ namespace PurityAnalyzer
                     if (!destMethod.IsSealed && !destinationType.IsSealed)
                     {
                         if (IsAnyKindOfPure(destMethod, recursiveState)
-                            || (destMethod.IsGenericMethod && !DoesMethodUseAnyTypeParameterAsObject(destMethod)))
+                            || IsGenericMethodThatDoesNotUseAnyMethodTypeParametersAsObject(destMethod)
+                            || DoesMethodContainingTypesHaveAnyTypeParametersButMethodDoesNotUseThemAsObject(destMethod))
                         {
                             problems.Add(destMethod);
                         }
@@ -422,6 +423,7 @@ namespace PurityAnalyzer
                 }
                 else
                 {
+                    //TODO: handle class-level type parameters
                     if (IsThereAnIssueCastingAsItRelatesToUsingTypeParametersAsObject(
                         matchingMethodInSourceType.GetValue(), destMethod))
                     {
@@ -701,24 +703,51 @@ namespace PurityAnalyzer
             }
         }
 
-        private bool DoesMethodUseAnyTypeParameterAsObject(IMethodSymbol destMethod)
+        private bool IsGenericMethodThatDoesNotUseAnyMethodTypeParametersAsObject(IMethodSymbol destMethod)
         {
-            for (int i = 0; i < destMethod.TypeParameters.Length; i++)
+            return (destMethod.IsGenericMethod && !DoesMethodUseAnyMethodTypeParameterAsObject(destMethod));
+        }
+
+        private bool DoesMethodUseAnyMethodTypeParameterAsObject(IMethodSymbol method)
+        {
+            foreach (var typeParameter in method.TypeParameters)
             {
-                var dstTypeParameter = destMethod.TypeParameters[i];
-
-                var dstMethodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
-                    destMethod,
+                var methodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
+                    method,
                     semanticModel,
-                    dstTypeParameter, objectMethodsRelevantToNotUsedAsObject, knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
+                    typeParameter, objectMethodsRelevantToNotUsedAsObject, knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
 
-                if (dstMethodUsesTypeParameterAsObject)
+                if (methodUsesTypeParameterAsObject)
                     return true;
-
             }
 
             return false;
         }
+
+        private bool DoesMethodContainingTypesHaveAnyTypeParametersButMethodDoesNotUseThemAsObject(IMethodSymbol method)
+        {
+            var typeParameters =
+                TypeParametersUsedAsObjectsModule.GetTypeParametersAndMatchingArgumentsForClass(method
+                    .ContainingType).ToList();
+
+            if (typeParameters.Count == 0)
+                return false;
+
+            foreach (var typeParameter in typeParameters)
+            {
+                var methodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
+                    method,
+                    semanticModel,
+                    typeParameter.typeParameter, objectMethodsRelevantToNotUsedAsObject, knownSymbols, RecursiveStateForNotUsedAsObject.Empty);
+
+                if (methodUsesTypeParameterAsObject)
+                    return false;
+
+            }
+
+            return true;
+        }
+
 
         private bool IsThereAnIssueCastingAsItRelatesToUsingTypeParametersAsObject(IMethodSymbol srcMethod,
             IMethodSymbol destMethod)
@@ -729,7 +758,6 @@ namespace PurityAnalyzer
 
                 var srcTypeParameter = srcMethod.TypeParameters[i];
 
-       
                 var srcMethodUsesTypeParameterAsObject = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject(
                     srcMethod,
                     semanticModel,
