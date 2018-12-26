@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace PurityAnalyzer.Tests.IsPureAttributeOnMethod.CastingAsItRelatesToTypeParameters
 {
     [TestFixture]
-    class Tests
+    class MethodTypeParameterTests
     {
 
         [Test]
