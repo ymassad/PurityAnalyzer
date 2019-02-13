@@ -226,6 +226,7 @@
     <Compile Include="NotUsedAsObjectAttributeTests\DotNetMethodsTests.cs" />
     <Compile Include="NotUsedAsObjectAttributeTests\TypeParametersOnClassLevelTests.cs" />
     <Compile Include="NotUsedAsObjectAttributeTests\Tests.cs" />
+    <Compile Include="PureAttribute\PureIsSameAsIsPure.cs" />
     <Compile Include="PureLambdaTests\Tests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\DotNetFrameworkTests.cs" />
     <Compile Include="ReturnsNewObjectAttribute\ReturnsNewObjectAttributeTests.cs" />

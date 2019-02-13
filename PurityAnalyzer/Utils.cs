@@ -39,7 +39,8 @@ namespace PurityAnalyzer
 
         public static bool IsIsPureAttribute(string attributeName)
         {
-            return attributeName == "IsPure" || attributeName == "IsPure" + "Attribute";
+            return attributeName == "IsPure" || attributeName == "IsPure" + "Attribute"
+                || attributeName == "Pure"   || attributeName == "Pure"   + "Attribute";
         }
 
         public static bool IsIsPureExceptLocallyAttribute(string attributeName)
