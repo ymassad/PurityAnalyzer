@@ -525,5 +525,70 @@ public static class Module1
 
         }
 
+        [Test]
+        public void MethodThatUsesStringInterpolationWithAnExpressionOfACustomSealedTypeThatHasAPureIFormattableStringMethodAndUsingCustomFormatIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+public sealed class Class1 : IFormattable
+{
+    public override string ToString() => string.Empty;
+
+    public string ToString(string format, IFormatProvider formatProvider) => string.Empty;
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        string str = $""hello{new Class1():cc}"";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatUsesStringInterpolationWithAnExpressionOfACustomSealedTypeThatHasAnImpureIFormattableStringMethodAndUsingCustomFormatIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+public sealed class Class1 : IFormattable
+{
+    public override string ToString() => string.Empty;
+    public static int state = 0;
+
+    public string ToString(string format, IFormatProvider formatProvider)
+    {
+        state++;
+        return string.Empty;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static void DoSomething()
+    {
+        string str = $""hello{new Class1():cc}"";
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
     }
 }
