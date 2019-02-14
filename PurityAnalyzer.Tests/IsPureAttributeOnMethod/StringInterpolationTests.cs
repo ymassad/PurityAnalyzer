@@ -26,7 +26,7 @@ public static class Module1
     [IsPure]
     public static void DoSomething()
     {
-        var str = $""hello"";
+        string str = $""hello"";
     }
 }";
 
@@ -51,7 +51,7 @@ public static class Module1
     public static void DoSomething()
     {
         string exp = ""value"";
-        var str = $""hello{exp}"";
+        string str = $""hello{exp}"";
     }
 }";
 
@@ -76,7 +76,7 @@ public static class Module1
     public static void DoSomething()
     {
         int exp = 1;
-        System.FormattableString str = $""hello{exp}"";
+        string str = $""hello{exp}"";
     }
 }";
 
@@ -84,5 +84,7 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
+
+        
     }
 }
