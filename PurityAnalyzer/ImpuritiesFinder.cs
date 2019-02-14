@@ -59,6 +59,8 @@ namespace PurityAnalyzer
         private readonly KnownSymbols knownSymbols;
         private IMethodSymbol[] objectMethodsRelevantToNotUsedAsObject;
         private IMethodSymbol objectToStringMethod;
+        private INamedTypeSymbol iformattableType;
+        private IMethodSymbol iformattableTypeToStringMethod;
 
         public ImpuritiesFinder(
             SemanticModel semanticModel,
@@ -75,6 +77,13 @@ namespace PurityAnalyzer
                 .GetMembers()
                 .OfType<IMethodSymbol>()
                 .Single(x => x.Name == "ToString" && x.Parameters.Length == 0);
+
+            iformattableType = semanticModel.Compilation.GetTypeByMetadataName(typeof(IFormattable).FullName);
+
+            iformattableTypeToStringMethod = iformattableType
+                .GetMembers()
+                .OfType<IMethodSymbol>()
+                .Single(x => x.Name == "ToString" && x.Parameters.Length == 2);
 
             var arrayType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Array).FullName);
 
@@ -221,9 +230,27 @@ namespace PurityAnalyzer
             {
                 var type = interpolatedExpression.Expression.Type;
 
-                var toStringMethodOnType = GetMatchingMethod(objectToStringMethod, type)
-                    .ValueOrThrow("Unexpected: cannot find ToString method on type");
+                var implementsIFormattable = type.AllInterfaces.Contains(iformattableType);
 
+                if (!implementsIFormattable && type.IsReferenceType && !type.IsSealed)
+                {
+                    yield return new Impurity(interpolatedStringOperation.Syntax, "Cannot guarantee that the actually type of the expression does not contain an impure IFormattable.ToString method on this non-sealed class");
+                    continue;
+                }
+
+                IMethodSymbol toStringMethodOnType;
+
+                if (implementsIFormattable)
+                {
+                    toStringMethodOnType = GetMatchingMethod(iformattableTypeToStringMethod, type)
+                        .ValueOrThrow("Unexpected: cannot find ToString method on type");
+                }
+                else
+                {
+                    toStringMethodOnType = GetMatchingMethod(objectToStringMethod, type)
+                        .ValueOrThrow("Unexpected: cannot find ToString method on type");
+                }
+ 
                 if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
                 {
                     yield return new Impurity(interpolatedStringOperation.Syntax, "ToString method is impure");
