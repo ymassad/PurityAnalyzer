@@ -58,6 +58,7 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol genericListType;
         private readonly KnownSymbols knownSymbols;
         private IMethodSymbol[] objectMethodsRelevantToNotUsedAsObject;
+        private IMethodSymbol objectToStringMethod;
 
         public ImpuritiesFinder(
             SemanticModel semanticModel,
@@ -68,7 +69,12 @@ namespace PurityAnalyzer
             this.purityType = purityType;
 
             
-            objectType = semanticModel.Compilation.GetTypeByMetadataName(typeof(object).FullName);
+            objectType = semanticModel.Compilation.ObjectType;
+
+            objectToStringMethod = objectType
+                .GetMembers()
+                .OfType<IMethodSymbol>()
+                .Single(x => x.Name == "ToString" && x.Parameters.Length == 0);
 
             var arrayType = semanticModel.Compilation.GetTypeByMetadataName(typeof(Array).FullName);
 
@@ -190,7 +196,38 @@ namespace PurityAnalyzer
                         yield return impurity;
 
                 }
+                else if (operation is IInterpolatedStringOperation interpolatedStringOperation)
+                {
+                    if (semanticModel.GetTypeInfo(subNode).ConvertedType.SpecialType == SpecialType.System_String)
+                    {
+                        foreach (var impurity in HandleStringInterpolationImplicitlyConvertedToString(
+                            subNode,
+                            interpolatedStringOperation,
+                            recursiveState))
+                            yield return impurity;
+                    }
+                }
 
+
+            }
+        }
+
+        private IEnumerable<Impurity> HandleStringInterpolationImplicitlyConvertedToString(
+            SyntaxNode node,
+            IInterpolatedStringOperation interpolatedStringOperation,
+            RecursiveState recursiveState)
+        {
+            foreach (var interpolatedExpression in interpolatedStringOperation.Parts.OfType<IInterpolationOperation>())
+            {
+                var type = interpolatedExpression.Expression.Type;
+
+                var toStringMethodOnType = GetMatchingMethod(objectToStringMethod, type)
+                    .ValueOrThrow("Unexpected: cannot find ToString method on type");
+
+                if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
+                {
+                    yield return new Impurity(interpolatedStringOperation.Syntax, "ToString method is impure");
+                }
             }
         }
 
@@ -636,70 +673,70 @@ namespace PurityAnalyzer
                     string.Join(Environment.NewLine, problems.Select(x => Utils.GetFullMetaDataName(x.ContainingType) + "." + x.Name)));
 
             return new CastPurityResult.Pure();
+        }
 
-            Maybe<IMethodSymbol> GetMatchingMethod(IMethodSymbol method, ITypeSymbol type)
+        private Maybe<IMethodSymbol> GetMatchingMethod(IMethodSymbol method, ITypeSymbol type)
+        {
+            //Arrays do not implement IEnumerable<T> except for at runtime
+            //To fix this problem, I use the implementation of the interface method of List<T>
+            if (type is IArrayTypeSymbol arrayType)
             {
-                //Arrays do not implement IEnumerable<T> except for at runtime
-                //To fix this problem, I use the implementation of the interface method of List<T>
-                if (type is IArrayTypeSymbol arrayType)
+                if (method.ContainingType.IsGenericType &&
+                    method.ContainingType.OriginalDefinition.Equals(genericIenumerableType) &&
+                    method.OriginalDefinition.Equals(genericGetEnumeratorMethod))
                 {
-                    if (method.ContainingType.IsGenericType &&
-                        method.ContainingType.OriginalDefinition.Equals(genericIenumerableType) &&
-                        method.OriginalDefinition.Equals(genericGetEnumeratorMethod))
-                    {
-                        return GetMatchingMethod(method, genericListType.Construct(arrayType.ElementType));
-                    }
+                    return GetMatchingMethod(method, genericListType.Construct(arrayType.ElementType));
                 }
-
-                if (type is ITypeParameterSymbol typeParameter)
-                {
-                    if (typeParameter.ConstraintTypes.IsEmpty)
-                    {
-                        return GetMatchingMethod(method, objectType);
-                    }
-                    else
-                    {
-                        //TODO: should I also include "object"? Only when !NotUsedAsObject?. Seems not. In one if the tests, the constraint is a class and therefore the GetMatchingMethod called below will include methods form Object
-                        return typeParameter.ConstraintTypes.Select(x => GetMatchingMethod(method, x))
-                            .GetItemsWithValues().FirstOrNoValue();
-
-                    }
-                }
-
-                if (method.ContainingType.TypeKind == TypeKind.Interface)
-                {
-                    return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();
-                }
-
-                if (method.ContainingType.Equals(objectType) && type.TypeKind == TypeKind.Interface)
-                {
-                    return method.ToMaybe();
-                }
-
-                var typeMostDerivedMethods = Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type, semanticModel.Compilation).ToArray());
-
-                foreach (var typeMethod in typeMostDerivedMethods)
-                {
-                    if (typeMethod.Equals(method))
-                        return typeMethod.ToMaybe();
-
-                    if (UltimatlyOverrides(typeMethod, method))
-                        return typeMethod.ToMaybe();
-
-                    if (UltimatlyOverrides(method, typeMethod))
-                        return typeMethod.ToMaybe();
-                }
-
-                return Maybe.NoValue;
             }
 
-            bool UltimatlyOverrides(IMethodSymbol method, IMethodSymbol overridden)
+            if (type is ITypeParameterSymbol typeParameter)
             {
-                if (method.OverriddenMethod == null)
+                if (typeParameter.ConstraintTypes.IsEmpty)
+                {
+                    return GetMatchingMethod(method, objectType);
+                }
+                else
+                {
+                    //TODO: should I also include "object"? Only when !NotUsedAsObject?. Seems not. In one if the tests, the constraint is a class and therefore the GetMatchingMethod called below will include methods form Object
+                    return typeParameter.ConstraintTypes.Select(x => GetMatchingMethod(method, x))
+                        .GetItemsWithValues().FirstOrNoValue();
+                }
+            }
+
+            if (method.ContainingType.TypeKind == TypeKind.Interface)
+            {
+                return (type.FindImplementationForInterfaceMember(method) as IMethodSymbol).ToMaybe();
+            }
+
+            if (method.ContainingType.Equals(objectType) && type.TypeKind == TypeKind.Interface)
+            {
+                return method.ToMaybe();
+            }
+
+            var typeMostDerivedMethods =
+                Utils.RemoveOverriddenMethods(Utils.GetAllMethods(type, semanticModel.Compilation).ToArray());
+
+            foreach (var typeMethod in typeMostDerivedMethods)
+            {
+                if (typeMethod.Equals(method))
+                    return typeMethod.ToMaybe();
+
+                if (UltimatlyOverrides(typeMethod, method))
+                    return typeMethod.ToMaybe();
+
+                if (UltimatlyOverrides(method, typeMethod))
+                    return typeMethod.ToMaybe();
+            }
+
+            return Maybe.NoValue;
+
+            bool UltimatlyOverrides(IMethodSymbol methodToCheck, IMethodSymbol overridden)
+            {
+                if (methodToCheck.OverriddenMethod == null)
                     return false;
 
-                return method.OverriddenMethod.Equals(overridden) ||
-                       UltimatlyOverrides(method.OverriddenMethod, overridden);
+                return methodToCheck.OverriddenMethod.Equals(overridden) ||
+                       UltimatlyOverrides(methodToCheck.OverriddenMethod, overridden);
             }
         }
 
