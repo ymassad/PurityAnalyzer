@@ -99,7 +99,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
                     Utils.GetKnownNotUsedAsObjectTypeParameters(),
-                    new Dictionary<string, string[]>()); //TODO: get from file
+                    new Dictionary<string, string[]>(), //TODO: get from file
+                    Utils.GetKnownPureOnInvariantIFormatProviderMethods()); 
 
             InvocationExpressionSyntax expression = (InvocationExpressionSyntax) context.Node;
 
@@ -147,7 +148,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
                     Utils.GetKnownNotUsedAsObjectTypeParameters(),
-                    new Dictionary<string, string[]>()); //TODO: get from file
+                    new Dictionary<string, string[]>(), //TODO: get from file
+                    Utils.GetKnownPureOnInvariantIFormatProviderMethods());
 
             var methodDeclaration = (BaseMethodDeclarationSyntax) context.Node;
 
@@ -388,7 +390,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
                     Utils.GetKnownNotUsedAsObjectTypeParameters(),
-                    new Dictionary<string, string[]>()); //TODO: get from file
+                    new Dictionary<string, string[]>(), //TODO: get from file
+                    Utils.GetKnownPureOnInvariantIFormatProviderMethods());
 
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
@@ -440,7 +443,8 @@ namespace PurityAnalyzer
                     Utils.GetKnownReturnsNewObjectMethods(context.SemanticModel),
                     Utils.GetKnownPureTypes(context.SemanticModel),
                     Utils.GetKnownNotUsedAsObjectTypeParameters(),
-                    new Dictionary<string, string[]>()); //TODO: get from file
+                    new Dictionary<string, string[]>(), //TODO: get from file
+                    Utils.GetKnownPureOnInvariantIFormatProviderMethods());
 
             var propertyDeclarationSyntax = (PropertyDeclarationSyntax)context.Node;
 

@@ -163,6 +163,7 @@
     <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToTypeParameters\ClassTypeParameterTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CastingAsItRelatesToTypeParameters\MethodTypeParameterTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\DifferentProjectsTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\FormattableStringInvariantTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\InvokingStaticMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomAttributesTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\CustomComparisonOperatorsTests.cs" />

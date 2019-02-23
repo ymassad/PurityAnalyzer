@@ -62,7 +62,13 @@ namespace PurityAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to System.Linq.Enumerable, Where: TSource
+        ///System.Linq.Enumerable, Select: TSource, TResult
+        ///System.Linq.Enumerable, SelectMany: TSource,TCollection,TResult
+        ///System.Linq.Enumerable, First: TSource
+        ///System.Linq.Enumerable, GroupBy: TSource,TElement,TResult
+        ///System.Collections.Generic.List`1, ConvertAll(System.Converter`2): TOutput
+        ///System.Linq.ImmutableArrayExtensions, Select: T, TResult.
         /// </summary>
         internal static string NotUsedAsObjectsTypeParameters {
             get {
@@ -122,6 +128,15 @@ namespace PurityAnalyzer {
         internal static string PureMethods {
             get {
                 return ResourceManager.GetString("PureMethods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System.Int32, ToString(System.String, System.IFormatProvider).
+        /// </summary>
+        internal static string PureOnInvariantIFormatProviderMethods {
+            get {
+                return ResourceManager.GetString("PureOnInvariantIFormatProviderMethods", resourceCulture);
             }
         }
         

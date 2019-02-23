@@ -22,7 +22,7 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             HashSet<INamedTypeSymbol> knownPureTypes,
-            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters, Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters)
+            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters, Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters, Dictionary<string, HashSet<MethodDescriptor>> knownPureOnInvariantIFormatProviderMethods)
         {
             KnownPureMethods = knownPureMethods;
             KnownPureExceptLocallyMethods = knownPureExceptLocallyMethods;
@@ -31,6 +31,7 @@ namespace PurityAnalyzer
             KnownPureTypes = knownPureTypes;
             KnownNotUsedAsObjectMethodTypeParameters = knownNotUsedAsObjectMethodTypeParameters;
             KnownNotUsedAsObjectClassTypeParameters = knownNotUsedAsObjectClassTypeParameters;
+            KnownPureOnInvariantIFormatProviderMethods = knownPureOnInvariantIFormatProviderMethods;
         }
 
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureMethods { get; }
@@ -40,6 +41,8 @@ namespace PurityAnalyzer
         public HashSet<INamedTypeSymbol> KnownPureTypes { get; }
         public Dictionary<string, Dictionary<MethodDescriptor, string[]>> KnownNotUsedAsObjectMethodTypeParameters { get; }
         public Dictionary<string, string[]> KnownNotUsedAsObjectClassTypeParameters { get; }
+
+        public Dictionary<string, HashSet<MethodDescriptor>> KnownPureOnInvariantIFormatProviderMethods { get; }
     }
 
     public class ImpuritiesFinder
@@ -61,6 +64,7 @@ namespace PurityAnalyzer
         private IMethodSymbol objectToStringMethod;
         private INamedTypeSymbol iformattableType;
         private IMethodSymbol iformattableTypeToStringMethod;
+        protected internal Maybe<IMethodSymbol> formattableStringInvariantMethod;
 
         public ImpuritiesFinder(
             SemanticModel semanticModel,
@@ -104,6 +108,11 @@ namespace PurityAnalyzer
 
             objectMethodsRelevantToNotUsedAsObject = TypeParametersUsedAsObjectsModule.GetObjectMethodsRelevantToCastingFromGenericTypeParameters(semanticModel);
 
+            formattableStringInvariantMethod =
+                semanticModel.Compilation.GetTypeByMetadataName(typeof(FormattableString).FullName)
+                .ToMaybe() //FormattableString does not exist in all runtimes. E.g. .NET framework < 4.6
+                .ChainValue(x => x.GetMembers("Invariant").OfType<IMethodSymbol>())
+                .ChainValue(x => x.FirstOrNoValue());
 
             this.knownSymbols = knownSymbols;
         }
@@ -117,9 +126,12 @@ namespace PurityAnalyzer
 
             foreach (var subNode in allNodes)
             {
-                if (ContainsImpureCast(subNode, recursiveState) is CastPurityResult.Impure impure)
+                if(!IsAnInterpolatedStringExpressionThatIsPassedToFormattableStringInvariant(subNode))
                 {
-                    yield return new Impurity(subNode, "Cast is impure" + Environment.NewLine + impure.Reason);
+                    if (ContainsImpureCast(subNode, recursiveState) is CastPurityResult.Impure impure)
+                    {
+                        yield return new Impurity(subNode, "Cast is impure" + Environment.NewLine + impure.Reason);
+                    }
                 }
 
                 if (subNode is CastExpressionSyntax castExpression)
@@ -209,22 +221,22 @@ namespace PurityAnalyzer
                 {
                     if (semanticModel.GetTypeInfo(subNode).ConvertedType.SpecialType == SpecialType.System_String)
                     {
-                        foreach (var impurity in HandleStringInterpolationImplicitlyConvertedToString(
-                            subNode,
+                        foreach (var impurity in DetectImpuritiesInInterpolatedExpressions(
                             interpolatedStringOperation,
-                            recursiveState))
+                            recursiveState,
+                            false))
                             yield return impurity;
                     }
                 }
-
-
             }
         }
 
-        private IEnumerable<Impurity> HandleStringInterpolationImplicitlyConvertedToString(
-            SyntaxNode node,
+        
+
+        private IEnumerable<Impurity> DetectImpuritiesInInterpolatedExpressions(
             IInterpolatedStringOperation interpolatedStringOperation,
-            RecursiveState recursiveState)
+            RecursiveState recursiveState,
+            bool acceptIFormattableToStringMethodsThatArePureOnInvariantIFormatProvider)
         {
             foreach (var interpolatedExpression in interpolatedStringOperation.Parts.OfType<IInterpolationOperation>())
             {
@@ -238,23 +250,46 @@ namespace PurityAnalyzer
                     continue;
                 }
 
-                IMethodSymbol toStringMethodOnType;
-
                 if (implementsIFormattable)
                 {
-                    toStringMethodOnType = GetMatchingMethod(iformattableTypeToStringMethod, type)
+                    var toStringMethodOnType = GetMatchingMethod(iformattableTypeToStringMethod, type)
                         .ValueOrThrow("Unexpected: cannot find ToString method on type");
+
+                    if (acceptIFormattableToStringMethodsThatArePureOnInvariantIFormatProvider)
+                    {
+                        if (!knownSymbols.KnownPureOnInvariantIFormatProviderMethods
+                                .TryGetValue(
+                                    Utils.GetFullMetaDataName(toStringMethodOnType.ContainingType),
+                                    out var methods) || !methods.AnyMatches(toStringMethodOnType))
+                        {
+                            if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
+                            {
+                                yield return new Impurity(interpolatedStringOperation.Syntax,
+                                    "ToString method is impure");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
+                        {
+                            yield return new Impurity(interpolatedStringOperation.Syntax, "ToString method is impure");
+                        }
+                    }
+
                 }
                 else
                 {
-                    toStringMethodOnType = GetMatchingMethod(objectToStringMethod, type)
+                    var toStringMethodOnType = GetMatchingMethod(objectToStringMethod, type)
                         .ValueOrThrow("Unexpected: cannot find ToString method on type");
+
+                    if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
+                    {
+                        yield return new Impurity(interpolatedStringOperation.Syntax, "ToString method is impure");
+                    }
                 }
  
-                if (!IsMethodPure(knownSymbols, semanticModel, toStringMethodOnType, recursiveState))
-                {
-                    yield return new Impurity(interpolatedStringOperation.Syntax, "ToString method is impure");
-                }
+
             }
         }
 
@@ -1201,10 +1236,56 @@ namespace PurityAnalyzer
                             acceptedPurityType, node, knownSymbols, semanticModel, recursiveState);
             }
 
+            if (formattableStringInvariantMethod.HasValueAnd(invariant => invariant.Equals(method)))
+            {
+                var invocationExpression = node.Parent as InvocationExpressionSyntax ??
+                                           node.Parent.Parent as InvocationExpressionSyntax ??
+                                           throw new Exception("Unable to find InvocationExpressionSyntax");
+
+                var parameter = invocationExpression.ArgumentList.Arguments.Single().Expression;
+
+                if (parameter is InterpolatedStringExpressionSyntax pp)
+                {
+                    var impurities = DetectImpuritiesInInterpolatedExpressions(
+                        (IInterpolatedStringOperation) semanticModel.GetOperation(pp),
+                        recursiveState,
+                        true);
+
+                    foreach (var impurity in impurities)
+                        yield return impurity;
+
+                    yield break;
+                }
+            }
+
             if (!IsMethodPure(knownSymbols, semanticModel, method, recursiveState, acceptedPurityType))
             {
                 yield return new Impurity(node, "Method is impure");
             }
+        }
+
+        private bool IsAnInterpolatedStringExpressionThatIsPassedToFormattableStringInvariant(SyntaxNode node)
+        {
+            if (formattableStringInvariantMethod.HasNoValue)
+                return false;
+
+            if (!(node is InterpolatedStringExpressionSyntax interpolatedString))
+                return false;
+
+            if (!(interpolatedString.Parent is ArgumentSyntax argument))
+                return false;
+
+            if (!(argument.Parent is ArgumentListSyntax argList))
+                return false;
+
+            if (!(argList.Parent is InvocationExpressionSyntax invocation))
+                return false;
+
+            var invokedMethod =
+                ((IInvocationOperation) semanticModel.GetOperation(invocation))
+                .TargetMethod;
+
+            return invokedMethod.Equals(formattableStringInvariantMethod.GetValue());
         }
 
         private IEnumerable<Impurity> HandleTypeParametersForMethodInvocation(

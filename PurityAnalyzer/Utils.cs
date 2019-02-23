@@ -1156,5 +1156,18 @@ namespace PurityAnalyzer
                     x => x.Key,
                     x => x.ToDictionary(y => y.Method, y=> y.typeParams));
         }
+
+        public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureOnInvariantIFormatProviderMethods()
+        {
+            var pureMethodsExceptLocallyFileContents =
+                Resources.PureOnInvariantIFormatProviderMethods;
+
+            return pureMethodsExceptLocallyFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(Utils.ParseMethodDescriptorLine)
+                .GroupBy(x => x.Type, x => x.Method)
+                .ToDictionary(
+                    x => x.Key,
+                    x => new HashSet<MethodDescriptor>(x));
+        }
     }
 }

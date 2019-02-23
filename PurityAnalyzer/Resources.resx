@@ -130,6 +130,9 @@
   <data name="PureMethods" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\PureMethods.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="PureOnInvariantIFormatProviderMethods" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\PureOnInvariantIFormatProviderMethods.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="PureTypes" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\PureTypes.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
