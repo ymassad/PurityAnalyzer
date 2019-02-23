@@ -22,7 +22,9 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             HashSet<INamedTypeSymbol> knownPureTypes,
-            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters, Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters, Dictionary<string, HashSet<MethodDescriptor>> knownPureOnInvariantIFormatProviderMethods)
+            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters,
+            Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters,
+            Dictionary<string, HashSet<MethodDescriptor>> knownPureOnInvariantIFormatProviderMethods)
         {
             KnownPureMethods = knownPureMethods;
             KnownPureExceptLocallyMethods = knownPureExceptLocallyMethods;
