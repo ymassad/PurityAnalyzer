@@ -132,6 +132,307 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAnInt16ExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        Int16 i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAnInt64ExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        Int64 i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasADateTimeExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        var i = new DateTime(2019,1,1);
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAFloatExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        float i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasADoubleExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        double i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAByteExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        byte i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasADecimalExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        decimal i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasASByteExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        sbyte i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAUInt32ExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        uint i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAUInt16ExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        UInt16 i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasAUInt64ExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        UInt64 i = 1;
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void MethodThatCallsTheInvariantMethodPassingAInterpolatedStringThatHasATimeSpanExpressionIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static string DoSomething()
+    {
+        TimeSpan i = new TimeSpan(20, 0, 0);
+
+        return FormattableString.Invariant($""{i}"");
+    }
+}";
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+
+            dignostics.Length.Should().Be(0);
+        }
+
+
 
         [Test]
         public void MethodThatCallsTheInvariantMethodPassingStringInterpolationWithAnExpressionOfACustomSealedTypeThatHasAnImpureToStringMethodIsImpure()
