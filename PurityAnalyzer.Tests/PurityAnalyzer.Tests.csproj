@@ -211,6 +211,7 @@
     <Compile Include="IsPureAttributeOnMethod\DotNetMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\SimpleDotNetMethodTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\StringInterpolationTests.cs" />
+    <Compile Include="IsPureAttributeOnMethod\SystemObjectTests.cs" />
     <Compile Include="IsPureAttributeOnProperty\IsPureAttributeOnPropertyTests.cs" />
     <Compile Include="IsPureAttributeOnClass\IsPureAttributeOnClassTests.cs" />
     <Compile Include="IsPureAttributeOnMethod\MethodCallingTests.cs" />
