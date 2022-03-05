@@ -304,6 +304,8 @@ public static class Module1
 
             foreach (var c in GetPureCasesForDecimal()) yield return c;
 
+            foreach (var c in GetPureCasesForObject()) yield return c;
+
             yield return @"var a = ((int?)1).HasValue";
             yield return @"var a = ((int?)1).Value";
 
@@ -1047,6 +1049,11 @@ public static class Module1
             //TODO: continue working on ImmutableArray
         }
 
+        public static IEnumerable<string> GetPureCasesForObject()
+        {
+            yield return @"var a = new object()";
+            yield return @"var a = new object().Equals(new object())";
+        }
 
         public static IEnumerable<string> GetImpureCases()
         {
@@ -1068,7 +1075,9 @@ public static class Module1
 
             yield return "new System.Text.StringBuilder().AppendLine()"; //Environment.NewLine is not pure!?
 
-            yield return @"var a = (IEnumerable<char>) ""1"""; //this is impure because string.GetHashCode is impure while IEnumerable<char>.GetHashCode = Object.GetHashCode is pure
+            yield return @"var a = (IEnumerable<char>) ""1"""; //this is impure because string.GetHashCode is impure while IEnumerable<char>.GetHashCode = Object.GetHashCode is pure. TODO: reconsider this after adding concept of [IsObjectGetHashCode]
+
+            yield return @"var a = new object().GetHashCode()";
         }
     }
 }
