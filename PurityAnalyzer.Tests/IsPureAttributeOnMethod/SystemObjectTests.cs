@@ -33,7 +33,6 @@ public static class Module1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().Be(0);
-
         }
 
         [Test]
@@ -61,6 +60,66 @@ public static class Module1
             dignostics.Length.Should().BePositive();
 
         }
+
+        [Test]
+        public void AccessingGetHashCodeOnParameterOfTypeThatInheritsFromObjectAndDoesNotOverrideMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething(Class1 o)
+    {
+        return o.GetHashCode();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void AccessingGetHashCodeOnNewClassThatInheritsFromObjectAndDoesNotOverrideGetHashCodeIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething()
+    {
+        var o = new Class1();
+
+        return o.GetHashCode();
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
 
 
         //TODO: what happens if we cast a method into a delegate and pass it to a function when the method returns new object? Or when it is pure except locally, etc.
