@@ -56,6 +56,16 @@ namespace PurityAnalyzer.Tests
             return RunPurityAnalyzer(content, Maybe.NoValue, additionalReferences);
         }
 
+        public static Diagnostic[] RunPurityAnalyzerWithImmutableCollections(
+            string content, params MetadataReference[] additionalReferences)
+        {
+            return RunPurityAnalyzer(
+                content,
+                Maybe.NoValue,
+                additionalReferences.Concat(GetAllReferencesNeededForType(typeof(ImmutableArray<>))).ToArray());
+        }
+
+
         public static Diagnostic[] RunPurityAnalyzer(string content, Maybe<string> secondFileContent,
             params MetadataReference[] additionalReferences)
         {
@@ -183,15 +193,15 @@ namespace PurityAnalyzer.Tests
 
         public static MetadataReference[] GetAllReferencesNeededForType(Type type)
         {
-            var immutableCollectionsAssembly = type.Assembly;
+            var assembly = type.Assembly;
 
             var files =
-                immutableCollectionsAssembly.GetReferencedAssemblies()
+                assembly.GetReferencedAssemblies()
                     .Select(x => Assembly.Load(x.FullName))
                     .Select(x => x.Location)
                     .ToList();
 
-            files.Add(immutableCollectionsAssembly.Location);
+            files.Add(assembly.Location);
 
             return files.Select(x => MetadataReference.CreateFromFile(x)).Cast<MetadataReference>().ToArray();
         }
