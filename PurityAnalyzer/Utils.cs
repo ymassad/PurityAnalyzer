@@ -986,7 +986,24 @@ namespace PurityAnalyzer
             var pureTypes =
                 pureTypesFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-            return new HashSet<INamedTypeSymbol>(pureTypes.Select(x => semanticModel1.Compilation.GetTypeByMetadataName(x)));
+            return new HashSet<INamedTypeSymbol>(
+                pureTypes
+                    .SelectMany(x =>
+                    {
+                        var compilation = semanticModel1.Compilation;
+
+                        var typeByMetadataName = compilation.GetTypeByMetadataName(x);
+
+                        if (typeByMetadataName != null)
+                            return new[] {typeByMetadataName};
+
+                        return compilation.References
+                            .Select(compilation.GetAssemblyOrModuleSymbol)
+                            .OfType<IAssemblySymbol>()
+                            .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(x))
+                            .Where(z => z != null)
+                            .ToArray();
+                    }));
         }
 
         public static SemanticModel GetSemanticModel(
