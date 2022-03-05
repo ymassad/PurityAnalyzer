@@ -84,6 +84,7 @@ System.Xml.XmlDocument, .ctor
 System.Globalization.NumberFormatInfo, get_InvariantInfo
 System.Globalization.NumberFormatInfo, GetFormat(System.Type)
 System.ValueType, .ctor
+System.ValueType, ToString
 System.Int32, op_Addition
 System.Int32, op_Subtraction
 System.Int32, op_LessThan
@@ -281,7 +282,7 @@ System.Object, .ctor
 System.Object, ToString()
 System.Object, GetHashCode()
 System.Object, GetType()
-System.Object, Equals()
+System.Object, Equals(System.Object)
 System.Attribute, .ctor
 System.Collections.Generic.List`1, .ctor()
 System.Collections.Generic.List`1, .ctor(System.Int32)
