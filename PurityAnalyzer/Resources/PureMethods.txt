@@ -280,7 +280,6 @@ System.UIntPtr, ToUInt64
 System.UIntPtr, ToString()
 System.Object, .ctor
 System.Object, ToString()
-System.Object, GetHashCode()
 System.Object, GetType()
 System.Object, Equals(System.Object)
 System.Attribute, .ctor
