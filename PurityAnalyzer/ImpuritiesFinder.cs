@@ -1223,7 +1223,7 @@ namespace PurityAnalyzer
                 return false;
             }
 
-            PurityType acceptedPurityType = PurityType.Pure;
+            PurityType acceptedPurityType;
 
             if ((purityType == PurityType.PureExceptLocally || purityType == PurityType.PureExceptReadLocally)
                 && IsAccessingLocalMethod(node))
@@ -1235,7 +1235,7 @@ namespace PurityAnalyzer
                 acceptedPurityType =
                     Utils
                         .ChangeAcceptedPurityTypeBasedOnWhetherExpressionRepresentsAccessOnNewObjectOrParameterBasedAccess(
-                            acceptedPurityType, node, knownSymbols, semanticModel, recursiveState);
+                            PurityType.Pure, node, knownSymbols, semanticModel, recursiveState);
             }
 
             if (formattableStringInvariantMethod.HasValueAnd(invariant => invariant.Equals(method)))
