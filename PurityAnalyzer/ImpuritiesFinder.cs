@@ -1247,6 +1247,10 @@ namespace PurityAnalyzer
             {
                 acceptedPurityType = purityType;
             }
+            else if (purityType == PurityType.IsObjectGetHashCode)
+            {
+                acceptedPurityType = PurityType.IsObjectGetHashCode;
+            }
             else
             {
                 acceptedPurityType =

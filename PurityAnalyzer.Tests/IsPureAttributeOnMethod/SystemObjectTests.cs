@@ -449,5 +449,55 @@ public static class Module1
 
         }
 
+        [Test]
+        public void CallingDistinctAndCountOnArrayOfNewObjectsDefiningGetHashCodeAndEqualsBasedOnObjectTypedMember_MethodIsPure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+using System.Collections.Immutable;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public object Member {get;}
+
+    public Class1(object member)
+    {
+        this.Member = member;
+    }
+
+    public override int GetHashCode()
+    {
+        return Member.GetHashCode();
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Class1 c && Member == c.Member;
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething2()
+    {
+        var o1 = new Class1(new object());
+        var o2 = new Class1(new object());
+        
+        return ImmutableArray.Create(o1, o2).Distinct().Count();
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzerWithImmutableCollections(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }

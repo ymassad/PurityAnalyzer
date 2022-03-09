@@ -282,6 +282,7 @@ System.Object, .ctor
 System.Object, ToString()
 System.Object, GetType()
 System.Object, Equals(System.Object)
+System.Object, op_Equality(System.Object, System.Object)
 System.Attribute, .ctor
 System.Collections.Generic.List`1, .ctor()
 System.Collections.Generic.List`1, .ctor(System.Int32)
