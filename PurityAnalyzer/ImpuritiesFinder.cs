@@ -67,6 +67,7 @@ namespace PurityAnalyzer
         private INamedTypeSymbol iformattableType;
         private IMethodSymbol iformattableTypeToStringMethod;
         protected internal Maybe<IMethodSymbol> formattableStringInvariantMethod;
+        private readonly IMethodSymbol objectGetHashCode;
 
         public ImpuritiesFinder(
             SemanticModel semanticModel,
@@ -115,6 +116,8 @@ namespace PurityAnalyzer
                 .ToMaybe() //FormattableString does not exist in all runtimes. E.g. .NET framework < 4.6
                 .ChainValue(x => x.GetMembers("Invariant").OfType<IMethodSymbol>())
                 .ChainValue(x => x.FirstOrNoValue());
+
+            objectGetHashCode = objectType.GetMembers("GetHashCode").Cast<IMethodSymbol>().Single();
 
             this.knownSymbols = knownSymbols;
         }
