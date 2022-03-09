@@ -1,0 +1,47 @@
+﻿Object.GetHashCode is special. new Object().GetHashCode() is impure because each time you do this you are likely to get a new value.
+
+But which part of it is impure? new Object() or GetHashCode()?
+
+We can argue both ways.
+
+We can say that new Object() assigns a "random" hashcode to the object. Or we can say that GetHashCode() gets the "random" value.
+
+We don't want to mark new Object() as impure in C#.
+
+This is the case because new Object() is used in many places. Even when you do new Class1(), you are calling new object() under the hood.
+
+We also don't want to mark GetHashCode() as impure. But the reason for this one is more subtle.
+
+Consider the IEnumerable<T>.Contains method. Is this method pure? It depends on the implementation of T.Equals and T.GetHashCode.
+
+In the case when T inherits from Object and does not override Equals or GetHashCode, IEnumerable<T>.Contains is pure.
+
+If we mark Object.GetHashCode as impure, the analyzer will consider IEnumerable<T>.Contains to be pure even if T.GetHashCode is actually impure (like updates global state).
+
+This is related to the concept of how casting is handled in PurityAnalyzer.
+
+The following is the plan:
+
+We consider new Object() to be pure.
+
+Object.GetHashCode() will have a special purity designation, a "object.GetHashCode purity". For now, let's say Object.GetHashCode() is marked with an attribute called [IsObjectGetHashCodeAttribute].
+
+For IEnumerable<T>.Contains to be pure, T.GetHashCode() should at least have "object.GetHashCode purity".
+
+By the way, this is also true for String.GetHashCode(). String.GetHashCode() is impure depending on UseRandomizedStringHashAlgorithm. I think we need to treat String.GetHashCode() like we treat Object.GetHashCode().
+
+I see two levels of implementing these ideas:
+
+1. Handle some pure cases relating to GetHashCode (complete approach):
+
+[IsPure]
+public static int DoSomething(Class1 o)
+{
+    return o.GetHashCode();
+}
+
+One idea here is to also mark parameters as [IsObjectGetHashCode].
+
+2. Consider those cases impure for now and just handle the following (partial approach):
+
+A method overriding Object.GetHashCode can be marked with [IsObjectGetHashCodeAttribute] and when casting to Object or to T, the source of the casting needs to have GetHashCode that has "object.GetHashCode purity". 
