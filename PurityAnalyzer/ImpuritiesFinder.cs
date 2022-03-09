@@ -721,7 +721,7 @@ namespace PurityAnalyzer
 
                     if (!legalCastFromNewObjectOrParameter)
                     {
-                        if (!IsGreaterOrEqaulPurity(
+                        if (!IsGreaterOrEqualPurity(
                             srcPurity,
                             destPurity))
                         {
@@ -932,7 +932,7 @@ namespace PurityAnalyzer
                 || x is IndexerDeclarationSyntax);
         }
 
-        public static bool IsGreaterOrEqaulPurity(Maybe<PurityType> type, Maybe<PurityType> than)
+        public static bool IsGreaterOrEqualPurity(Maybe<PurityType> type, Maybe<PurityType> than)
         {
             if (type.HasNoValue && than.HasNoValue)
                 return true;
@@ -943,10 +943,10 @@ namespace PurityAnalyzer
             if (type.HasNoValue && than.HasValue)
                 return false;
 
-            return IsGreaterOrEqaulPurity(type.GetValue(), than.GetValue());
+            return IsGreaterOrEqualPurity(type.GetValue(), than.GetValue());
         }
 
-        public static bool IsGreaterOrEqaulPurity(PurityType type, PurityType than)
+        public static bool IsGreaterOrEqualPurity(PurityType type, PurityType than)
         {
             if (type == PurityType.Pure)
             {
