@@ -825,6 +825,11 @@ namespace PurityAnalyzer
             return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "AssumeIsPureAttribute");
         }
 
+        public static bool SymbolHasAssumeIsObjectGetHashCodeAttribute(ISymbol symbol)
+        {
+            return Utils.GetAllAttributes(symbol).Any(x => x.AttributeClass.Name == "IsObjectGetHashCodeAttribute");
+        }
+
         public static IMethodSymbol FindMostDerivedMethod(IMethodSymbol[] allMethods, IMethodSymbol method)
         {
             var current = method;

@@ -4,6 +4,7 @@ namespace PurityAnalyzer
     {
         Pure,
         PureExceptReadLocally,
-        PureExceptLocally
+        PureExceptLocally,
+        IsObjectGetHashCode
     }
 }

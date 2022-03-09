@@ -949,12 +949,26 @@ namespace PurityAnalyzer
         public static bool IsGreaterOrEqaulPurity(PurityType type, PurityType than)
         {
             if (type == PurityType.Pure)
+            {
                 return true;
+            }
 
             if (type == PurityType.PureExceptReadLocally)
+            {
                 return than == PurityType.PureExceptReadLocally || than == PurityType.PureExceptLocally;
+            }
 
-            return than == PurityType.PureExceptLocally;
+            if (type == PurityType.PureExceptLocally)
+            {
+                return than == PurityType.PureExceptLocally;
+            }
+
+            if (type == PurityType.IsObjectGetHashCode)
+            {
+                return than == PurityType.IsObjectGetHashCode;
+            }
+
+            throw new Exception("Invalid PurityType");
         }
 
         private IEnumerable<Impurity> GetImpurities2(ObjectCreationExpressionSyntax node,
@@ -1502,6 +1516,9 @@ namespace PurityAnalyzer
             if (IsMethodPure(knownSymbols1, semanticModel1, method, recursiveState, PurityType.PureExceptLocally))
                 return PurityType.PureExceptLocally;
 
+            if (IsMethodPure(knownSymbols1, semanticModel1, method, recursiveState, PurityType.IsObjectGetHashCode))
+                return PurityType.IsObjectGetHashCode;
+
             return Maybe.NoValue;
         }
 
@@ -1524,6 +1541,19 @@ namespace PurityAnalyzer
             RecursiveState recursiveState,
             PurityType purityType = PurityType.Pure)
         {
+            if (purityType == PurityType.IsObjectGetHashCode)
+            {
+                var objectType = semanticModel1.Compilation.ObjectType;
+
+                var objectGetHashCode = objectType.GetMembers("GetHashCode").Cast<IMethodSymbol>().Single();
+
+                if (method.Equals(objectGetHashCode))
+                    return true;
+
+                if (Utils.SymbolHasAssumeIsObjectGetHashCodeAttribute(method.ContainingType))
+                    return true;
+            }
+
             if (recursiveState.MethodsInStack.Contains((method, purityType)))
                 return true;
 
