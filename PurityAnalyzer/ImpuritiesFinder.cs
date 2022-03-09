@@ -62,10 +62,10 @@ namespace PurityAnalyzer
         private readonly INamedTypeSymbol genericIenumerableType;
         private readonly INamedTypeSymbol genericListType;
         private readonly KnownSymbols knownSymbols;
-        private IMethodSymbol[] objectMethodsRelevantToNotUsedAsObject;
-        private IMethodSymbol objectToStringMethod;
-        private INamedTypeSymbol iformattableType;
-        private IMethodSymbol iformattableTypeToStringMethod;
+        private readonly IMethodSymbol[] objectMethodsRelevantToNotUsedAsObject;
+        private readonly IMethodSymbol objectToStringMethod;
+        private readonly INamedTypeSymbol iformattableType;
+        private readonly IMethodSymbol iformattableTypeToStringMethod;
         protected internal Maybe<IMethodSymbol> formattableStringInvariantMethod;
         private readonly IMethodSymbol objectGetHashCode;
 
