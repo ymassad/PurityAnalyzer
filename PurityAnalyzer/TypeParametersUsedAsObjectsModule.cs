@@ -92,26 +92,18 @@ namespace PurityAnalyzer
                     knownSymbols, recursiveStateForNotUsedAsObject).Any();
             }
 
-            if (typeParameter.DeclaringMethod != null)
+            if (knownSymbols.KnownNotUsedAsObjectMethodTypeParameters.TryGetValue(
+                    Utils.GetFullMetaDataName(method.ContainingType),
+                    out var methods) &&
+                methods.Keys.FirstOrNoValue(x => x.Matches(method))
+                    .HasValueAnd(x =>
+                    {
+                        var typeParamDescs = methods[x];
+
+                        return typeParamDescs.Any(tpd => Utils.Matches(tpd, method, typeParameter));
+                    }))
             {
-                if (knownSymbols.KnownNotUsedAsObjectMethodTypeParameters.TryGetValue(
-                        Utils.GetFullMetaDataName(typeParameter.DeclaringMethod.ContainingType),
-                        out var methods) &&
-                    methods.Keys.FirstOrNoValue(x => x.Matches(typeParameter.DeclaringMethod))
-                        .HasValueAnd(x => methods[x].Contains(typeParameter.Name)))
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (knownSymbols.KnownNotUsedAsObjectClassTypeParameters.TryGetValue(
-                        Utils.GetFullMetaDataName(typeParameter.DeclaringType),
-                        out var methods) &&
-                    methods.Contains(typeParameter.Name))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;

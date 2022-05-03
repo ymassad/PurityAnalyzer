@@ -22,7 +22,7 @@ namespace PurityAnalyzer
             Dictionary<string, HashSet<MethodDescriptor>> knownPureExceptReadLocallyMethods,
             Dictionary<string, HashSet<MethodDescriptor>> knownReturnsNewObjectMethods,
             HashSet<INamedTypeSymbol> knownPureTypes,
-            Dictionary<string, Dictionary<MethodDescriptor, string[]>> knownNotUsedAsObjectMethodTypeParameters,
+            Dictionary<string, Dictionary<MethodDescriptor, Utils.TypeParamDesc[]>> knownNotUsedAsObjectMethodTypeParameters,
             Dictionary<string, string[]> knownNotUsedAsObjectClassTypeParameters,
             Dictionary<string, HashSet<MethodDescriptor>> knownPureOnInvariantIFormatProviderMethods)
         {
@@ -41,7 +41,7 @@ namespace PurityAnalyzer
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureExceptReadLocallyMethods { get; }
         public Dictionary<string, HashSet<MethodDescriptor>> KnownReturnsNewObjectMethods { get; }
         public HashSet<INamedTypeSymbol> KnownPureTypes { get; }
-        public Dictionary<string, Dictionary<MethodDescriptor, string[]>> KnownNotUsedAsObjectMethodTypeParameters { get; }
+        public Dictionary<string, Dictionary<MethodDescriptor, Utils.TypeParamDesc[]>> KnownNotUsedAsObjectMethodTypeParameters { get; }
         public Dictionary<string, string[]> KnownNotUsedAsObjectClassTypeParameters { get; }
 
         public Dictionary<string, HashSet<MethodDescriptor>> KnownPureOnInvariantIFormatProviderMethods { get; }
@@ -1337,21 +1337,31 @@ namespace PurityAnalyzer
 
                     var constraintTypes = param.ConstraintTypes;
 
+                    //TODO: are static constructors checked when we have Class1<T>.Method1()?
+                    var methodUseTAsObjectIncludingStaticConstructorsIfRelevant = TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(
+                        method,
+                        semanticModel,
+                        param,
+                        objectMethodsRelevantToCastingFromGenericTypeParameters,
+                        knownSymbols,
+                        //TODO: should I merge RecursiveStateForNotUsedAsObject and RecursiveState, what test will require this?
+                        RecursiveStateForNotUsedAsObject.Empty);
+
                     if (constraintTypes.IsEmpty)
                     {
-                        //TODO: are static constructors checked when we have Class1<T>.Method1()?
-                        if (TypeParametersUsedAsObjectsModule.DoesMethodUseTAsObject_IncludingStaticConstructorsIfRelevant(
-                            method,
-                            semanticModel,
-                            param,
-                            objectMethodsRelevantToCastingFromGenericTypeParameters,
-                            knownSymbols,
-                            //TODO: should I merge RecursiveStateForNotUsedAsObject and RecursiveState, what test will require this?
-                            RecursiveStateForNotUsedAsObject.Empty))
+                        if (methodUseTAsObjectIncludingStaticConstructorsIfRelevant)
                         {
                             constraintTypes = constraintTypes.Add(objectType);
                         }
                     }
+                    else if (constraintTypes.Contains(objectType))
+                    {
+                        if (!methodUseTAsObjectIncludingStaticConstructorsIfRelevant)
+                        {
+                            constraintTypes = constraintTypes.Remove(objectType);
+                        }
+                    }
+
 
                     //TODO: what if there is a constraint of type say ISomething. What happens if T is marked with [NotUsedAsObject]? Should we take that into account when we check the cast?
 
@@ -1610,6 +1620,7 @@ namespace PurityAnalyzer
                         return true;
                 }
 
+                //TODO: what about other locations?
                 var location = method.Locations.First();
 
                 var locationSourceTree = location.SourceTree;

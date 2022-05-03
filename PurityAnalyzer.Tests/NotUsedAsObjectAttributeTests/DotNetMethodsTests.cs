@@ -187,7 +187,7 @@ public static class Module1
         }
 
         [Test]
-        public void CallingListConvertAllAndUsingTypeArgumentForTResultThatHasImpureToStringMethod_KeepsMethodPure()
+        public void CallingListConvertAllAndUsingTypeArgumentForTOutputThatHasImpureToStringMethod_KeepsMethodPure()
         {
             string code = $@"
 using System;

@@ -889,13 +889,18 @@ namespace PurityAnalyzer
             return false;
         }
 
-        public static (string Type, MethodDescriptor Method, string[] typeParams) ParseMethodDescriptorAndTypeParametersLine(string line)
+        public static (string Type, MethodDescriptor Method, TypeParamDesc[] typeParams) ParseMethodDescriptorAndTypeParametersLine(string line)
         {
             var seperatedByColumn = line.Split(new []{":"}, StringSplitOptions.RemoveEmptyEntries);
 
             (var type, var method) = ParseMethodDescriptorLine(seperatedByColumn[0]);
 
-            var typeParams = seperatedByColumn[1].Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
+            var typeParams =
+                seperatedByColumn[1]
+                    .Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Select(x => ParseTypeParamDesc(x))
+                    .ToArray();
 
             return (type, method, typeParams);
         }
@@ -1165,7 +1170,7 @@ namespace PurityAnalyzer
                 .ToList();
         }
 
-        public static Dictionary<string, Dictionary<MethodDescriptor, string[]>> GetKnownNotUsedAsObjectTypeParameters()
+        public static Dictionary<string, Dictionary<MethodDescriptor, TypeParamDesc[]>> GetKnownNotUsedAsObjectTypeParameters()
         {
             var notUsedAsObjectsTypeParametersFileContents =
                 Resources.NotUsedAsObjectsTypeParameters;
@@ -1178,6 +1183,60 @@ namespace PurityAnalyzer
                     x => x.Key,
                     x => x.ToDictionary(y => y.Method, y=> y.typeParams));
         }
+
+        public static bool Matches(TypeParamDesc typeParamDesc, IMethodSymbol methodInQuestion,
+            ITypeParameterSymbol typeParameter)
+        {
+            ISymbol symbol = methodInQuestion;
+
+            for (int i = 0; i < typeParamDesc.Level; i++)
+            {
+                if (symbol == null)
+                    return false;
+
+                symbol = symbol.ContainingSymbol;
+
+            }
+
+            if (symbol == null)
+                return false;
+
+            return symbol.OriginalDefinition.Equals(typeParameter.ContainingSymbol.OriginalDefinition) &&
+                   typeParameter.Name == typeParamDesc.Name;
+        }
+
+        /// <summary>
+        /// Type parameter descriptor as in NotUsedAsObjectsTypeParameters.txt
+        /// </summary>
+        public class TypeParamDesc
+        {
+            public string Name { get; }
+
+            /// <summary>
+            /// 0 means the type parameter is on the method itself. 1 means the type parameter is on the containing type. 2 means the type parameter is on the containing type of the containing type, etc.
+            /// </summary>
+            public int Level { get; }
+
+            public TypeParamDesc(string name, int level)
+            {
+                Name = name;
+                Level = level;
+            }
+        }
+
+        private static TypeParamDesc ParseTypeParamDesc(string str)
+        {
+            if (!str.Contains("."))
+                return new TypeParamDesc(str, 0);
+
+            var parts = str.Split('.');
+
+            if (parts.Take(parts.Length - 1).Any(x => x != "container"))
+                throw new Exception("Invalid type parameter descriptor");
+
+            return new TypeParamDesc(parts.Last(), parts.Length - 1);
+        }
+
 
         public static Dictionary<string, HashSet<MethodDescriptor>> GetKnownPureOnInvariantIFormatProviderMethods()
         {
