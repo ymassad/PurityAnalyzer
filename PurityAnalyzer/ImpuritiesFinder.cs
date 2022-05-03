@@ -1249,7 +1249,14 @@ namespace PurityAnalyzer
             }
             else if (purityType == PurityType.IsObjectGetHashCode)
             {
-                acceptedPurityType = PurityType.IsObjectGetHashCode;
+                if (Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState))
+                {
+                    acceptedPurityType = PurityType.Pure;
+                }
+                else
+                {
+                    acceptedPurityType = PurityType.IsObjectGetHashCode;
+                }
             }
             else
             {

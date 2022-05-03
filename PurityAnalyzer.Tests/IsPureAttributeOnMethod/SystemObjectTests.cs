@@ -394,6 +394,119 @@ public static class Module1
         }
 
         [Test]
+        public void CallingDistinctAndCountOnArrayOfNewObjectsDefiningGetHashCodeAndEquals_GetHashCodeIsImpureBecauseItCallsGetHashCodeOnNewObject_MethodIsImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+using System.Collections.Immutable;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int Age {get;}
+    public int Size {get;}
+
+    public Class1(int age, int size)
+    {
+        this.Age = age;
+        this.Size = size;
+    }
+
+    public static int state = 0;
+
+    public override int GetHashCode()
+    {
+        return new object().GetHashCode();
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Class1 c && Age == c.Age && Size == c.Size;
+    }
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething2()
+    {
+        var o1 = new Class1(15, 20);
+        var o2 = new Class1(16, 30);
+        
+        return ImmutableArray.Create(o1, o2).Distinct().Count();
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzerWithImmutableCollections(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+        [Test]
+        public void CallingDistinctAndCountOnArrayOfNewObjectsDefiningGetHashCodeAndEquals_GetHashCodeIsImpureBecauseItCallsGetHashCodeOnNewObjectCreatedInAnotherMethod_MethodIsImpure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+using System.Collections.Immutable;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int Age {get;}
+    public int Size {get;}
+
+    public Class1(int age, int size)
+    {
+        this.Age = age;
+        this.Size = size;
+    }
+
+    public static int state = 0;
+
+    public override int GetHashCode()
+    {
+        return CreateObject().GetHashCode();
+    }
+
+    public static object CreateObject() => new object();
+
+    public override bool Equals(object obj)
+    {
+        return obj is Class1 c && Age == c.Age && Size == c.Size;
+    }
+
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int DoSomething2()
+    {
+        var o1 = new Class1(15, 20);
+        var o2 = new Class1(16, 30);
+        
+        return ImmutableArray.Create(o1, o2).Distinct().Count();
+    }
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzerWithImmutableCollections(code);
+            dignostics.Length.Should().BePositive();
+
+        }
+
+
+        [Test]
         public void CallingDistinctAndCountOnArrayOfNewObjectsDefiningGetHashCodeAndEquals_EqualsIsImpure_MethodIsImpure()
         {
             string code = @"
