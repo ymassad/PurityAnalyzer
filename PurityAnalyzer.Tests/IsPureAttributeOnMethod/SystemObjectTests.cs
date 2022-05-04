@@ -505,6 +505,7 @@ public static class Module1
 
         }
 
+        //TODO: add more tests related to ObjectGetHashCode purity
 
         [Test]
         public void CallingDistinctAndCountOnArrayOfNewObjectsDefiningGetHashCodeAndEquals_EqualsIsImpure_MethodIsImpure()
