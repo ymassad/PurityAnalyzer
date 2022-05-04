@@ -352,6 +352,9 @@ namespace PurityAnalyzer
                 .ChainValue(x => x.Body)
                 .ValueOrMaybe(() =>
                     expression.Ancestors().OfType<AccessorDeclarationSyntax>().FirstOrNoValue()
+                        .ChainValue(x => x.Body))
+                .ValueOrMaybe(() =>
+                    expression.Ancestors().OfType<ConstructorDeclarationSyntax>().FirstOrNoValue()
                         .ChainValue(x => x.Body));
         }
 

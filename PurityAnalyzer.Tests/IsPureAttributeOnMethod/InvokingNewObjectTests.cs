@@ -78,6 +78,68 @@ public static class Module1
         }
 
         [Test]
+        public void StaticConstructorThatReadsAReadWriteFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    static Module1()
+    {
+        var instance = new Class1();
+
+        var v = instance.a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void StaticConstructorThatReadsAReadWriteFieldOnNewlyCreatedObjectAndThenWritesValueToReadonlyStaticFieldIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public static class Module1
+{
+    public static readonly int field;   
+    [IsPure]
+    static Module1()
+    {
+        var instance = new Class1();
+
+        field = instance.a;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
         public void MethodThatWritesAReadWriteFieldOnNewlyCreatedObjectIsPure()
         {
             string code = @"
