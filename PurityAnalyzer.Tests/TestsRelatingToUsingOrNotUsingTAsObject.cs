@@ -17,7 +17,7 @@ public class IsPureAttribute : Attribute
 {{
 }}
 
-public class Class1
+public class ClassWithImpureToStringEqualsAndGetHashCode
 {{
     public int state;
 
@@ -45,7 +45,7 @@ public static class Module1
     [IsPure]
     public static void DoSomething()
     {{
-        var array = ImmutableArray.Create(new Class1());
+        var array = ImmutableArray.Create(new ClassWithImpureToStringEqualsAndGetHashCode());
     }}
 }}";
 
