@@ -6,3 +6,4 @@ System.Linq.Enumerable, GroupBy: TSource,TElement,TResult
 System.Collections.Generic.List`1, ConvertAll(System.Converter`2): container.T, TOutput
 System.Linq.ImmutableArrayExtensions, Select: T, TResult
 System.Collections.Immutable.ImmutableArray`1, Add: container.T
+System.Collections.Immutable.ImmutableArray, Create: T
