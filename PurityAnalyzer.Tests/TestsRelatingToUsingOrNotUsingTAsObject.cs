@@ -58,8 +58,11 @@ public static class Module1
 
         }
 
-        [Test]
-        public void CallingImmutableArrayAllExtensionMethodWhereTIsClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
+        [TestCase("bool value = array.All(x => true);")]
+        [TestCase("bool value = array.Any();")]
+        [TestCase("bool value = array.Any(x => true);")]
+        public void
+            CallOnImmutableArrayOfClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure(string code1)
         {
             string code = $@"
 using System;
@@ -79,37 +82,7 @@ public static class Module1
     {{
         var array = ImmutableArray.Create(new ClassWithImpureToStringEqualsAndGetHashCode());
 
-        bool value = array.All(x => true);
-    }}
-}}";
-
-            var dignostics = Utilities.RunPurityAnalyzerWithImmutableCollections(code);
-            dignostics.Length.Should().Be(0);
-
-        }
-
-        [Test]
-        public void CallingImmutableArrayParameterlessAnyExtensionMethodWhereTIsClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
-        {
-            string code = $@"
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-
-public class IsPureAttribute : Attribute
-{{
-}}
-
-{ClassWithImpureToStringEqualsAndGetHashCode}
-
-public static class Module1
-{{
-    [IsPure]
-    public static void DoSomething()
-    {{
-        var array = ImmutableArray.Create(new ClassWithImpureToStringEqualsAndGetHashCode());
-
-        bool value = array.Any();
+        {code1}
     }}
 }}";
 
@@ -117,33 +90,5 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
-        [Test]
-        public void CallingImmutableArrayAnyExtensionMethodWhereTIsClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
-        {
-            string code = $@"
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-
-public class IsPureAttribute : Attribute
-{{
-}}
-
-{ClassWithImpureToStringEqualsAndGetHashCode}
-
-public static class Module1
-{{
-    [IsPure]
-    public static void DoSomething()
-    {{
-        var array = ImmutableArray.Create(new ClassWithImpureToStringEqualsAndGetHashCode());
-
-        bool value = array.Any(x => true);
-    }}
-}}";
-
-            var dignostics = Utilities.RunPurityAnalyzerWithImmutableCollections(code);
-            dignostics.Length.Should().Be(0);
-        }
     }
 }
