@@ -6,17 +6,7 @@ namespace PurityAnalyzer.Tests
     [TestFixture]
     public class TestsRelatingToUsingOrNotUsingTAsObject
     {
-        [Test]
-        public void CallingImmutableArrayCreateOnClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
-        {
-            string code = $@"
-using System;
-using System.Collections.Immutable;
-
-public class IsPureAttribute : Attribute
-{{
-}}
-
+        private static readonly string ClassWithImpureToStringEqualsAndGetHashCode = $@"
 public class ClassWithImpureToStringEqualsAndGetHashCode
 {{
     public int state;
@@ -38,7 +28,20 @@ public class ClassWithImpureToStringEqualsAndGetHashCode
         state++;
         return 0;
     }}
+}}";
+
+        [Test]
+        public void CallingImmutableArrayCreateOnClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
+        {
+            string code = $@"
+using System;
+using System.Collections.Immutable;
+
+public class IsPureAttribute : Attribute
+{{
 }}
+
+{ClassWithImpureToStringEqualsAndGetHashCode}
 
 public static class Module1
 {{
