@@ -7,5 +7,17 @@ System.Collections.Generic.List`1, ConvertAll(System.Converter`2): container.T, 
 System.Linq.ImmutableArrayExtensions, Select: T, TResult
 System.Linq.ImmutableArrayExtensions, All: T
 System.Linq.ImmutableArrayExtensions, Any: T
+System.Linq.ImmutableArrayExtensions, SelectMany: TSource, TCollection, TResult
+System.Linq.ImmutableArrayExtensions, Where: T
+System.Linq.ImmutableArrayExtensions, Aggregate: TAccumulate, TResult, T
+System.Linq.ImmutableArrayExtensions, ElementAt: T
+System.Linq.ImmutableArrayExtensions, ElementAtOrDefault: T
+System.Linq.ImmutableArrayExtensions, First: T
+System.Linq.ImmutableArrayExtensions, FirstOrDefault: T
+System.Linq.ImmutableArrayExtensions, Last: T
+System.Linq.ImmutableArrayExtensions, LastOrDefault: T
+System.Linq.ImmutableArrayExtensions, Single: T
+System.Linq.ImmutableArrayExtensions, SingleOrDefault: T
+System.Linq.ImmutableArrayExtensions, ToArray: T
 System.Collections.Immutable.ImmutableArray`1, Add: container.T
 System.Collections.Immutable.ImmutableArray, Create: T

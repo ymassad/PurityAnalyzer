@@ -353,6 +353,17 @@ System.Linq.ImmutableArrayExtensions, Select
 System.Linq.ImmutableArrayExtensions, Where
 System.Linq.ImmutableArrayExtensions, All
 System.Linq.ImmutableArrayExtensions, Any
+System.Linq.ImmutableArrayExtensions, SelectMany
+System.Linq.ImmutableArrayExtensions, Aggregate
+System.Linq.ImmutableArrayExtensions, ElementAt
+System.Linq.ImmutableArrayExtensions, ElementAtOrDefault
+System.Linq.ImmutableArrayExtensions, First
+System.Linq.ImmutableArrayExtensions, FirstOrDefault
+System.Linq.ImmutableArrayExtensions, Last
+System.Linq.ImmutableArrayExtensions, LastOrDefault
+System.Linq.ImmutableArrayExtensions, Single
+System.Linq.ImmutableArrayExtensions, SingleOrDefault
+System.Linq.ImmutableArrayExtensions, ToArray
 System.Collections.Immutable.ImmutableArray`1, GetEnumerator
 System.Decimal, op_Addition
 System.Decimal, op_Subtraction
