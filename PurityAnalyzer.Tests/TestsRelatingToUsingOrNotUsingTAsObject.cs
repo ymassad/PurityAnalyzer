@@ -31,7 +31,7 @@ public class ClassWithImpureToStringEqualsAndGetHashCode
 }}";
 
         [Test]
-        public void CallingImmutableArrayCreateOnClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
+        public void CallingImmutableArrayCreateWhereTIsClassThatHasImpureToStringEqualsAndGetHashCode_LeavesMethodPure()
         {
             string code = $@"
 using System;
