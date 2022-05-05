@@ -279,6 +279,59 @@ public static class Module1
 
         }
 
+        [Test]
+        public void MethodThatReadsLengthOfArrayCreatedInMethodIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static int DoSomething()
+    {
+        int[] arr = {1,2,3};
+        var length = arr.Length;
+        return length;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
+        [Test]
+        public void MethodThatReadsLengthOfArrayPassedAsParameterIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+
+    [IsPure]
+    public static int DoSomething(int[] arr)
+    {
+        var length = arr.Length;
+        return length;
+    }
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 
 

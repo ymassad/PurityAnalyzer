@@ -387,3 +387,4 @@ System.Decimal, .ctor(System.Int64)
 System.Decimal, .ctor(System.UInt64)
 System.Decimal, .ctor(System.Single)
 System.Decimal, .ctor(System.Double)
+System.Array, get_Length
