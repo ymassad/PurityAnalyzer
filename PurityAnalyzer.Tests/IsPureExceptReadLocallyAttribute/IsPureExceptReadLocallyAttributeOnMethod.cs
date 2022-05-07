@@ -795,6 +795,42 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+
+        [Test]
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPrivateInstanceMutableFieldIsPureExceptReadLocally_TwoLevels_SecondFieldIsAPublicReadOnlyField()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureProperty {get; set;}
+}
+
+public class Class3
+{
+    public readonly Class2 Property = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return instance.Property.PureProperty;
+    }
+
+    private Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
         [Test]
         public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInStaticMutableFieldIsNotPureExceptReadLocally()
         {
