@@ -55,5 +55,52 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive("DoSomething will cause global state to be mutated");
         }
+
+        [Test]
+        public void TryingToBreakPureExceptReadLocally_Test1()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state;
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public static class B
+{{
+    public static readonly A A = new A();
+}}
+
+public class C
+{{
+    private readonly A a;
+
+    public C()
+    {{
+        a = B.A;
+    }}
+
+    public void Increment() => a.Increment();
+    public int Read() => a.Read();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(C c2)
+    {{
+        return c2.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive("DoSomething will read global state");
+        }
     }
 }
