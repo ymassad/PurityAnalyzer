@@ -690,7 +690,7 @@ public class Class1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0, "instance (of type Class2) is not under the control of the Class object");
+            dignostics.Length.Should().Be(0);
         }
 
         [Test]
