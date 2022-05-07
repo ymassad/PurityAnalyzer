@@ -44,7 +44,7 @@ public class C
 public static class Module1
 {{
     [IsPure]
-    public static void DoSomething(C c1)
+    public static void DoSomething()
     {{
         var c2 = new C();
 
