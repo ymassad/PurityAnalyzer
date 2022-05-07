@@ -1,0 +1,1 @@
+﻿7 May 2022: For a method to be pure-except-read-locally or pure-except-locally, the read or mutated data must be 100% owned by the object. See the MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPublicInstanceMutableFieldIsNotPureExceptReadLocally test.

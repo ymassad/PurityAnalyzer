@@ -630,8 +630,9 @@ public class Class1
             dignostics.Length.Should().Be(0);
         }
 
+        //This case was changed from pure to impure on 7 May 2022
         [Test]
-        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInInstanceMutableFieldIsPureExceptReadLocally()
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPublicInstanceMutableFieldIsNotPureExceptReadLocally()
         {
             string code = @"
 using System;
@@ -658,7 +659,38 @@ public class Class1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            dignostics.Length.Should().BePositive("The instance field (of type Class2) is not under the control of the Class object");
+        }
+
+        [Test]
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPrivateInstanceMutableFieldIsPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureProperty {get; set;}
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return instance.PureProperty;
+    }
+
+    private Class2 instance = new Class2();
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0, "instance (of type Class2) is not under the control of the Class object");
         }
 
         [Test]
