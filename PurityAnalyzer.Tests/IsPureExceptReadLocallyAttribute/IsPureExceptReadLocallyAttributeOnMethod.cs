@@ -813,7 +813,7 @@ public class Class2
 
 public class Class3
 {
-    public readonly Class2 Property = new Class2();
+    public readonly Class2 Field = new Class2();
 }
 
 public class Class1
@@ -821,7 +821,7 @@ public class Class1
     [IsPureExceptReadLocally]
     public int DoSomething()
     {
-        return instance.Property.PureProperty;
+        return instance.Field.PureProperty;
     }
 
     private Class3 instance = new Class3();
