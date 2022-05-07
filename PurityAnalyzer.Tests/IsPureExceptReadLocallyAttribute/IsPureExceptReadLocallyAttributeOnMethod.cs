@@ -663,6 +663,37 @@ public class Class1
         }
 
         [Test]
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInReadonlyPublicInstanceFieldIsPureExceptReadLocally()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureProperty {get; set;}
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return instance.PureProperty;
+    }
+
+    public readonly Class2 instance = new Class2();
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
         public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPrivateInstanceMutableFieldIsPureExceptReadLocally()
         {
             string code = @"
@@ -726,6 +757,42 @@ public class Class1
 
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive();
+        }
+
+
+        [Test]
+        public void MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPrivateInstanceMutableFieldIsPureExceptReadLocally_TwoLevels()
+        {
+            string code = @"
+using System;
+
+public class IsPureExceptReadLocallyAttribute : Attribute
+{
+}
+
+public class Class2
+{
+    public int PureProperty {get; set;}
+}
+
+public class Class3
+{
+    public Class2 Property {get;} = new Class2();
+}
+
+public class Class1
+{
+    [IsPureExceptReadLocally]
+    public int DoSomething()
+    {
+        return instance.Property.PureProperty;
+    }
+
+    private Class3 instance = new Class3();
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
         }
 
         [Test]
