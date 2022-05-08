@@ -1,1 +1,4 @@
 ﻿7 May 2022: For a method to be pure-except-read-locally or pure-except-locally, the read or mutated data must be 100% owned by the object. See the MethodThatGetsALocalAutomaticPropertyOnAnObjectOfADifferentTypeStoredInPublicInstanceMutableFieldIsNotPureExceptReadLocally test.
+
+There should be no way for a pure-except-locally method to mutate global state.
+There should be no way for a pure-except-read-locally method to read global state.
