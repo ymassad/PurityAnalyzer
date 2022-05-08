@@ -3,6 +3,7 @@ using NUnit.Framework;
 
 namespace PurityAnalyzer.Tests.IsPureExceptReadLocallyAttribute
 {
+    //TODO: 8 May 2022: revise tests based on new understanding of pure-except-read-locally and pure-except-locally
     [TestFixture]
     public class IsPureExceptReadLocallyAttributeOnMethod
     {
