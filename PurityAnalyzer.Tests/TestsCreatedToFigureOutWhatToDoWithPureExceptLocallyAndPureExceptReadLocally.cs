@@ -147,6 +147,89 @@ public static class Module1
         }
 
         [Test]
+        public void PureExceptReadLocally_Test2()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state;
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public class C
+{{
+    private readonly A a;
+
+    public C(A a2)
+    {{
+        a = a2;
+    }}
+
+    public void Increment() => a.Increment();
+    public int Read() => a.Read();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(C c2)
+    {{
+        return c2.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive("C.a is initialized from a constructor parameter and so it could reference global state");
+        }
+
+        [Test]
+        public void PureExceptReadLocally_Test3()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private readonly int state = 1;
+
+    public int Read() => state;
+}}
+
+public class C
+{{
+    private readonly A a;
+
+    public C(A a2)
+    {{
+        a = a2;
+    }}
+
+    public int Read() => a.Read();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(C c2)
+    {{
+        return c2.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0, "A.state is readonly");
+        }
+
+
+        [Test]
         public void PureExceptLocally_Test1()
         {
             string code = $@"
