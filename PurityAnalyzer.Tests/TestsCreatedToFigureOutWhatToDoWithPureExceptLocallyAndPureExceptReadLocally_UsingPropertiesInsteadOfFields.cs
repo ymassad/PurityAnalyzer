@@ -315,6 +315,48 @@ public static class Module1
             dignostics.Length.Should().BePositive("C.a is non-readonly and so it may point to global state");
         }
 
+        [Test]
+        public void PureExceptReadLocally_Test6()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state {{ get; set; }}
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public class C
+{{
+    public A a {{ get; }}
+
+    public C()
+    {{
+        a = new A();
+    }}
+
+    public void Increment() => a.Increment();
+    public int Read() => a.Read();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(C c2)
+    {{
+        return c2.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0, "C.a is non-readonly");
+        }
+
 
         [Test]
         public void PureExceptLocally_Test1()
