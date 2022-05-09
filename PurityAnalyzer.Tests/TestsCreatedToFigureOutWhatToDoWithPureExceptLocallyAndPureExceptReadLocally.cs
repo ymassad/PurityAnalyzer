@@ -353,5 +353,77 @@ public static class Module1
             dignostics.Length.Should().Be(0);
         }
 
+        [Test]
+        public void GlobalState_Test1()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state;
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public static class B
+{{
+    public static readonly A A = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static void DoSomething()
+    {{
+        var a = B.A;
+
+        a.Increment();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive("DoSomething will cause global state to be mutated");
+        }
+
+        [Test]
+        public void GlobalState_Test2()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state;
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public static class B
+{{
+    public static readonly A A = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething()
+    {{
+        var a = B.A;
+
+        return a.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive("DoSomething will read global state");
+        }
+
     }
 }
