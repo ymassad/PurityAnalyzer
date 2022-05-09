@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DoesNotUseClassTypeParameterAsObjectAttributeTests\Tests.cs" />
+    <Compile Include="TestsCreatedToFigureOutWhatToDoWithPureExceptLocallyAndPureExceptReadLocally_UsingPropertiesInsteadOfFields.cs" />
     <Compile Include="TestsCreatedToFigureOutWhatToDoWithPureExceptLocallyAndPureExceptReadLocally.cs" />
     <Compile Include="TestsRelatingToUsingOrNotUsingTAsObject.cs" />
     <Compile Include="IsPureAttributeOnMethod\CallingMethodsOnGenericClassesTests.cs" />
