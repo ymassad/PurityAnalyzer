@@ -102,5 +102,256 @@ public static class Module1
             var dignostics = Utilities.RunPurityAnalyzer(code);
             dignostics.Length.Should().BePositive("DoSomething will read global state");
         }
+
+
+        [Test]
+        public void PureExceptReadLocally_Test1()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    private int state;
+
+    public void Increment() => state++;
+    public int Read() => state;
+}}
+
+public class C
+{{
+    private readonly A a;
+
+    public C()
+    {{
+        a = new A();
+    }}
+
+    public void Increment() => a.Increment();
+    public int Read() => a.Read();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(C c2)
+    {{
+        return c2.Read();
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0, "C.a is readonly and is initialized as a new object");
+        }
+
+        [Test]
+        public void PureExceptLocally_Test1()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    public int state;
+}}
+
+public class C
+{{
+    public A Field = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething()
+    {{
+        var c = new C();
+        
+        c.Field = new A();
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void PureExceptLocally_Test2()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    public int state;
+}}
+
+public class C
+{{
+    public A Field = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(A a)
+    {{
+        var c = new C();
+        
+        c.Field = a;
+
+        c.Field.state = 1;
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive();
+        }
+
+        [Test]
+        public void PureExceptLocally_Test3()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    public int state;
+}}
+
+public class C
+{{
+    public readonly A Field = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething()
+    {{
+        var c = new C();
+        
+        c.Field.state = 1;
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void PureExceptLocally_Test4()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    public int state;
+}}
+
+public class C
+{{
+    public A Field = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething()
+    {{
+        var c = new C();
+        
+        c.Field.state = 1;
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().BePositive("C.Field is public non-readonly");
+        }
+
+        [Test]
+        public void PureExceptLocally_Test5()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class C
+{{
+    public int state;
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething()
+    {{
+        var c = new C();
+        
+        c.state = 1;
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
+        [Test]
+        public void PureExceptLocally_Test6()
+        {
+            string code = $@"
+using System;
+
+public class IsPureAttribute : Attribute {{}}
+
+public class A
+{{
+    public int state;
+}}
+
+public class C
+{{
+    public A Field = new A();
+}}
+
+public static class Module1
+{{
+    [IsPure]
+    public static int DoSomething(A a)
+    {{
+        var c = new C();
+        
+        c.Field = a;
+
+        return 0;
+    }}
+}}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+        }
+
     }
 }
