@@ -344,11 +344,7 @@ namespace PurityAnalyzer
                 return;
 
             bool isAutoPropertyWithGetAccessor =
-                propertyDeclaration.AccessorList != null 
-                && propertyDeclaration.AccessorList.Accessors.Any(x =>
-                    x.Keyword.Kind() == SyntaxKind.GetKeyword)
-                && propertyDeclaration.AccessorList.Accessors.All(x =>
-                    x.Body == null && x.ExpressionBody == null);
+                IsAutoPropertyWithGetAccessor(propertyDeclaration);
 
             if (isAutoPropertyWithGetAccessor)
             {
@@ -371,6 +367,15 @@ namespace PurityAnalyzer
 
                 context.ReportDiagnostic(diagnostic);
             }
+        }
+
+        private static bool IsAutoPropertyWithGetAccessor(PropertyDeclarationSyntax propertyDeclaration)
+        {
+            return propertyDeclaration.AccessorList != null 
+                   && propertyDeclaration.AccessorList.Accessors.Any(x =>
+                       x.Keyword.Kind() == SyntaxKind.GetKeyword)
+                   && propertyDeclaration.AccessorList.Accessors.All(x =>
+                       x.Body == null && x.ExpressionBody == null);
         }
 
 
