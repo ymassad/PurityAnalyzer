@@ -203,6 +203,7 @@ namespace PurityAnalyzer
                 if (objectCreationExpression
                         .ArgumentList != null)
                 {
+                    //TODO: I think that we don't need to check the arguments here. These are not guarantees enough. There should be a better way. Add tests.
                     if (objectCreationExpression
                         .ArgumentList
                         .Arguments.Any(arg =>
