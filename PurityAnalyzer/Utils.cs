@@ -1253,5 +1253,14 @@ namespace PurityAnalyzer
                     x => x.Key,
                     x => new HashSet<MethodDescriptor>(x));
         }
+
+        public static bool IsAutoPropertyWithGetAccessor(PropertyDeclarationSyntax propertyDeclaration)
+        {
+            return propertyDeclaration.AccessorList != null 
+                   && propertyDeclaration.AccessorList.Accessors.Any(x =>
+                       x.Keyword.Kind() == SyntaxKind.GetKeyword)
+                   && propertyDeclaration.AccessorList.Accessors.All(x =>
+                       x.Body == null && x.ExpressionBody == null);
+        }
     }
 }
