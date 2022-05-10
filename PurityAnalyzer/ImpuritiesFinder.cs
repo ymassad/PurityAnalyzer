@@ -1249,6 +1249,7 @@ namespace PurityAnalyzer
             }
             else if (purityType == PurityType.IsObjectGetHashCode)
             {
+                //TODO: revise this. IsAccessOnNewlyCreatedObject is used in multiple places. Add more tests to figure out if there are changes needed. At the point of writing, I don't think IsAccessOnNewlyCreatedObject has a very well defined meaning. Like should the object have been created in the current method?
                 if (Utils.IsAccessOnNewlyCreatedObject(knownSymbols, semanticModel, node, recursiveState))
                 {
                     acceptedPurityType = PurityType.Pure;
