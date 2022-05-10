@@ -511,6 +511,9 @@ namespace PurityAnalyzer
             KnownSymbols knownSymbols,
             RecursiveState recursiveState1)
         {
+            if (IsAutoPropertyWithGetAccessor(propertyDeclaration))
+                return false;
+
             return !GetNonNewObjectReturnsForPropertyGet(propertyDeclaration, semanticModel, knownSymbols, recursiveState1).Any();
         }
 
