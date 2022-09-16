@@ -27,7 +27,6 @@ public static class Module1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-
             dignostics.Length.Should().Be(0);
         }
 
@@ -54,7 +53,6 @@ public static class Module1
 }";
 
             var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-
             dignostics.Length.Should().Be(0);
         }
 
