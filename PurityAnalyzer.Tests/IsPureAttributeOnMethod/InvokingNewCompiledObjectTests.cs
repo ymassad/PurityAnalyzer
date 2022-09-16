@@ -36,8 +36,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -63,8 +62,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -91,8 +89,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -119,8 +116,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -145,8 +141,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -170,8 +165,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -197,8 +191,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -224,8 +217,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -253,8 +245,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -280,8 +271,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -309,8 +299,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -337,8 +326,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -366,8 +354,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -393,8 +380,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -422,8 +408,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -451,8 +436,7 @@ public static class Module1
     public static MutableClassWithPureMethodsExceptLocally Create() => new MutableClassWithPureMethodsExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -477,8 +461,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -501,8 +484,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -527,8 +509,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -554,8 +535,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -582,8 +562,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -608,8 +587,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -636,8 +614,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -665,8 +642,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -691,8 +667,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -712,8 +687,7 @@ public static class Module1
     public static int DoSomething() => new MutableClassWithPurePropertiesExceptLocally().PureExceptLocallyPropertyGetterAndSetter;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
 
@@ -737,8 +711,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -763,8 +736,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -790,8 +762,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -818,8 +789,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -844,8 +814,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -872,8 +841,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
@@ -901,8 +869,7 @@ public static class Module1
     public static MutableClassWithPurePropertiesExceptLocally Create() => new MutableClassWithPurePropertiesExceptLocally();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
 
@@ -928,8 +895,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]

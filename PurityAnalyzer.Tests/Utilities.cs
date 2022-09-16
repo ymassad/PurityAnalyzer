@@ -213,6 +213,12 @@ namespace PurityAnalyzer.Tests
             diagnostics.Length.Should().Be(0);
         }
 
+        public static void AssertPure(string code, params MetadataReference[] additionalReferences)
+        {
+            var diagnostics = Utilities.RunPurityAnalyzer(code, additionalReferences);
+            diagnostics.Length.Should().Be(0);
+        }
+
         public static void AssertImpure(string code)
         {
             var diagnostics = Utilities.RunPurityAnalyzer(code);
