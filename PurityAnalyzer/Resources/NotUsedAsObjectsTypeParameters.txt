@@ -21,3 +21,4 @@ System.Linq.ImmutableArrayExtensions, SingleOrDefault: T
 System.Linq.ImmutableArrayExtensions, ToArray: T
 System.Collections.Immutable.ImmutableArray`1, Add: container.T
 System.Collections.Immutable.ImmutableArray, Create: T
+System.Linq.Enumerable, ToList: TSource

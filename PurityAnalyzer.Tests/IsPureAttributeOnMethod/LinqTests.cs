@@ -276,5 +276,40 @@ public static class Module1
 
         }
 
+
+        [Test]
+        public void CallingToListOnEnumerableOfStringIsPure()
+        {
+            string code = @"
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static List<string> DoSomething()
+    {
+        IEnumerable<string> Strings()
+        {
+            yield return ""s1"";
+            yield return ""s2"";
+        }
+
+        return Strings().ToList();
+    }
+
+
+}";
+
+            var dignostics = Utilities.RunPurityAnalyzer(code);
+            dignostics.Length.Should().Be(0);
+
+        }
+
     }
 }
