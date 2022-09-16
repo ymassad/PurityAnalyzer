@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings;
@@ -204,6 +205,12 @@ namespace PurityAnalyzer.Tests
             files.Add(assembly.Location);
 
             return files.Select(x => MetadataReference.CreateFromFile(x)).Cast<MetadataReference>().ToArray();
+        }
+
+        public static void AssertPure(string code)
+        {
+            var diagnostics = Utilities.RunPurityAnalyzer(code);
+            diagnostics.Length.Should().Be(0);
         }
     }
 }

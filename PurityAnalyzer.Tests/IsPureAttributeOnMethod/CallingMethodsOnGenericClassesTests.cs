@@ -45,8 +45,7 @@ public static class GenericClass<T>
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -132,8 +131,7 @@ public static class GenericClass<T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
 

@@ -26,8 +26,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 

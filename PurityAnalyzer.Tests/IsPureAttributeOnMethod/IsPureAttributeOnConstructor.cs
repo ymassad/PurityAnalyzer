@@ -28,8 +28,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -186,8 +185,7 @@ public static class Utils
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -217,8 +215,7 @@ public static class Utils
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -308,8 +305,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -336,8 +332,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -365,8 +360,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -393,8 +387,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -549,8 +542,7 @@ public static class AnotherClass
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -581,8 +573,7 @@ public static class AnotherClass
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 
@@ -609,8 +600,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
 
         }
 

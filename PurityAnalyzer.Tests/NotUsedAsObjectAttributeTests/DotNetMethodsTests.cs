@@ -47,8 +47,7 @@ public static class Module1
         var result = new []{{new Class1()}}.Where(x => true);
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -69,8 +68,7 @@ public static class Module1
         var result = new []{{new Class1()}}.Select(x => new Class1());
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -91,8 +89,7 @@ public static class Module1
         var result = new []{{new Class1()}}.SelectMany(x => new[]{{new Class1()}});
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -113,8 +110,7 @@ public static class Module1
         var result = new []{{new Class1()}}.First();
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -136,8 +132,7 @@ public static class Module1
     }}
 }}";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -182,8 +177,7 @@ public static class Module1
         var result = new List<Class1>{{new Class1()}}.ConvertAll(x => 'a');
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -205,8 +199,7 @@ public static class Module1
         var result = new List<char> {{'c'}}.ConvertAll(x => new Class1());
     }}
 }}";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
     }
 }
