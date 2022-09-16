@@ -49,8 +49,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -180,8 +179,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -206,8 +204,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -259,8 +256,7 @@ public class Class1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -367,8 +363,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -399,8 +394,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -427,8 +421,7 @@ public class Class1
     int localState = 0;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -458,8 +451,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -487,8 +479,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -519,8 +510,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -547,8 +537,7 @@ public class Class1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -655,8 +644,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -687,8 +675,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -715,8 +702,7 @@ public class Class1
     int localState = 0;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -746,8 +732,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -775,8 +760,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -807,8 +791,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -835,8 +818,7 @@ public class Class1
     private int ImpureProperty { set => state = value; }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -972,8 +954,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1005,8 +986,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -1034,8 +1014,7 @@ public class Class1
     int localState = 0;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -1066,8 +1045,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1096,8 +1074,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1129,8 +1106,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1307,8 +1283,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1334,8 +1309,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1473,8 +1447,7 @@ public class Class1
     public Class3 instance = new Class3();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1548,8 +1521,7 @@ public class Class1
     public Class3 instance = new Class3();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1653,8 +1625,7 @@ public class Class1
     public Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -1684,8 +1655,7 @@ public class Class1
     public Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         //Because the current method could store the target in a field
@@ -1725,8 +1695,7 @@ public class MyClass
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1769,8 +1738,7 @@ public class MyClass
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1806,8 +1774,7 @@ public class MyClass
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1909,8 +1876,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2010,8 +1976,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2113,8 +2078,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2226,8 +2190,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2338,8 +2301,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2443,8 +2405,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2545,8 +2506,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2648,8 +2608,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2750,8 +2709,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2864,8 +2822,7 @@ public class Class2
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -2976,8 +2933,7 @@ public class Class2
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

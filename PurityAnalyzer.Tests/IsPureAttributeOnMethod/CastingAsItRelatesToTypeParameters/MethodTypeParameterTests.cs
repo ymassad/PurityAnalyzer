@@ -80,8 +80,7 @@ public static class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -258,8 +257,7 @@ public static class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -299,8 +297,7 @@ public static class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

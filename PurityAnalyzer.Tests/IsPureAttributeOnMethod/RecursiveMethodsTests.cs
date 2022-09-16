@@ -58,8 +58,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -131,8 +130,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -170,8 +168,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -235,8 +232,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -438,8 +434,7 @@ public class Module1
     public static int Prop1 => Instance[0];
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -485,8 +480,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

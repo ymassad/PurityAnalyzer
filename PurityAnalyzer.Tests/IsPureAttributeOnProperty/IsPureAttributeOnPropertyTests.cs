@@ -55,8 +55,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -79,8 +78,7 @@ public class Class1
     public static int Prop1 => a++;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -105,8 +103,7 @@ public class Class1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -277,8 +274,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -298,8 +294,7 @@ public class Class1
     public static int Prop1 {get; set;}
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -319,8 +314,7 @@ public class Class1
     public int Prop1 {get; set;}
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
     }

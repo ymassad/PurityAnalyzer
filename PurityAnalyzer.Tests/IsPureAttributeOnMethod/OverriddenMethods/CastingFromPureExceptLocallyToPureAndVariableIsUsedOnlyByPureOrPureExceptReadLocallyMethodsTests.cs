@@ -49,8 +49,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -91,8 +90,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -143,8 +141,7 @@ public class Class1
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -196,8 +193,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -234,8 +230,7 @@ public static class Module1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -471,8 +466,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -509,8 +503,7 @@ public static class Module1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -614,8 +607,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -716,8 +708,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -825,8 +816,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -942,8 +932,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1055,8 +1044,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1153,8 +1141,7 @@ public static class ExtensionMethods
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1527,8 +1514,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1582,8 +1568,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1642,8 +1627,7 @@ public static class ExtensionMethods
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1735,8 +1719,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -1783,8 +1766,7 @@ public class Class1
 }
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

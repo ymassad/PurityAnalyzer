@@ -67,8 +67,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -91,8 +90,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -114,8 +112,7 @@ public class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -134,8 +131,7 @@ public static class Module1<[NotUsedAsObject] T>
     public static string Prop1 => default(T).ToString();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -157,8 +153,7 @@ public class Module1<[NotUsedAsObject] T>
    }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -180,8 +175,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -203,8 +197,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -247,8 +240,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -269,8 +261,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -296,8 +287,7 @@ public static class Module1<[NotUsedAsObject] T>
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -323,8 +313,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -355,8 +344,7 @@ public static class Module2<T2>
 
 ";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -523,8 +511,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

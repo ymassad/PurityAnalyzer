@@ -43,8 +43,7 @@ public class Class1
     public static int DoSomething => 1;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -136,8 +135,7 @@ public class Class1
     public int DoSomething => c;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -189,8 +187,7 @@ public class Class1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -285,8 +282,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -314,8 +310,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -340,8 +335,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -369,8 +363,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -394,8 +387,7 @@ public class Class1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -490,8 +482,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -519,8 +510,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -546,8 +536,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -575,8 +564,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -606,8 +594,7 @@ public class Class1
     private int ImpureProperty { set => state = value; }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -730,8 +717,7 @@ public class Class1
     public static Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -766,8 +752,7 @@ public class Class1
     public static Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
   
@@ -800,8 +785,7 @@ public class Class1
     public static readonly Class1 instance = new Class1();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -836,8 +820,7 @@ public class Class1
     public static readonly Class2 instance = new Class2();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -882,8 +865,7 @@ public class MyClass
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -922,8 +904,7 @@ public class MyClass
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 

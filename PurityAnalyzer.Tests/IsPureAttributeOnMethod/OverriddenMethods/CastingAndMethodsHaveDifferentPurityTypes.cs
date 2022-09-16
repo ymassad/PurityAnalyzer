@@ -83,8 +83,7 @@ public static class Module1
     public static readonly Derived source = new Derived();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -122,8 +121,7 @@ public static class Module1
     public static readonly Base source = new Base();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -238,8 +236,7 @@ public static class Module1
     public static readonly Derived source = new Derived();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -278,8 +275,7 @@ public static class Module1
     public static readonly Base source = new Base();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -393,8 +389,7 @@ public static class Module1
     public static readonly Derived source = new Derived();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
@@ -432,8 +427,7 @@ public static class Module1
     public static readonly Base source = new Base();
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]

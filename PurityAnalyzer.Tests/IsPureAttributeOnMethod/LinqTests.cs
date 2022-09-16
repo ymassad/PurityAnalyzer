@@ -69,8 +69,7 @@ public static class Module1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -98,8 +97,7 @@ public static class Module1
     static int state = 0;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -127,8 +125,7 @@ public static class Module1
     static int state = 0;
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -164,8 +161,7 @@ public static class Module1
 
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -268,8 +264,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
 
         }
 
