@@ -394,8 +394,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
 
@@ -418,8 +417,7 @@ public static class Module1<[NotUsedAsObject] T>
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code, Utilities.GetTestsCompiledCsharpLibProjectReference());
         }
 
         [Test]
