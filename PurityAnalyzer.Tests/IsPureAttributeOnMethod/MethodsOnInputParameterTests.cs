@@ -100,9 +100,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -196,9 +194,7 @@ public static class Module1
         return input.Method();
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -237,9 +233,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -305,9 +299,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -409,9 +401,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -447,9 +437,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -522,9 +510,7 @@ public static class Module1
         return input.Dto.Method();
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -597,9 +583,7 @@ public static class Module1
         return input.Dto.Method();
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -672,9 +656,7 @@ public static class Module1
         return input.Dto.Method();
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
         [Test]
@@ -747,9 +729,7 @@ public static class Module1
         return input.Dto.Method();
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
 
 
@@ -786,9 +766,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().BePositive();
+            Utilities.AssertImpure(code);
         }
     }
 }
