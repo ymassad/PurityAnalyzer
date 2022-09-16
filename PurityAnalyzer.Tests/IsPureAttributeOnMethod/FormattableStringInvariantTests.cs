@@ -50,9 +50,7 @@ public static class Module1
         return FormattableString.Invariant($""constant"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -74,9 +72,7 @@ public static class Module1
         return Invariant($""constant"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
 
@@ -100,9 +96,7 @@ public static class Module1
         return FormattableString.Invariant($""{str}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -125,9 +119,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -150,9 +142,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -175,9 +165,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -200,9 +188,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -225,9 +211,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -250,9 +234,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -275,9 +257,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -300,9 +280,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -325,9 +303,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -350,9 +326,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -375,9 +349,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -400,9 +372,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -425,9 +395,7 @@ public static class Module1
         return FormattableString.Invariant($""{i}"");
     }
 }";
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
 

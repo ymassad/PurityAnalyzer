@@ -31,9 +31,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         //Even if input is mutable, reading such mutable input is a pure operation
@@ -62,9 +60,7 @@ public static class Module1
     }
 }";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code);
-
-            dignostics.Length.Should().Be(0);
+            Utilities.AssertPure(code);
         }
 
         [Test]
