@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -927,7 +927,7 @@ public static class Module1
         }
 
         [Test]
-        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaReadWriteFieldOnNewlyCreatedObjectDirectlyIsPure()
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaReadWriteFieldOnNewlyCreatedObjectDirectlyIsImpure()
         {
             string code = @"
 using System;
@@ -955,12 +955,12 @@ public static class Module1
         return new Class0().class1.a;
     }
 }";
-
-            Utilities.AssertPure(code);
+            //Impure because the new object is accessed via a public writable field on the new object
+            Utilities.AssertImpure(code);
         }
 
         [Test]
-        public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaReadWriteFieldOnNewlyCreatedObjectDirectlyIsPure()
+        public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaReadWriteFieldOnNewlyCreatedObjectDirectlyIsImpure()
         {
             string code = @"
 using System;
@@ -990,12 +990,12 @@ public static class Module1
         return 1;
     }
 }";
-
-            Utilities.AssertPure(code);
+            //Impure because the new object is accessed via a public writable field on the new object
+            Utilities.AssertImpure(code);
         }
 
         [Test]
-        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAReadWriteFieldOnNewlyCreatedObjectIsPure()
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAReadWriteFieldOnNewlyCreatedObjectIsImpure()
         {
             string code = @"
 using System;
@@ -1027,8 +1027,8 @@ public static class Module1
         return 1;
     }
 }";
-
-            Utilities.AssertPure(code);
+            //Impure because the new object is accessed via a public writable property on the new object
+            Utilities.AssertImpure(code);
         }
 
         [Test]
