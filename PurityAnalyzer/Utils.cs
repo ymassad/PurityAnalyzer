@@ -874,6 +874,17 @@ namespace PurityAnalyzer
             {
                 if (exp is MemberAccessExpressionSyntax memberAccess1)
                 {
+                    // If the receiver is itself a member access, the step we took to get here might be through a
+                    // non-private non-readonly field/property (e.g. c.Field in c.Field.state). Public and internal
+                    // are both "global enough" (visible across type/assembly); only private is truly local.
+                    if (memberAccess1.Expression is MemberAccessExpressionSyntax innerMemberAccess)
+                    {
+                        var innerMemberSymbol = semanticModel.GetSymbolInfo(innerMemberAccess.Name).Symbol;
+                        if (innerMemberSymbol is IFieldSymbol field && field.DeclaredAccessibility != Accessibility.Private && !field.IsReadOnly)
+                            return false;
+                        if (innerMemberSymbol is IPropertySymbol property && property.DeclaredAccessibility != Accessibility.Private && property.SetMethod != null)
+                            return false;
+                    }
                     return IsOnNewlyCreatedObject(memberAccess1.Expression);
                 }
                 if (exp is ElementAccessExpressionSyntax elementAccess1)
