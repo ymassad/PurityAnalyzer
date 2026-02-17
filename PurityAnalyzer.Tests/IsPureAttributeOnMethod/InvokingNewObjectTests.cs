@@ -960,6 +960,101 @@ public static class Module1
         }
 
         [Test]
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaReadonlyFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    public readonly Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class0().class1.a;
+    }
+}";
+            //Pure because the new object is accessed via a readonly field (cannot be reassigned to shared state)
+            Utilities.AssertPure(code);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaInternalFieldOnNewlyCreatedObjectDirectlyIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    internal Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class0().class1.a;
+    }
+}";
+            //Impure because internal is still visible across the assembly (global state); only private is truly local
+            Utilities.AssertImpure(code);
+        }
+
+        [Test]
+        public void MethodThatReadsAReadWriteFieldOnObjectAccessedViaPrivateFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    private Class1 class1 = new Class1();
+
+    [IsPure]
+    public static int DoSomething()
+    {
+        return new Class0().class1.a;
+    }
+}";
+            //Pure because the new object is accessed via a private field (not visible outside the type, truly local)
+            Utilities.AssertPure(code);
+        }
+
+        [Test]
         public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaReadWriteFieldOnNewlyCreatedObjectDirectlyIsImpure()
         {
             string code = @"
@@ -992,6 +1087,107 @@ public static class Module1
 }";
             //Impure because the new object is accessed via a public writable field on the new object
             Utilities.AssertImpure(code);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaReadonlyFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    public readonly Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.a = 2;
+
+        return 1;
+    }
+}";
+            //Pure because the new object is accessed via a readonly field (cannot be reassigned to shared state)
+            Utilities.AssertPure(code);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaInternalFieldOnNewlyCreatedObjectDirectlyIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    internal Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.a = 2;
+
+        return 1;
+    }
+}";
+            //Impure because internal is still visible across the assembly (global state); only private is truly local
+            Utilities.AssertImpure(code);
+        }
+
+        [Test]
+        public void MethodThatWritesAReadWriteFieldOnObjectAccessedViaPrivateFieldOnNewlyCreatedObjectDirectlyIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+}
+
+public class Class0
+{
+    private Class1 class1 = new Class1();
+
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.a = 2;
+
+        return 1;
+    }
+}";
+            //Pure because the new object is accessed via a private field (not visible outside the type, truly local)
+            Utilities.AssertPure(code);
         }
 
         [Test]
@@ -1029,6 +1225,113 @@ public static class Module1
 }";
             //Impure because the new object is accessed via a public writable property on the new object
             Utilities.AssertImpure(code);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAReadonlyFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public class Class0
+{
+    public readonly Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.Increment();
+
+        return 1;
+    }
+}";
+            //Pure because the new object is accessed via a readonly field (cannot be reassigned to shared state)
+            Utilities.AssertPure(code);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAnInternalFieldOnNewlyCreatedObjectIsImpure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public class Class0
+{
+    internal Class1 class1 = new Class1();
+}
+
+public static class Module1
+{
+    
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.Increment();
+
+        return 1;
+    }
+}";
+            //Impure because internal is still visible across the assembly (global state); only private is truly local
+            Utilities.AssertImpure(code);
+        }
+
+        [Test]
+        public void MethodThatCallsAPureExceptLocallyMethodOnAnObjectObtainedByAccesingAPrivateFieldOnNewlyCreatedObjectIsPure()
+        {
+            string code = @"
+using System;
+
+public class IsPureAttribute : Attribute
+{
+}
+
+public class Class1
+{
+    public int a;
+
+    public void Increment() => a++;
+}
+
+public class Class0
+{
+    private Class1 class1 = new Class1();
+
+    [IsPure]
+    public static int DoSomething()
+    {
+        new Class0().class1.Increment();
+
+        return 1;
+    }
+}";
+            //Pure because the new object is accessed via a private field (not visible outside the type, truly local)
+            Utilities.AssertPure(code);
         }
 
         [Test]
