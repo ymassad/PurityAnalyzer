@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -165,14 +166,56 @@ namespace PurityAnalyzer.Tests
             return solution.AddDocument(documentId, fileName, SourceText.From(fileContent));
         }
 
+        /// <summary>
+        /// Gets BCL metadata references from the runtime's Trusted Platform Assemblies (TPA).
+        /// This uses the same implementation assemblies the current process uses, so we avoid
+        /// mixing ref vs runtime and duplicate-type errors (e.g. "Attribute exists in both").
+        /// </summary>
+        private static MetadataReference[] GetDefaultBclReferences()
+        {
+            var tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+            if (string.IsNullOrEmpty(tpa))
+            {
+                return new[]
+                {
+                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+                };
+            }
+            var separator = new[] { ';', '|' };
+            if (tpa.IndexOf(';') < 0 && tpa.IndexOf('|') < 0)
+                separator = new[] { ':' };
+            var paths = tpa.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            var refs = new List<MetadataReference>();
+            foreach (var path in paths)
+            {
+                if (string.IsNullOrWhiteSpace(path)) continue;
+                var p = path.Trim();
+                if (!p.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!File.Exists(p)) continue;
+                var dir = Path.GetDirectoryName(p);
+                if (string.IsNullOrEmpty(dir)) continue;
+                if (!dir.Contains("Microsoft.NETCore.App", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                refs.Add(MetadataReference.CreateFromFile(p));
+            }
+            if (refs.Count == 0)
+            {
+                return new[]
+                {
+                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+                };
+            }
+            return refs.ToArray();
+        }
+
         private static Solution AddNewProjectToWorkspace(
             Solution solution, string projName, ProjectId projectId, params MetadataReference[] additionalReferences)
         {
             MetadataReference csharpSymbolsReference = MetadataReference.CreateFromFile(typeof(CSharpCompilation).Assembly.Location);
             MetadataReference codeAnalysisReference = MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location);
-
-            MetadataReference corlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
-            MetadataReference systemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
+            var bclRefs = GetDefaultBclReferences();
 
             return
                 solution.AddProject(
@@ -185,11 +228,9 @@ namespace PurityAnalyzer.Tests
                             compilationOptions: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                         .WithMetadataReferences(new[]
                         {
-                            corlibReference,
-                            systemCoreReference,
                             csharpSymbolsReference,
                             codeAnalysisReference
-                        }.Concat(additionalReferences).ToArray()));
+                        }.Concat(bclRefs).Concat(additionalReferences).ToArray()));
         }
 
         public static MetadataReference[] GetAllReferencesNeededForType(Type type)
