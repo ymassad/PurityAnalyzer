@@ -62,10 +62,10 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
         
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -164,9 +164,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -199,9 +199,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
@@ -379,9 +379,9 @@ public class Dto1
 public static class Module1
 {
     [IsPure]
-    public static string DoSomething(Dto1 input)
+    public static int DoSomething(Dto1 input)
     {
-        return input.Prop1.ToString();
+        return input.Prop1;
     }
 }";
 
