@@ -18,10 +18,10 @@ The goal is to make side effects explicit and controlled.
 
 A method marked `[IsPure]` must:
 
-- Not read static fields  
+- Not read mutable static fields  
 - Not write static fields  
 - Not read instance fields  
-- Not write instance fields  
+- Not write mutable instance fields  
 - Not call impure methods  
 - Not rely on hidden global behavior  
 
@@ -298,3 +298,21 @@ It is tracked separately so that:
 - `new object().GetHashCode()` is correctly treated as impure.  
 - Object construction remains valid.  
 - Normal `GetHashCode` usage does not break the analyzer.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO - talk about path access like this.field1.field2.GetXYZ().field3
