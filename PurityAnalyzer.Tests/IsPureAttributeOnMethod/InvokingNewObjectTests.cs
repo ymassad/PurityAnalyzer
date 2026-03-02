@@ -2146,5 +2146,59 @@ public static class Module1
             Utilities.AssertImpure(code);
         }
 
+        [Test]
+        public void MethodThatMutatesNewlyCreatedObjectAndReturnsItIsPure()
+        {
+            string code = @"
+using System;
+using System.Collections.Generic;
+
+public class IsPureAttribute : Attribute { }
+
+public static class Module1
+{
+    [IsPure]
+    public static List<Guid> Make()
+    {
+        var list = new List<Guid>();
+        list.Add(Guid.Empty);
+        return list;
+    }
+}";
+            Utilities.AssertPure(code);
+        }
+
+        [Test]
+        public void MethodThatCallsMethodThatReturnsNewObjectAndThenMutatesItLocallyIsPure()
+        {
+            string code = @"
+using System;
+using System.Collections.Generic;
+
+public class IsPureAttribute : Attribute { }
+public class ReturnsNewObjectAttribute : Attribute { }
+
+public static class Factory
+{
+    [IsPure]
+    public static List<Guid> Make()
+    {
+        return new List<Guid>();
+    }
+}
+
+public static class Module1
+{
+    [IsPure]
+    public static int F()
+    {
+        var list = Factory.Make();
+        list.Add(Guid.Empty);
+        return list.Count;
+    }
+}";
+            Utilities.AssertPure(code);
+        }
+
     }
 }
