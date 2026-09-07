@@ -2,7 +2,7 @@
 
 PurityAnalyzer is a Roslyn analyzer for C# that helps developers write and maintain pure code.
 
-A pure method should produce the same result for the same inputs and should not have externally visible side effects. Among other things, this means it should not depend on mutable global state, mutate external state, or call impure methods.
+A pure method should produce the same result for the same inputs and should not have externally visible side effects. Among other things, this means it should not depend on mutable state, or call impure methods.
 
 PurityAnalyzer lets you mark methods or classes as pure and reports diagnostics when their implementation violates those purity rules.
 
