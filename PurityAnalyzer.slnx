@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="PurityAnalyzer.Tests.CompiledCsharpLib/PurityAnalyzer.Tests.CompiledCsharpLib.csproj" />
+  <Project Path="PurityAnalyzer.Tests/PurityAnalyzer.Tests.csproj" />
+  <Project Path="PurityAnalyzer.Vsix/PurityAnalyzer.Vsix.csproj" />
+  <Project Path="PurityAnalyzer/PurityAnalyzer.csproj" />
+</Solution>

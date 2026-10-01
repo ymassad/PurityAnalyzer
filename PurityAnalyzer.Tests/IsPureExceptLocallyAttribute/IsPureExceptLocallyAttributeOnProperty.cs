@@ -846,7 +846,7 @@ public class Derived : Base
 
 public class MyClass
 {
-    Base field;
+    Base baseField;
 
     [IsPureExceptLocally]
     public int Something
@@ -855,7 +855,7 @@ public class MyClass
         {
             Base x = new Derived();
 
-            field = ReturnParam(x);
+            baseField = ReturnParam(x);
 
             return 1;
         }
@@ -892,12 +892,12 @@ public class Derived : Base
 
 public class MyClass
 {
-    Base field;
+    Base baseField;
 
     [IsPureExceptLocally]
     public int Something
     {
-        set => field = ReturnParam(new Derived());
+        set => baseField = ReturnParam(new Derived());
     }
 
     public Base ReturnParam(Base p) => p;

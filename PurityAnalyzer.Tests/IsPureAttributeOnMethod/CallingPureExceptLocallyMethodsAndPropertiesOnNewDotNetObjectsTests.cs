@@ -33,7 +33,7 @@ public static class Module1
     }}
 }}";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.CreateFromType<XmlDocument>());
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetSystemXmlReference());
             dignostics.Length.Should().Be(0);
         }
 

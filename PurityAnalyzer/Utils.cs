@@ -1038,6 +1038,18 @@ namespace PurityAnalyzer
             return PurityAnalyzerAnalyzer.GetSemanticModelForSyntaxTreeAsync(tree).Result;
         }
 
+        public static IEnumerable<INamedTypeSymbol> GetContainingTypes(ISymbol symbol)
+        {
+            var containingType = symbol.ContainingType;
+
+            while (containingType != null)
+            {
+                yield return containingType;
+
+                containingType = containingType.ContainingType;
+            }
+        }
+
         public static bool IsPureData(ITypeSymbol type)
         {
             var pureTypes = new[]

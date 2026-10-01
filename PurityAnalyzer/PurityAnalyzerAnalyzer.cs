@@ -232,6 +232,7 @@ namespace PurityAnalyzer
                     ProcessDoesNotUseClassTypeParameterAsObjectAttributeForMethod(
                         context,
                         methodDeclaration,
+                        methodSymbol,
                         knownSymbols,
                         typeParameterIdentifier);
                 }
@@ -242,11 +243,17 @@ namespace PurityAnalyzer
         private void ProcessDoesNotUseClassTypeParameterAsObjectAttributeForMethod(
             SyntaxNodeAnalysisContext context,
             BaseMethodDeclarationSyntax methodDeclaration,
+            IMethodSymbol methodSymbol,
             KnownSymbols knownSymbols,
             IdentifierNameSyntax typeParameterIdentifier)
         {
+            // Look the type parameter up by name on the containing classes (innermost first).
+            // Binding the nameof argument is not enough: since C# 11, nameof(T) in a method attribute
+            // binds to the method's own type parameter T when the method declares one.
             var typeParameterSymbol =
-                context.SemanticModel.GetSymbolInfo(typeParameterIdentifier).Symbol as ITypeParameterSymbol;
+                Utils.GetContainingTypes(methodSymbol)
+                    .SelectMany(x => x.TypeParameters)
+                    .FirstOrDefault(x => x.Name == typeParameterIdentifier.Identifier.Text);
 
 
             if (typeParameterSymbol == null)

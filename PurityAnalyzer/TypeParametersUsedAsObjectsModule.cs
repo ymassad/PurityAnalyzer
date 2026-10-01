@@ -35,21 +35,9 @@ namespace PurityAnalyzer
             KnownSymbols knownSymbols,
             RecursiveStateForNotUsedAsObject recursiveStateForNotUsedAsObject)
         {
-            IEnumerable<INamedTypeSymbol> GetAllContainingTypes()
-            {
-                var containingType = method.ContainingType;
-
-                while (containingType != null)
-                {
-                    yield return containingType;
-
-                    containingType = containingType.ContainingType;
-                }
-            }
-
             if (method.IsStatic || method.MethodKind == MethodKind.Constructor)
             {
-                var containingTypes = GetAllContainingTypes().ToList();
+                var containingTypes = Utils.GetContainingTypes(method).ToList();
 
                 var staticConstructors = containingTypes.SelectMany(x => x.StaticConstructors).ToList();
 

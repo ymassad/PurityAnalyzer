@@ -1,0 +1,95 @@
+PurityAnalyzer - Plan to production readiness
+=============================================
+
+Goal
+----
+A Roslyn analyzer that lets C# developers declare purity (IsPure, IsPureExceptLocally,
+IsPureExceptReadLocally, ReturnsNewObject, NotUsedAsObject, ...) and have the compiler
+enforce it. Production-ready means: sound on modern C#, fast in large solutions, easy
+to install/configure, documented, and maintained via CI.
+
+Guiding principle: a false "pure" is worse than a false "impure". When in doubt, fail closed.
+
+
+Phase 1 - Specify the semantic model
+------------------------------------
+- Write a spec of what each attribute guarantees, with examples.
+- Resolve the open design questions:
+  - pure-except-locally / pure-except-read-locally (May 2022 rethink; revise tests accordingly)
+  - Object.GetHashCode / String.GetHashCode purity (ThoughtsOnGetHashCode.txt)
+  - casting / overridden-method rules (OverriddenMethods/Note.txt)
+  - meaning of "newly created object"
+  - delegates/method groups, class-level type parameters (see TODOs)
+- Resolve or retire the "TestsCreatedToFigureOutWhatToDo..." test classes.
+
+
+Phase 2 - Modernize the platform
+--------------------------------
+Target: Visual Studio 2026 / .NET 10 SDK only.
+DONE (2026-09-30):
+- Analyzer: netstandard2.0, Roslyn 5.0.0 (the version VS 2026 shipped with), latest LangVersion,
+  extended analyzer rules on (RS1035 banned-API findings lowered to warnings until phase 4).
+- Tests: SDK-style, net10.0, NUnit 4, FluentAssertions 7.x (8+ is commercial). Test code is compiled
+  against pinned .NET Framework 4.7.2 reference assemblies (Basic.Reference.Assemblies) so results
+  don't depend on the host runtime.
+- VSIX: SDK-style, VS 2026 only ([18.0,19.0), x64 + Arm64). Builds with VS MSBuild only.
+- Solution migrated to .slnx. Version made consistent (0.8).
+- Baseline kept: 1840 tests, same 24 pre-existing failures (open design questions, phase 1),
+  plus 1 new one: Roslyn now exposes patterns (obj is T t) as conversions, so a downcast in an
+  Equals override is now checked (SystemObjectTests.CallingDistinctAndCount...). Decide in phase 1.
+REMAINING:
+- Enable concurrent execution, skip generated code, analyzer release tracking, RS1024 (symbol equality).
+- Move tests to Microsoft.CodeAnalysis.Testing (optional).
+- Package metadata (description, license, icon, README).
+- Add test runs against modern .NET reference assemblies (ties into phase 5).
+- VSIX problem: modern VS runs analyzers out of process, so the static settings the VSIX package
+  sets (custom list files, pure-lambda method, cross-project semantic model hook) probably never
+  reach the analyzer. Verify in VS 2026, then fix with phase 4 config redesign or drop the VSIX.
+
+
+Phase 3 - Soundness on modern C#
+--------------------------------
+- Make unknown/unhandled constructs fail closed (report as impure / unsupported).
+- Consider moving from syntax walking to the IOperation API.
+- Cover modern language features: records/init/with, target-typed new, pattern
+  matching/switch expressions, local functions, async/await, lock, ref locals/returns,
+  Span/ref structs, unsafe code, deconstruction, default interface members, static
+  abstract members, primary constructors, collection expressions, etc.
+
+
+Phase 4 - Performance and robustness
+------------------------------------
+- Replace static mutable configuration and the cross-tree semantic model hook with a
+  supported design (compilation-start actions, per-compilation state).
+- Remove banned APIs from the analyzer (RS1035): load custom lists via AdditionalFiles or
+  .editorconfig instead of File IO; replace Environment.NewLine uses. Then delete the RS1035
+  override in PurityAnalyzer/.editorconfig so it is an error again.
+- Cache known-symbol lists and per-method purity results per compilation.
+- Benchmark on large real-world solutions; ensure no AD0001 crashes.
+
+
+Phase 5 - .NET knowledge base
+-----------------------------
+- Rebuild the known pure / pure-except-locally / returns-new-object lists for modern .NET
+  (fill known gaps: ImmutableArray/List, tuples, KeyValuePair, decimal, ...).
+- Only trust curated entries and explicit user declarations; do NOT trust third-party
+  annotations such as System.Diagnostics.Contracts.PureAttribute (unverified, different meaning).
+- Let users supply their own lists for third-party libraries (wire up the "get from file" TODOs).
+
+
+Phase 6 - User experience
+-------------------------
+- Ship the attributes (separate package or source generator) instead of name-matching
+  user-defined ones.
+- Distinct diagnostic IDs (PUR0001...) with titles, help links, configurable severity.
+- Configuration via .editorconfig / MSBuild properties.
+- Messages that explain why something is impure (including the call chain).
+- Code fixes where useful (add attribute, use invariant overload, ...).
+
+
+Phase 7 - Docs, release, validation
+-----------------------------------
+- Docs: getting started, per-attribute guide, rules reference, limitations, adoption guide.
+- CI pipeline: build, test, pack, publish; changelog; semantic versioning.
+- Dogfood on several real open-source codebases; measure false positives/negatives.
+- Release 1.0.

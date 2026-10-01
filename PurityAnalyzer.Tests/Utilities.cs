@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Basic.Reference.Assemblies;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
@@ -47,9 +49,21 @@ namespace PurityAnalyzer.Tests
             return MetadataReference.CreateFromFile(typeof(ImmutableDto1).Assembly.Location);
         }
 
-        public static PortableExecutableReference CreateFromType<T>()
+        public static MetadataReference GetSystemXmlReference()
         {
-            return MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
+            return Net472.References.SystemXml;
+        }
+
+        public static MetadataReference[] GetImmutableCollectionsReferences()
+        {
+            var immutableCollectionsPath = Path.Combine(
+                AppContext.BaseDirectory, "TestReferences", "System.Collections.Immutable.dll");
+
+            return new MetadataReference[]
+            {
+                MetadataReference.CreateFromFile(immutableCollectionsPath),
+                Net472.References.SystemRuntime
+            };
         }
 
         public static Diagnostic[] RunPurityAnalyzer(string content, params MetadataReference[] additionalReferences)
@@ -63,7 +77,7 @@ namespace PurityAnalyzer.Tests
             return RunPurityAnalyzer(
                 content,
                 Maybe.NoValue,
-                additionalReferences.Concat(GetAllReferencesNeededForType(typeof(ImmutableArray<>))).ToArray());
+                additionalReferences.Concat(GetImmutableCollectionsReferences()).ToArray());
         }
 
 
@@ -168,11 +182,11 @@ namespace PurityAnalyzer.Tests
         private static Solution AddNewProjectToWorkspace(
             Solution solution, string projName, ProjectId projectId, params MetadataReference[] additionalReferences)
         {
-            MetadataReference csharpSymbolsReference = MetadataReference.CreateFromFile(typeof(CSharpCompilation).Assembly.Location);
-            MetadataReference codeAnalysisReference = MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location);
-
-            MetadataReference corlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
-            MetadataReference systemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
+            // Code under test is compiled against .NET Framework 4.7.2 reference assemblies, not against the
+            // runtime that hosts the tests. netstandard.dll is needed for the netstandard2.0 CompiledCsharpLib.
+            MetadataReference corlibReference = Net472.References.mscorlib;
+            MetadataReference systemCoreReference = Net472.References.SystemCore;
+            MetadataReference netstandardReference = Net472.References.netstandard;
 
             return
                 solution.AddProject(
@@ -187,24 +201,8 @@ namespace PurityAnalyzer.Tests
                         {
                             corlibReference,
                             systemCoreReference,
-                            csharpSymbolsReference,
-                            codeAnalysisReference
+                            netstandardReference
                         }.Concat(additionalReferences).ToArray()));
-        }
-
-        public static MetadataReference[] GetAllReferencesNeededForType(Type type)
-        {
-            var assembly = type.Assembly;
-
-            var files =
-                assembly.GetReferencedAssemblies()
-                    .Select(x => Assembly.Load(x.FullName))
-                    .Select(x => x.Location)
-                    .ToList();
-
-            files.Add(assembly.Location);
-
-            return files.Select(x => MetadataReference.CreateFromFile(x)).Cast<MetadataReference>().ToArray();
         }
 
         public static void AssertPure(string code)

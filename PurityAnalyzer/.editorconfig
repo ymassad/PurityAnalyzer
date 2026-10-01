@@ -1,0 +1,4 @@
+[*.cs]
+# Banned APIs in analyzers (file IO for custom lists, Environment).
+# Kept visible as warnings until configuration is redesigned (plan.txt, phase 4).
+dotnet_diagnostic.RS1035.severity = warning

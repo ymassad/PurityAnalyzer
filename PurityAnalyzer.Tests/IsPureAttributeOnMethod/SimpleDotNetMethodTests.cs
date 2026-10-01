@@ -35,7 +35,7 @@ public static class Module1
     }}
 }}";
 
-            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetAllReferencesNeededForType(typeof(ImmutableArray<>)));
+            var dignostics = Utilities.RunPurityAnalyzer(code, Utilities.GetImmutableCollectionsReferences());
             dignostics.Length.Should().Be(0);
         }
 
